@@ -5,6 +5,8 @@
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 
+we my error
+
 namespace cn40 {
 
 class CN40Climate : public esphome::climate::Climate,
