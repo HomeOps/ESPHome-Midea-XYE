@@ -1,0 +1,9 @@
+name: "cn40"
+version: "0.0.1"
+
+files:
+  - cn40_climate.h
+  - cn40_climate.cpp
+
+components:
+  - climate
