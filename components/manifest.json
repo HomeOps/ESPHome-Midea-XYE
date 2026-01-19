@@ -1,7 +1,0 @@
-{
-  "name": "cn40",
-  "version": "0.0.1",
-  "components": ["climate"],
-  "dependencies": ["climate", "uart"]
-}
-
