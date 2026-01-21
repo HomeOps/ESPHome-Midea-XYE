@@ -21,6 +21,8 @@ void CN40Climate::diag() {
     // Log RS485 direction pin (critical for M5 RS485 Base)
     ESP_LOGI(TAG, "RS485 DE/RE pin state: %d", gpio_get_level(GPIO_NUM_33));
 
+    send_query();
+
     // Check for bus activity after 500ms
     this->set_timeout("uart_check", 500, [this]() {
         if (this->available()) {
@@ -55,7 +57,7 @@ void CN40Climate::loop() {
     // TODO: validate header
     // TODO: validate CRC
     // TODO: parse payload
-    write(b);
+    //write(b);
   }
 
   //diag();
