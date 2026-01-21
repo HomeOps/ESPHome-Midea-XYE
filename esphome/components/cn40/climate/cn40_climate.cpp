@@ -55,6 +55,7 @@ void CN40Climate::loop() {
     // TODO: validate header
     // TODO: validate CRC
     // TODO: parse payload
+    write(b);
   }
 
   //diag();
@@ -101,6 +102,13 @@ void CN40Climate::send_command_() {
   diag();
   // TODO: build CN40 command frame
   // TODO: write bytes using write_array()
+}
+
+uint8_t queryData[16] = {0xaa, 0xc0, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f, 0x81, 0x55};
+
+void CN40Climate::send_query() {
+  ESP_LOGD("main", "CN40Climate send query command.");
+  write_array(queryData, sizeof(queryData));
 }
 
 }

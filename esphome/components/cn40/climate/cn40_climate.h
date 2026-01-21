@@ -24,6 +24,7 @@ class CN40Climate : public esphome::climate::Climate,
   void send_command_();
  private:
   void diag();
+  void send_query();
 };
 
 }
