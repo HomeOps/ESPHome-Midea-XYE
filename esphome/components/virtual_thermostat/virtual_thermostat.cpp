@@ -3,23 +3,17 @@
 namespace esphome {
 namespace virtual_thermostat {
 
-// ---------------------------------------------------------
-// CONSTRUCTOR
-// ---------------------------------------------------------
 VirtualThermostat::VirtualThermostat() {
-  // Initialize preset names; entities will be wired by codegen/YAML
-  home  = {"Home",  nullptr, nullptr};
-  sleep = {"Sleep", nullptr, nullptr};
-  away  = {"Away",  nullptr, nullptr};
+  // Only set names; do NOT touch min_entity/max_entity (they come from YAML/codegen)
+  home.name  = "Home";
+  sleep.name = "Sleep";
+  away.name  = "Away";
 
-  manual = {"", nullptr, nullptr};
+  manual.name = "";  // manual mode
   active_preset = &manual;
-  last_preset_name = "";
+  last_preset_name.clear();
 }
 
-// ---------------------------------------------------------
-// SETUP
-// ---------------------------------------------------------
 void VirtualThermostat::setup() {
   this->mode = climate::CLIMATE_MODE_AUTO;
 
@@ -27,7 +21,9 @@ void VirtualThermostat::setup() {
   active_preset = getPresetFromName(last_preset_name);
 
   // If active preset is not manual and has entities, apply it
-  if (active_preset != &manual && active_preset->min_entity && active_preset->max_entity) {
+  if (active_preset != &manual &&
+      active_preset->min_entity &&
+      active_preset->max_entity) {
     apply_preset(active_preset);
   } else {
     // Fallback: use manual range
@@ -36,9 +32,6 @@ void VirtualThermostat::setup() {
   }
 }
 
-// ---------------------------------------------------------
-// TRAITS
-// ---------------------------------------------------------
 climate::ClimateTraits VirtualThermostat::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_auto_mode(true);
@@ -50,9 +43,6 @@ climate::ClimateTraits VirtualThermostat::traits() {
   return traits;
 }
 
-// ---------------------------------------------------------
-// APPLY PRESET
-// ---------------------------------------------------------
 void VirtualThermostat::apply_preset(Preset *p) {
   if (p == &manual) {
     this->target_temperature_low  = manual_min;
@@ -63,9 +53,6 @@ void VirtualThermostat::apply_preset(Preset *p) {
   }
 }
 
-// ---------------------------------------------------------
-// EXIT PRESET MODE → MANUAL
-// ---------------------------------------------------------
 void VirtualThermostat::exit_preset_mode() {
   active_preset = &manual;
   manual_min = this->target_temperature_low;
@@ -73,9 +60,6 @@ void VirtualThermostat::exit_preset_mode() {
   last_preset_name.clear();
 }
 
-// ---------------------------------------------------------
-// PRESET LOOKUP
-// ---------------------------------------------------------
 Preset *VirtualThermostat::getPresetFromName(const std::string &name) {
   if (name == home.name)  return &home;
   if (name == sleep.name) return &sleep;
@@ -83,11 +67,7 @@ Preset *VirtualThermostat::getPresetFromName(const std::string &name) {
   return &manual;  // unknown or empty → manual
 }
 
-// ---------------------------------------------------------
-// CONTROL (user changes)
-// ---------------------------------------------------------
 void VirtualThermostat::control(const climate::ClimateCall &call) {
-
   // MODE CHANGE
   if (call.get_mode().has_value()) {
     auto new_mode = *call.get_mode();
@@ -97,7 +77,6 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
          new_mode == climate::CLIMATE_MODE_COOL) &&
         this->mode == climate::CLIMATE_MODE_AUTO) {
 
-      // Use active preset midpoint (manual or named)
       if (active_preset == &manual) {
         this->target_temperature = (manual_min + manual_max) / 2.0f;
       } else {
@@ -152,9 +131,6 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   this->publish_state();
 }
 
-// ---------------------------------------------------------
-// MAIN LOOP
-// ---------------------------------------------------------
 void VirtualThermostat::loop() {
   if (!this->room_sensor || !this->real_ac) return;
 
