@@ -39,7 +39,7 @@ async def to_code(config):
     await climate.register_climate(var, config)
 
     room = await cg.get_variable(config[CONF_ROOM_SENSOR])
-    cg.add(var.room_sensor = room)
+    cg.add(var.room_sensor(room))
 
     real = await cg.get_variable(config[CONF_REAL_AC])
     cg.add(var.real_ac = real)
