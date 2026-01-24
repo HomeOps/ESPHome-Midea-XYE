@@ -352,6 +352,12 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           // Show Heating vs Heat at least in Heat mode. Will figure
           // out how to determine if compressor is on in other modes later.
           update_property(this->current_temperature, CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]), need_publish);
+
+#ifndef SET_TARGET_TEMP_ON_QUERY
+          // Target temperature always comes in as C, but user may want it in F.
+          update_property(this->target_temperature, RXData[RX_C0_BYTE_SET_TEMP], need_publish);
+#endif
+
           if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[9] & 0x0F) != 0x00) {
             this->action = climate::CLIMATE_ACTION_HEATING;
             need_publish = true;
@@ -406,10 +412,11 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
                    (RXData[RX_C0_BYTE_PROTECT_FLAGS1] << 0) | (RXData[RX_C0_BYTE_PROTECT_FLAGS2] << 8));
         break;
       }
-      case 0xC4:
+      case CLIENT_COMMAND_QUERY_EXTENDED:
         bool need_publish = false;
         set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[21]));
         set_number(this->static_pressure_number_, 0x0F & RXData[24]);
+#ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
         if (mode != ClimateMode::CLIMATE_MODE_OFF ||
             ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
         {
@@ -430,6 +437,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           if (need_publish)
             this->publish_state();
         }
+#endif
 
         if (RXData[9] != 0x30 || RXData[10] != 0x98 || RXData[11] != 0x00 || RXData[12] != 0x00 || RXData[13] != 0x00 ||
             RXData[14] != 0x01 || RXData[15] != 0x20 || RXData[19] != 0xBC || RXData[20] != 0xD6 ||
