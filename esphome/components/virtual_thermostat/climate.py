@@ -42,7 +42,7 @@ async def to_code(config):
     cg.add(var.room_sensor(room))
 
     real = await cg.get_variable(config[CONF_REAL_AC])
-    cg.add(var.real_ac = real)
+    cg.add(var.real_ac(real))
 
     home_min = await cg.get_variable(config[CONF_HOME_MIN])
     home_max = await cg.get_variable(config[CONF_HOME_MAX])
@@ -51,12 +51,12 @@ async def to_code(config):
     away_min = await cg.get_variable(config[CONF_AWAY_MIN])
     away_max = await cg.get_variable(config[CONF_AWAY_MAX])
 
-    cg.add(var.home.min_entity = home_min)
-    cg.add(var.home.max_entity = home_max)
+    cg.add(var.home.min_entity(home_min))
+    cg.add(var.home.max_entity(home_max))
 
-    cg.add(var.sleep.min_entity = sleep_min)
-    cg.add(var.sleep.max_entity = sleep_max)
+    cg.add(var.sleep.min_entity(sleep_min))
+    cg.add(var.sleep.max_entity(sleep_max))
 
-    cg.add(var.away.min_entity = away_min)
-    cg.add(var.away.max_entity = away_max)
+    cg.add(var.away.min_entity(away_min))
+    cg.add(var.away.max_entity(away_max))
 
