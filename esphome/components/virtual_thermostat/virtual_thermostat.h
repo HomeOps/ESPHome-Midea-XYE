@@ -8,14 +8,16 @@ namespace virtual_thermostat {
 struct Preset {
   climate::ClimatePreset id{climate::CLIMATE_PRESET_NONE};
   number::Number *min_entity{nullptr};
+  float min_ = NAN;
   number::Number *max_entity{nullptr};
+  float max_ = NAN;
 
   float min() const {
-    return min_entity ? min_entity->state : NAN;
+    return min_entity ? min_entity->state : min_;
   }
 
   float max() const {
-    return max_entity ? max_entity->state : NAN;
+    return max_entity ? max_entity->state : max_;
   }
 
   float getTemp() const {
@@ -40,7 +42,7 @@ class VirtualThermostat : public climate::Climate, public Component {
   float manual_max{23.0f};
 
   // Active preset pointer
-  Preset *active_preset{&manual;
+  Preset *active_preset{&manual};
 
   // Last preset name (RAM; persistence can be added later)
   climate::ClimatePreset last_preset_id {climate::CLIMATE_PRESET_NONE};
