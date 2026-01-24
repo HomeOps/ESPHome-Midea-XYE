@@ -16,7 +16,7 @@ CONF_AWAY_MAX = "away_max"
 virtual_thermostat_ns = cg.esphome_ns.namespace("virtual_thermostat")
 VirtualThermostat = virtual_thermostat_ns.class_("VirtualThermostat", climate.Climate, cg.Component)
 
-CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(
+CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(VirtualThermostat),
 
