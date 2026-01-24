@@ -355,7 +355,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 
 #ifndef SET_TARGET_TEMP_ON_QUERY
           // Target temperature always comes in as C, but user may want it in F.
-          update_property(this->target_temperature, RXData[RX_C0_BYTE_SET_TEMP], need_publish);
+          update_property(this->target_temperature, static_cast<float>(RXData[RX_C0_BYTE_SET_TEMP]), need_publish);
 #endif
 
           if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[9] & 0x0F) != 0x00) {
