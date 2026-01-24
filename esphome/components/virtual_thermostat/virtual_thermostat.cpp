@@ -4,15 +4,13 @@ namespace esphome {
 namespace virtual_thermostat {
 
 VirtualThermostat::VirtualThermostat() {
-  active_preset = &manual;
-  last_preset_name.clear();
 }
 
 void VirtualThermostat::setup() {
   this->mode = climate::CLIMATE_MODE_AUTO;
 
   // Restore last preset in RAM (persistence can be added later)
-  active_preset = getPresetFromName(last_preset_name);
+  active_preset = getPresetFromId(last_preset_name);
 
   // If active preset is not manual and has entities, apply it
   if (active_preset != &manual &&
