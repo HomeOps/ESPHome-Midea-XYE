@@ -6,7 +6,7 @@ namespace esphome {
 namespace virtual_thermostat {
 
 struct Preset {
-  std::string name;
+  climate::ClimatePreset id{climate::CLIMATE_PRESET_NONE};
   number::Number *min_entity{nullptr};
   number::Number *max_entity{nullptr};
 
@@ -30,12 +30,12 @@ class VirtualThermostat : public climate::Climate, public Component {
   climate::Climate *real_ac{nullptr};
 
   // Presets (entities wired from YAML/codegen)
-  Preset home;
-  Preset sleep;
-  Preset away;
+  Preset home { climate::CLIMATE_PRESET_HOME };
+  Preset sleep { climate::CLIMATE_PRESET_SLEEP };
+  Preset away { climate::CLIMATE_PRESET_AWAY };
 
   // Manual preset (no entities, stores its own values)
-  Preset manual;
+  Preset manual { climate::CLIMATE_PRESET_MANUAL };
   float manual_min{0.0f};
   float manual_max{0.0f};
 
@@ -55,7 +55,7 @@ class VirtualThermostat : public climate::Climate, public Component {
  private:
   void apply_preset(Preset *p);
   void exit_preset_mode();
-  Preset *getPresetFromName(const std::string &name);
+  Preset *getPresetFromId(const climate::ClimatePreset &id);
 };
 
 }  // namespace virtual_thermostat

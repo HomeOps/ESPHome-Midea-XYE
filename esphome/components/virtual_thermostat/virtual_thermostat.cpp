@@ -4,12 +4,6 @@ namespace esphome {
 namespace virtual_thermostat {
 
 VirtualThermostat::VirtualThermostat() {
-  // Only set names; do NOT touch min_entity/max_entity (they come from YAML/codegen)
-  home.name  = "Home";
-  sleep.name = "Sleep";
-  away.name  = "Away";
-
-  manual.name = "";  // manual mode
   active_preset = &manual;
   last_preset_name.clear();
 }
@@ -35,12 +29,21 @@ void VirtualThermostat::setup() {
 climate::ClimateTraits VirtualThermostat::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supported_modes({climate::CLIMATE_MODE_AUTO, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
-  traits.set_supports_action(true);
-  traits.set_supports_current_temperature(true);
-  traits.set_supports_target_temperature(true);
-  traits.set_supports_two_point_target_temperature(true);
-  traits.set_supported_fan_modes({"Auto", "Low", "Med", "High"});
-  traits.set_supported_presets({home.name, sleep.name, away.name});
+  traits.add_feature_flags(
+    climate::CLIMATE_FEATURE_ACTION | // show heating/cooling/idle
+    climate::CLIMATE_FEATURE_FAN_MODE | // fan modes supported
+    climate::CLIMATE_FEATURE_PRESET | // presets supported
+    climate::CLIMATE_FEATURE_TWO_POINT | // AUTO mode uses min/max
+    climate::CLIMATE_FEATURE_TARGET_TEMPERATURE | // HEAT/COOL modes use single target temp
+    climate::CLIMATE_FEATURE_TARGET_TEMPERATURE_RANGE // AUTO mode uses target temp range
+  );
+  traits.set_supported_fan_modes({
+    climate::CLIMATE_FAN_MODE_AUTO,
+    climate::CLIMATE_FAN_MODE_LOW,
+    climate::CLIMATE_FAN_MODE_MED,
+    climate::CLIMATE_FAN_MODE_HIGH
+  });
+  traits.set_supported_presets({home.id, sleep.id, away.id, manual.id});
   return traits;
 }
 
@@ -61,17 +64,17 @@ void VirtualThermostat::exit_preset_mode() {
   last_preset_name.clear();
 }
 
-Preset *VirtualThermostat::getPresetFromName(const std::string &name) {
-  if (name == home.name)  return &home;
-  if (name == sleep.name) return &sleep;
-  if (name == away.name)  return &away;
+Preset *VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) {
+  if (id == home.id)  return &home;
+  if (id == sleep.id) return &sleep;
+  if (id == away.id)  return &away;
   return &manual;  // unknown or empty → manual
 }
 
 void VirtualThermostat::control(const climate::ClimateCall &call) {
   // MODE CHANGE
   if (call.get_mode().has_value()) {
-    auto new_mode = *call.get_mode();
+    const auto new_mode = *call.get_mode();
 
     // AUTO → HEAT/COOL
     if ((new_mode == climate::CLIMATE_MODE_HEAT ||
@@ -101,9 +104,8 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 
   // PRESET CHANGE
   if (call.get_preset().has_value()) {
-    std::string p = *call.get_preset();
-
-    active_preset = getPresetFromName(p);
+    const climate::ClimatePreset p = *call.get_preset();
+    active_preset = getPresetFromId(p);
     last_preset_name = (active_preset == &manual) ? "" : active_preset->name;
 
     apply_preset(active_preset);
