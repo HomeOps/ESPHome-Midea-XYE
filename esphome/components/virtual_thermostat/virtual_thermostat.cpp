@@ -18,18 +18,18 @@ climate::ClimateTraits VirtualThermostat::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supported_modes({climate::CLIMATE_MODE_AUTO, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
   traits.add_feature_flags(
-    climate::CLIMATE_FEATURE_ACTION | // show heating/cooling/idle
-    climate::CLIMATE_FEATURE_FAN_MODE | // fan modes supported
-    climate::CLIMATE_FEATURE_PRESET | // presets supported
-    climate::CLIMATE_FEATURE_TWO_POINT | // AUTO mode uses min/max
-    climate::CLIMATE_FEATURE_TARGET_TEMPERATURE | // HEAT/COOL modes use single target temp
-    climate::CLIMATE_FEATURE_TARGET_TEMPERATURE_RANGE // AUTO mode uses target temp range
+    climate::CLIMATE_SUPPORTS_ACTION | // show heating/cooling/idle
+    climate::CLIMATE_SUPPORTS_FAN_MODE | // fan modes supported
+    climate::CLIMATE_SUPPORTS_PRESET | // presets supported
+    climate::CLIMATE_SUPPORTS_TWO_POINT | // AUTO mode uses min/max
+    climate::CLIMATE_SUPPORTS_TARGET_TEMPERATURE | // HEAT/COOL modes use single target temp
+    climate::CLIMATE_SUPPORTS_TARGET_TEMPERATURE_RANGE // AUTO mode uses target temp range
   );
   traits.set_supported_fan_modes({
-    climate::CLIMATE_FAN_MODE_AUTO,
-    climate::CLIMATE_FAN_MODE_LOW,
-    climate::CLIMATE_FAN_MODE_MED,
-    climate::CLIMATE_FAN_MODE_HIGH
+    climate::ClimateFanMode::CLIMATE_FAN_AUTO,
+    climate::ClimateFanMode::CLIMATE_FAN_MIDDLEMODE_LOW,
+    climate::ClimateFanMode::CLIMATE_FAN_MIDDLEMODE_MED,
+    climate::ClimateFanMode::CLIMATE_FAN_HIGH
   });
   traits.set_supported_presets({home.id, sleep.id, away.id, manual.id});
   return traits;
