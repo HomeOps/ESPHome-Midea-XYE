@@ -14,18 +14,9 @@ struct Preset {
   number::Number *min_entity{nullptr};
   number::Number *max_entity{nullptr};
   VirtualThermostat *thermostat{nullptr};
-
-  float min() const {
-    return min_entity ? min_entity->state : thermostat->target_temperature_low;
-  }
-
-  float max() const {
-    return max_entity ? max_entity->state : thermostat->target_temperature_high;
-  }
-
-  float getTemp() const {
-    return (min() + max()) / 2.0f;
-  }
+  float min() const;
+  float max() const;
+  float getTemp() const;
 };
 
 class VirtualThermostat : public climate::Climate, public Component {

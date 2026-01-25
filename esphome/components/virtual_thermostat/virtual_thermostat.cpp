@@ -3,6 +3,18 @@
 namespace esphome {
 namespace virtual_thermostat {
 
+float Preset::min() const {
+  return min_entity ? min_entity->state : thermostat->target_temperature_low;
+}
+
+float Preset::max() const {
+  return max_entity ? max_entity->state : thermostat->target_temperature_high;
+}
+
+float Preset::getTemp() const {
+  return (min() + max()) / 2.0f;
+}
+
 VirtualThermostat::VirtualThermostat() {
 }
 
