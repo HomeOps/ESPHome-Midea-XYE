@@ -117,9 +117,9 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 }
 
 void VirtualThermostat::loop() {
-  if (!this->room_sensor || !this->real_climate_) return;
+  if (!this->room_sensor_ || !this->real_climate_) return;
 
-  const float room = this->room_sensor->state;
+  const float room = this->room_sensor_->state;
 
   // AUTO MODE
   if (this->mode == climate::CLIMATE_MODE_AUTO) {

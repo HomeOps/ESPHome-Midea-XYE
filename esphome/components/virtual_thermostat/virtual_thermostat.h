@@ -26,9 +26,9 @@ class VirtualThermostat : public climate::Climate, public Component {
 friend class Preset;
 public:
   // External inputs (wired from YAML/codegen)
-  sensor::Sensor *room_sensor{nullptr};
+  sensor::Sensor *room_sensor_{nullptr};
+  void room_sensor(sensor::Sensor *s) { this->room_sensor_ = s; }
   climate::Climate *real_climate_{nullptr};
-
   void real_climate(climate::Climate *c) { this->real_climate_ = c; }
 
   // Presets (entities wired from YAML/codegen)
