@@ -27,7 +27,9 @@ friend class Preset;
 public:
   // External inputs (wired from YAML/codegen)
   sensor::Sensor *room_sensor{nullptr};
-  climate::Climate *real_ac{nullptr};
+  climate::Climate *real_climate_{nullptr};
+
+  void real_climate(climate::Climate *c) { this->real_climate_ = c; }
 
   // Presets (entities wired from YAML/codegen)
   Preset home { climate::CLIMATE_PRESET_HOME, this };
@@ -37,6 +39,7 @@ public:
 
   VirtualThermostat();
 
+  
   void setup() override;
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;

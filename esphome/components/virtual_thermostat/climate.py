@@ -4,7 +4,7 @@ from esphome.components import climate, sensor, number
 from esphome.const import CONF_ID
 
 CONF_ROOM_SENSOR = "room_sensor"
-CONF_REAL_AC = "real_ac"
+CONF_REAL_CLIMATE = "real_climate"
 
 CONF_HOME_MIN = "home_min"
 CONF_HOME_MAX = "home_max"
@@ -21,7 +21,7 @@ CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
         cv.GenerateID(): cv.declare_id(VirtualThermostat),
 
         cv.Required(CONF_ROOM_SENSOR): cv.use_id(sensor.Sensor),
-        cv.Required(CONF_REAL_AC): cv.use_id(climate.Climate),
+        cv.Required(CONF_REAL_CLIMATE): cv.use_id(climate.Climate),
 
         cv.Required(CONF_HOME_MIN): cv.use_id(number.Number),
         cv.Required(CONF_HOME_MAX): cv.use_id(number.Number),
@@ -41,8 +41,8 @@ async def to_code(config):
     room = await cg.get_variable(config[CONF_ROOM_SENSOR])
     cg.add(var.room_sensor(room))
 
-    real = await cg.get_variable(config[CONF_REAL_AC])
-    cg.add(var.real_ac(real))
+    real = await cg.get_variable(config[CONF_REAL_CLIMATE])
+    cg.add(var.real_climate(real))
 
     home_min = await cg.get_variable(config[CONF_HOME_MIN])
     home_max = await cg.get_variable(config[CONF_HOME_MAX])

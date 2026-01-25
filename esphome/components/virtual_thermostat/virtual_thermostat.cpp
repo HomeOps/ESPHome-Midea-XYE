@@ -45,8 +45,10 @@ climate::ClimateTraits VirtualThermostat::traits() {
 }
 
 void VirtualThermostat::apply_preset(const Preset& p) {
-  this->target_temperature_low  = p.min();
-  this->target_temperature_high = p.max();
+  if (p.id != manual.id) {
+    this->target_temperature_low  = p.min();
+    this->target_temperature_high = p.max();
+  }
 }
 
 void VirtualThermostat::exit_preset_mode() {
@@ -115,7 +117,7 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 }
 
 void VirtualThermostat::loop() {
-  if (!this->room_sensor || !this->real_ac) return;
+  if (!this->room_sensor || !this->real_climate_) return;
 
   const float room = this->room_sensor->state;
 
@@ -126,13 +128,13 @@ void VirtualThermostat::loop() {
 
     if (room < minv) {
       this->action = climate::CLIMATE_ACTION_HEATING;
-      this->real_ac->mode = climate::CLIMATE_MODE_HEAT;
-      this->real_ac->target_temperature = minv;
+      this->real_climate_->mode = climate::CLIMATE_MODE_HEAT;
+      this->real_climate_->target_temperature = minv;
     }
     else if (room > maxv) {
       this->action = climate::CLIMATE_ACTION_COOLING;
-      this->real_ac->mode = climate::CLIMATE_MODE_COOL;
-      this->real_ac->target_temperature = maxv;
+      this->real_climate_->mode = climate::CLIMATE_MODE_COOL;
+      this->real_climate_->target_temperature = maxv;
     }
     else {
       this->action = climate::CLIMATE_ACTION_IDLE;
@@ -144,27 +146,27 @@ void VirtualThermostat::loop() {
   if (this->mode == climate::CLIMATE_MODE_HEAT) {
     const auto t = this->target_temperature;
     this->action = climate::CLIMATE_ACTION_HEATING;
-    this->real_ac->mode = climate::CLIMATE_MODE_HEAT;
-    this->real_ac->target_temperature = t;
+    this->real_climate_->mode = climate::CLIMATE_MODE_HEAT;
+    this->real_climate_->target_temperature = t;
   }
 
   // COOL MODE
   if (this->mode == climate::CLIMATE_MODE_COOL) {
     const auto t = this->target_temperature;
     this->action = climate::CLIMATE_ACTION_COOLING;
-    this->real_ac->mode = climate::CLIMATE_MODE_COOL;
-    this->real_ac->target_temperature = t;
+    this->real_climate_->mode = climate::CLIMATE_MODE_COOL;
+    this->real_climate_->target_temperature = t;
   }
 
   // FAN MODE PASSTHROUGH
   if (this->fan_mode == climate::CLIMATE_FAN_AUTO)
-    this->real_ac->fan_mode = climate::CLIMATE_FAN_AUTO;
+    this->real_climate_->fan_mode = climate::CLIMATE_FAN_AUTO;
   else if (this->fan_mode == climate::CLIMATE_FAN_LOW)
-    this->real_ac->fan_mode = climate::CLIMATE_FAN_LOW;
+    this->real_climate_->fan_mode = climate::CLIMATE_FAN_LOW;
   else if (this->fan_mode == climate::CLIMATE_FAN_MEDIUM)
-    this->real_ac->fan_mode = climate::CLIMATE_FAN_MEDIUM;
+    this->real_climate_->fan_mode = climate::CLIMATE_FAN_MEDIUM;
   else if (this->fan_mode == climate::CLIMATE_FAN_HIGH)
-    this->real_ac->fan_mode = climate::CLIMATE_FAN_HIGH;
+    this->real_climate_->fan_mode = climate::CLIMATE_FAN_HIGH;
 
   this->publish_state();
 }
