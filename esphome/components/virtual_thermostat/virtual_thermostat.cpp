@@ -18,12 +18,12 @@ climate::ClimateTraits VirtualThermostat::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supported_modes({climate::CLIMATE_MODE_AUTO, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
   traits.add_feature_flags(
-    climate::CLIMATE_SUPPORTS_ACTION | // show heating/cooling/idle
-    climate::CLIMATE_SUPPORTS_FAN_MODE | // fan modes supported
-    climate::CLIMATE_SUPPORTS_PRESET | // presets supported
-    climate::CLIMATE_SUPPORTS_TWO_POINT | // AUTO mode uses min/max
-    climate::CLIMATE_SUPPORTS_TARGET_TEMPERATURE | // HEAT/COOL modes use single target temp
-    climate::CLIMATE_SUPPORTS_TARGET_TEMPERATURE_RANGE // AUTO mode uses target temp range
+    climate::ClimateFeature::CLIMATE_FEATURE_ACTION | // show heating/cooling/idle
+    climate::ClimateFeature::CLIMATE_FEATURE_FAN_MODE | // fan modes supported
+    climate::ClimateFeature::CLIMATE_FEATURE_PRESET | // presets supported
+    climate::ClimateFeature::CLIMATE_FEATURE_TWO_POINT | // AUTO mode uses min/max
+    climate::ClimateFeature::CLIMATE_FEATURE_TARGET_TEMPERATURE | // HEAT/COOL modes use single target temp
+    climate::ClimateFeature::CLIMATE_FEATURE_TARGET_TEMPERATURE_RANGE // AUTO mode uses target temp range
   );
   traits.set_supported_fan_modes({
     climate::ClimateFanMode::CLIMATE_FAN_AUTO,
