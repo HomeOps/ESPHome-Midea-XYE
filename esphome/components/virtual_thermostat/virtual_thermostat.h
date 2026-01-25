@@ -37,15 +37,10 @@ class VirtualThermostat : public climate::Climate, public Component {
   Preset away { climate::CLIMATE_PRESET_AWAY };
 
   // Manual preset (no entities, stores its own values)
-  Preset manual { climate::CLIMATE_PRESET_NONE };
-  float manual_min{20.0f};
-  float manual_max{23.0f};
-
-  // Active preset pointer
-  Preset *active_preset{&manual};
+  Preset manual { climate::CLIMATE_PRESET_NONE, nullptr, 20.0f, nullptr, 23.0f };
 
   // Last preset name (RAM; persistence can be added later)
-  climate::ClimatePreset last_preset_id {climate::CLIMATE_PRESET_NONE};
+  climate::ClimatePreset last_preset_id {manual.id};
 
   VirtualThermostat();
 
@@ -55,9 +50,9 @@ class VirtualThermostat : public climate::Climate, public Component {
   void loop() override;
 
  private:
-  void apply_preset(Preset *p);
+  void apply_preset(const Preset& p);
   void exit_preset_mode();
-  Preset *getPresetFromId(const climate::ClimatePreset &id);
+  Preset& getPresetFromId(const climate::ClimatePreset &id) const;
 };
 
 }  // namespace virtual_thermostat

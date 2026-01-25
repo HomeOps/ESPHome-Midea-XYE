@@ -8,20 +8,10 @@ VirtualThermostat::VirtualThermostat() {
 
 void VirtualThermostat::setup() {
   this->mode = climate::CLIMATE_MODE_AUTO;
-
   // Restore last preset in RAM (persistence can be added later)
-  active_preset = getPresetFromId(last_preset_name);
-
+  const auto& active_preset = getPresetFromId(last_preset_id);
   // If active preset is not manual and has entities, apply it
-  if (active_preset != &manual &&
-      active_preset->min_entity &&
-      active_preset->max_entity) {
-    apply_preset(active_preset);
-  } else {
-    // Fallback: use manual range
-    this->target_temperature_low  = manual_min;
-    this->target_temperature_high = manual_max;
-  }
+  apply_preset(active_preset);
 }
 
 climate::ClimateTraits VirtualThermostat::traits() {
@@ -45,28 +35,22 @@ climate::ClimateTraits VirtualThermostat::traits() {
   return traits;
 }
 
-void VirtualThermostat::apply_preset(Preset *p) {
-  if (p == &manual) {
-    this->target_temperature_low  = manual_min;
-    this->target_temperature_high = manual_max;
-  } else if (p->min_entity && p->max_entity) {
-    this->target_temperature_low  = p->min();
-    this->target_temperature_high = p->max();
-  }
+void VirtualThermostat::apply_preset(const Preset& p) {
+  this->target_temperature_low  = p.min();
+  this->target_temperature_high = p.max();
 }
 
 void VirtualThermostat::exit_preset_mode() {
-  active_preset = &manual;
-  manual_min = this->target_temperature_low;
-  manual_max = this->target_temperature_high;
-  last_preset_name.clear();
+  manual.min_ = this->target_temperature_low;
+  manual.max_ = this->target_temperature_high;
+  last_preset_id = manual.id;
 }
 
-Preset *VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) {
-  if (id == home.id)  return &home;
-  if (id == sleep.id) return &sleep;
-  if (id == away.id)  return &away;
-  return &manual;  // unknown or empty → manual
+Preset& *VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) const {
+  if (id == home.id)  return home;
+  if (id == sleep.id) return sleep;
+  if (id == away.id)  return away;
+  return manual;  // unknown or empty → manual
 }
 
 void VirtualThermostat::control(const climate::ClimateCall &call) {
@@ -74,27 +58,20 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     const auto new_mode = *call.get_mode();
 
+    const auto& active_preset = getPresetFromId(last_preset_id);
+
     // AUTO → HEAT/COOL
     if ((new_mode == climate::CLIMATE_MODE_HEAT ||
          new_mode == climate::CLIMATE_MODE_COOL) &&
         this->mode == climate::CLIMATE_MODE_AUTO) {
-
-      if (active_preset == &manual) {
-        this->target_temperature = (manual_min + manual_max) / 2.0f;
-      } else {
-        this->target_temperature = active_preset->getTemp();
-      }
+      this->target_temperature = active_preset.getTemp();
     }
 
     // HEAT/COOL → AUTO
     if (new_mode == climate::CLIMATE_MODE_AUTO &&
         (this->mode == climate::CLIMATE_MODE_HEAT ||
          this->mode == climate::CLIMATE_MODE_COOL)) {
-
-      if (active_preset != &manual) {
-        apply_preset(active_preset);
-      }
-      // manual → keep current min/max
+      apply_preset(active_preset);
     }
 
     this->mode = new_mode;
@@ -103,9 +80,8 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   // PRESET CHANGE
   if (call.get_preset().has_value()) {
     const climate::ClimatePreset p = *call.get_preset();
-    active_preset = getPresetFromId(p);
-    last_preset_name = (active_preset == &manual) ? "" : active_preset->name;
-
+    last_preset_id = p;
+    const auto& active_preset = getPresetFromId(p);
     apply_preset(active_preset);
   }
 
@@ -160,7 +136,7 @@ void VirtualThermostat::loop() {
 
   // HEAT MODE
   if (this->mode == climate::CLIMATE_MODE_HEAT) {
-    int t = (int)this->target_temperature;
+    const int t = (int)this->target_temperature;
     this->action = climate::CLIMATE_ACTION_HEATING;
     this->real_ac->mode = climate::CLIMATE_MODE_HEAT;
     this->real_ac->target_temperature = t;
@@ -168,20 +144,20 @@ void VirtualThermostat::loop() {
 
   // COOL MODE
   if (this->mode == climate::CLIMATE_MODE_COOL) {
-    int t = (int)this->target_temperature;
+    const int t = (int)this->target_temperature;
     this->action = climate::CLIMATE_ACTION_COOLING;
     this->real_ac->mode = climate::CLIMATE_MODE_COOL;
     this->real_ac->target_temperature = t;
   }
 
   // FAN MODE PASSTHROUGH
-  if (this->fan_mode == "Auto")
+  if (this->fan_mode == climate::CLIMATE_FAN_AUTO)
     this->real_ac->fan_mode = climate::CLIMATE_FAN_AUTO;
-  else if (this->fan_mode == "Low")
+  else if (this->fan_mode == climate::CLIMATE_FAN_LOW)
     this->real_ac->fan_mode = climate::CLIMATE_FAN_LOW;
-  else if (this->fan_mode == "Med")
+  else if (this->fan_mode == climate::CLIMATE_FAN_MEDIUM)
     this->real_ac->fan_mode = climate::CLIMATE_FAN_MEDIUM;
-  else if (this->fan_mode == "High")
+  else if (this->fan_mode == climate::CLIMATE_FAN_HIGH)
     this->real_ac->fan_mode = climate::CLIMATE_FAN_HIGH;
 
   this->publish_state();
