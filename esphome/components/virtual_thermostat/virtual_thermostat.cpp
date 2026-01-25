@@ -8,9 +8,7 @@ VirtualThermostat::VirtualThermostat() {
 
 void VirtualThermostat::setup() {
   this->mode = climate::CLIMATE_MODE_AUTO;
-  // Restore last preset in RAM (persistence can be added later)
-  const auto& active_preset = getPresetFromId(last_preset_id);
-  // If active preset is not manual and has entities, apply it
+  const auto& active_preset = getActivePreset();
   apply_preset(active_preset);
 }
 
@@ -38,12 +36,11 @@ void VirtualThermostat::apply_preset(const Preset& p) {
 }
 
 void VirtualThermostat::exit_preset_mode() {
-  manual.min_ = this->target_temperature_low;
-  manual.max_ = this->target_temperature_high;
-  last_preset_id = manual.id;
+  this->preset = manual.id;
 }
 
-const Preset& VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) const {
+const Preset& VirtualThermostat::getActivePreset() const {
+  const auto id = this->preset;
   if (id == home.id)  return home;
   if (id == sleep.id) return sleep;
   if (id == away.id)  return away;
@@ -108,12 +105,12 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 void VirtualThermostat::loop() {
   if (!this->room_sensor || !this->real_ac) return;
 
-  float room = this->room_sensor->state;
+  const float room = this->room_sensor->state;
 
   // AUTO MODE
   if (this->mode == climate::CLIMATE_MODE_AUTO) {
-    int minv = (int)this->target_temperature_low;
-    int maxv = (int)this->target_temperature_high;
+    const auto minv = this->target_temperature_low;
+    const auto maxv = this->target_temperature_high;
 
     if (room < minv) {
       this->action = climate::CLIMATE_ACTION_HEATING;
@@ -133,7 +130,7 @@ void VirtualThermostat::loop() {
 
   // HEAT MODE
   if (this->mode == climate::CLIMATE_MODE_HEAT) {
-    const int t = (int)this->target_temperature;
+    const auto t = this->target_temperature;
     this->action = climate::CLIMATE_ACTION_HEATING;
     this->real_ac->mode = climate::CLIMATE_MODE_HEAT;
     this->real_ac->target_temperature = t;
@@ -141,7 +138,7 @@ void VirtualThermostat::loop() {
 
   // COOL MODE
   if (this->mode == climate::CLIMATE_MODE_COOL) {
-    const int t = (int)this->target_temperature;
+    const auto t = this->target_temperature;
     this->action = climate::CLIMATE_ACTION_COOLING;
     this->real_ac->mode = climate::CLIMATE_MODE_COOL;
     this->real_ac->target_temperature = t;

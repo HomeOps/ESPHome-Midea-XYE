@@ -5,19 +5,22 @@
 namespace esphome {
 namespace virtual_thermostat {
 
+class VirtualThermostat;
+
 struct Preset {
-  climate::ClimatePreset id{climate::CLIMATE_PRESET_NONE};
+  Preset() = delete;
+  Preset(climate::ClimatePreset id, VirtualThermostat *thermostat) : id(id), thermostat(thermostat) {}
+  climate::ClimatePreset id;
   number::Number *min_entity{nullptr};
-  float min_ = NAN;
   number::Number *max_entity{nullptr};
-  float max_ = NAN;
+  VirtualThermostat *thermostat{nullptr};
 
   float min() const {
-    return min_entity ? min_entity->state : min_;
+    return min_entity ? min_entity->state : thermostat->target_temperature_low;
   }
 
   float max() const {
-    return max_entity ? max_entity->state : max_;
+    return max_entity ? max_entity->state : thermostat->target_temperature_high;
   }
 
   float getTemp() const {
@@ -26,21 +29,17 @@ struct Preset {
 };
 
 class VirtualThermostat : public climate::Climate, public Component {
- public:
+friend class Preset;
+public:
   // External inputs (wired from YAML/codegen)
   sensor::Sensor *room_sensor{nullptr};
   climate::Climate *real_ac{nullptr};
 
   // Presets (entities wired from YAML/codegen)
-  Preset home { climate::CLIMATE_PRESET_HOME };
-  Preset sleep { climate::CLIMATE_PRESET_SLEEP };
-  Preset away { climate::CLIMATE_PRESET_AWAY };
-
-  // Manual preset (no entities, stores its own values)
-  Preset manual { climate::CLIMATE_PRESET_NONE, nullptr, 20.0f, nullptr, 23.0f };
-
-  // Last preset name (RAM; persistence can be added later)
-  climate::ClimatePreset last_preset_id {manual.id};
+  Preset home { climate::CLIMATE_PRESET_HOME, this };
+  Preset sleep { climate::CLIMATE_PRESET_SLEEP, this };
+  Preset away { climate::CLIMATE_PRESET_AWAY, this };
+  Preset manual { climate::CLIMATE_PRESET_NONE, this };
 
   VirtualThermostat();
 
@@ -52,7 +51,7 @@ class VirtualThermostat : public climate::Climate, public Component {
  private:
   void apply_preset(const Preset& p);
   void exit_preset_mode();
-  const Preset& getPresetFromId(const climate::ClimatePreset &id) const;
+  const Preset& getActivePreset() const;
 };
 
 }  // namespace virtual_thermostat
