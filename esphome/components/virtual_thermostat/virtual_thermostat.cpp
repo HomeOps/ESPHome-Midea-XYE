@@ -24,8 +24,8 @@ climate::ClimateTraits VirtualThermostat::traits() {
   );
   traits.set_supported_fan_modes({
     climate::ClimateFanMode::CLIMATE_FAN_AUTO,
-    climate::ClimateFanMode::CLIMATE_FAN_MIDDLEMODE_LOW,
-    climate::ClimateFanMode::CLIMATE_FAN_MIDDLEMODE_MED,
+    climate::ClimateFanMode::CLIMATE_FAN_LOW,
+    climate::ClimateFanMode::CLIMATE_FAN_MEDIUM,
     climate::ClimateFanMode::CLIMATE_FAN_HIGH
   });
   traits.set_supported_presets({home.id, sleep.id, away.id, manual.id});
