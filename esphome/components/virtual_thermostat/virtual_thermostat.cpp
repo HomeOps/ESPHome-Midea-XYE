@@ -52,7 +52,8 @@ void VirtualThermostat::exit_preset_mode() {
 }
 
 const Preset& VirtualThermostat::getActivePreset() const {
-  const auto id = this->preset;
+  const climate::ClimatePreset id = *call.get_preset();
+  //const auto id = this->preset;
   if (id == home.id)  return home;
   if (id == sleep.id) return sleep;
   if (id == away.id)  return away;
@@ -64,7 +65,7 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     const auto new_mode = *call.get_mode();
 
-    const auto& active_preset = getPresetFromId(last_preset_id);
+    const auto& active_preset = getActivePreset();
 
     // AUTO → HEAT/COOL
     if ((new_mode == climate::CLIMATE_MODE_HEAT ||
@@ -85,9 +86,7 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 
   // PRESET CHANGE
   if (call.get_preset().has_value()) {
-    const climate::ClimatePreset p = *call.get_preset();
-    last_preset_id = p;
-    const auto& active_preset = getPresetFromId(p);
+    const auto& active_preset = getActivePreset();
     apply_preset(active_preset);
   }
 
