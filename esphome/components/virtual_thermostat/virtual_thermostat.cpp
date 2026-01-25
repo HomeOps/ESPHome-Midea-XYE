@@ -43,7 +43,7 @@ void VirtualThermostat::exit_preset_mode() {
   last_preset_id = manual.id;
 }
 
-Preset& *VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) const {
+const Preset& VirtualThermostat::getPresetFromId(const climate::ClimatePreset &id) const {
   if (id == home.id)  return home;
   if (id == sleep.id) return sleep;
   if (id == away.id)  return away;

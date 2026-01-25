@@ -52,7 +52,7 @@ class VirtualThermostat : public climate::Climate, public Component {
  private:
   void apply_preset(const Preset& p);
   void exit_preset_mode();
-  Preset& getPresetFromId(const climate::ClimatePreset &id) const;
+  const Preset& getPresetFromId(const climate::ClimatePreset &id) const;
 };
 
 }  // namespace virtual_thermostat
