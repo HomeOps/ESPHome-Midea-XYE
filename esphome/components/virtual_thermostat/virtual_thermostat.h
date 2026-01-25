@@ -11,8 +11,8 @@ struct Preset {
   Preset() = delete;
   Preset(climate::ClimatePreset id, VirtualThermostat *thermostat) : id(id), thermostat(thermostat) {}
   climate::ClimatePreset id;
-  number::Number *min_entity{nullptr};
-  number::Number *max_entity{nullptr};
+  number::Number *min_entity_{nullptr};
+  number::Number *max_entity_{nullptr};
   VirtualThermostat *thermostat{nullptr};
   void min_entity(number::Number *n);
   void max_entity(number::Number *n);
