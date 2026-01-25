@@ -14,6 +14,9 @@ struct Preset {
   number::Number *min_entity{nullptr};
   number::Number *max_entity{nullptr};
   VirtualThermostat *thermostat{nullptr};
+  void min_entity(number::Number *n);
+  void max_entity(number::Number *n);
+
   float min() const;
   float max() const;
   float getTemp() const;
