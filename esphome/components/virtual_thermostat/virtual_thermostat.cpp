@@ -19,7 +19,6 @@ VirtualThermostat::VirtualThermostat() {
 }
 
 void VirtualThermostat::setup() {
-  this->mode = climate::CLIMATE_MODE_AUTO;
   const auto& active_preset = getActivePreset();
   apply_preset(active_preset);
 }
