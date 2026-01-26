@@ -61,6 +61,7 @@ CONF_PROTECT_FLAGS = "protect_flags"
 CONF_POWER_USAGE = "power_usage"
 CONF_HUMIDITY_SETPOINT = "humidity_setpoint"
 CONF_STATIC_PRESSURE = "static_pressure"
+CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 midea_ac_ns = cg.esphome_ns.namespace("midea").namespace("ac")
 AirConditioner = midea_ac_ns.class_("AirConditioner", climate.Climate, cg.Component)
 StaticPressureNumber = midea_ac_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -233,6 +234,7 @@ CONFIG_SCHEMA = cv.All(
                 device_class=DEVICE_CLASS_HUMIDITY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_FOLLOW_ME_SENSOR): cv.use_id(sensor.Sensor),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
@@ -408,3 +410,6 @@ async def to_code(config):
     if CONF_HUMIDITY_SETPOINT in config:
         sens = await sensor.new_sensor(config[CONF_HUMIDITY_SETPOINT])
         cg.add(var.set_humidity_setpoint_sensor(sens))
+    if CONF_FOLLOW_ME_SENSOR in config:
+        sens = await cg.get_variable(config[CONF_FOLLOW_ME_SENSOR])
+        cg.add(var.set_follow_me_sensor(sens))
