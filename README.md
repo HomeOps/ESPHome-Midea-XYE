@@ -92,9 +92,15 @@ climate:
       - COOL
       - HEAT
       - DRY
+    # NOTE: Experimental / not yet fully implemented:
+    #   - SILENT and TURBO fan modes are defined but currently not used in the
+    #     device control logic and may have no effect.
     custom_fan_modes:           # Optional
       - SILENT
       - TURBO
+    # NOTE: Experimental / not yet fully implemented:
+    #   - Presets such as BOOST and SLEEP are defined but currently not used in
+    #     the device control logic and may have no effect.
     supported_presets:          # Optional
       - BOOST
       - SLEEP
