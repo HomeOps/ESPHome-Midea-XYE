@@ -6,9 +6,10 @@ esp8266:
   board: d1_mini
 
 # WiFi configuration (required for compilation)
+# Note: These are placeholder values for CI testing only
 wifi:
-  ssid: "test"
-  password: "test12345678"
+  ssid: "placeholder_ssid"
+  password: "placeholder_password"
   min_auth_mode: WPA2
 
 # Enable API

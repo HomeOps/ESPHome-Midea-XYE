@@ -10,6 +10,8 @@ jobs:
   esphome-build:
     runs-on: ubuntu-latest
     name: ESPHome Build Test
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +24,8 @@ jobs:
 
       - name: Install ESPHome
         run: |
-          pip install esphome
+          # Pin to latest stable version for reproducible builds
+          pip install esphome==2026.1.2
 
       - name: Compile test configuration
         run: |
