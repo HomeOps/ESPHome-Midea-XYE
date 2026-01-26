@@ -214,7 +214,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
           case 0xC4:
             controlState = STATE_SEND_C0;
             break;
-          case 0xC6:
+          case CLIENT_COMMAND_FOLLOWME:
             controlState = STATE_SEND_C0;
             break;
         }
@@ -244,7 +244,7 @@ void AirConditioner::update() {
       // If the AC mode changed, follow-me should be
       // refreshed, if emulating the wired controller's
       // behavior.
-      cmdSent = 0xC6;
+      cmdSent = CLIENT_COMMAND_FOLLOWME;
       sendRecv(cmdSent);
       if (this->mode == ClimateMode::CLIMATE_MODE_OFF) {
         ESP_LOGI(Constants::TAG, "Set static pressure.");
@@ -593,25 +593,25 @@ void AirConditioner::do_follow_me(float temperature, bool beeper) {
   IrFollowMeData data(static_cast<uint8_t>(lroundf(temperature)), beeper);
   this->transmitter_.transmit(data);
 #else
-  // Prepare 0xC6 command for Follow-Me temperature update
-  prepareTXData(0xC6);
+  // Prepare Follow-Me command for temperature update
+  prepareTXData(CLIENT_COMMAND_FOLLOWME);
   
-  // TXData[10] is a subcommand type field for 0xC6 commands.
-  // Subcommand values: 0x06=Follow-Me init, 0x02=Follow-Me update, 0x04=Static pressure
+  // TXData[10] is a subcommand type field for Follow-Me commands.
+  // Subcommand values: 0x06=Init, 0x02=Update, 0x04=Static pressure
   // The followMeInit flag tracks whether we've sent the initialization command.
   // It gets reset to false whenever the AC mode changes (see control() function),
   // ensuring a proper initialization sequence after mode changes.
   if (followMeInit) {
-    TXData[10] = C6_SUBCOMMAND_FOLLOW_ME_UPDATE;  // Follow-Me update
+    TXData[10] = FOLLOWME_SUBCOMMAND_UPDATE;  // Follow-Me update
   } else {
-    TXData[10] = C6_SUBCOMMAND_FOLLOW_ME_INIT;  // Follow-Me initialization
+    TXData[10] = FOLLOWME_SUBCOMMAND_INIT;  // Follow-Me initialization
     followMeInit = true;
   }
   lastFollowMeTemperature = static_cast<uint8_t>(lroundf(temperature));
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);
   // Only send if mode is something other than off.
-  // Wired controller does not send 0xC6 when off.
+  // Wired controller does not send Follow-Me command when off.
   if (this->mode != ClimateMode::CLIMATE_MODE_OFF) {
     if (controlState != STATE_WAIT_DATA) {
       controlState = STATE_SEND_C6;
@@ -629,10 +629,10 @@ void AirConditioner::set_static_pressure(uint8_t static_pressure) {
     return;
   }
 
-  // Prepare 0xC6 command for static pressure setting
-  prepareTXData(0xC6);
+  // Prepare Follow-Me command for static pressure setting
+  prepareTXData(CLIENT_COMMAND_FOLLOWME);
   TXData[8] = 0x10 | (static_pressure & 0x0F);
-  TXData[10] = C6_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
+  TXData[10] = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);
 
