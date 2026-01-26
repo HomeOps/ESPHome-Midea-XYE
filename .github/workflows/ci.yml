@@ -22,10 +22,9 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install ESPHome
+      - name: Install dependencies
         run: |
-          # Pin to latest stable version for reproducible builds
-          pip install esphome==2026.1.2
+          pip install -r requirements.txt
 
       - name: Compile test configuration
         run: |
