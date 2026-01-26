@@ -371,13 +371,12 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           // Don't update the fan mode. Assume it set correctly.
           // Show Heating vs Heat at least in Heat mode. Will figure
           // out how to determine if compressor is on in other modes later.
-          
           // Store the internal temperature from the XYE bus
           this->internal_temperature_ = CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]);
-          
+
           // Publish the internal temperature to the sensor if configured
           set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
-          
+
           // Update current_temperature based on sensor availability
           this->update_current_temperature_from_sensors_(need_publish);
 
@@ -685,7 +684,7 @@ void AirConditioner::on_follow_me_sensor_update_(float state) {
   if (need_publish) {
     this->publish_state();
   }
-  
+
   // Check if enough time has passed since last update (minimum 5 seconds to avoid excessive updates)
   uint32_t now = millis();
   // Handle millis() overflow correctly using unsigned arithmetic
