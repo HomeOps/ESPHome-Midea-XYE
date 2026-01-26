@@ -1,7 +1,7 @@
 # GitHub Copilot Instructions
 
 ## Repository Overview
-This repository contains an ESPHome external component for controlling Midea HVAC systems over the XYE/CCM RS‑485 bus. It provides a native Home Assistant climate entity with full mode, fan, and setpoint support.
+This repository contains an ESPHome external component for controlling Midea HVAC systems over the XYE/CCM RS-485 bus. It provides a native Home Assistant climate entity with full mode, fan, and setpoint support.
 
 ## Development Guidelines
 
