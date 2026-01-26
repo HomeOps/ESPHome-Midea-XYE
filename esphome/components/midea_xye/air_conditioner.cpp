@@ -197,7 +197,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
-      if (cmdSent != 0xC3) {
+      if (cmdSent != CLIENT_COMMAND_SET) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
@@ -205,13 +205,13 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
         queuedCommand = 0;
       } else {
         switch (cmdSent) {
-          case 0xC0:
+          case CLIENT_COMMAND_QUERY:
             controlState = STATE_SEND_C4;
             break;
-          case 0xC3:
+          case CLIENT_COMMAND_SET:
             controlState = STATE_SEND_C6;
             break;
-          case 0xC4:
+          case CLIENT_COMMAND_QUERY_EXTENDED:
             controlState = STATE_SEND_C0;
             break;
           case CLIENT_COMMAND_FOLLOWME:
@@ -261,8 +261,8 @@ void AirConditioner::update() {
       break;
     }
     case STATE_SEND_C4: {
-      prepareTXData(0xC4);
-      cmdSent = 0xC4;
+      prepareTXData(CLIENT_COMMAND_QUERY_EXTENDED);
+      cmdSent = CLIENT_COMMAND_QUERY_EXTENDED;
       sendRecv(cmdSent);
       break;
     }
