@@ -596,18 +596,14 @@ void AirConditioner::do_follow_me(float temperature, bool beeper) {
   // Prepare 0xC6 command for Follow-Me temperature update
   prepareTXData(0xC6);
   
-  // TXData[10] is a subcommand type field for 0xC6 commands:
-  // - Value 6: Follow-Me initialization (sent on first update after mode change/startup)
-  // - Value 2: Follow-Me temperature update (sent on subsequent updates)
-  // - Value 4: Static pressure setting (used in set_static_pressure function)
-  //
+  // TXData[10] is a subcommand type field for 0xC6 commands.
   // The followMeInit flag tracks whether we've sent the initialization command.
   // It gets reset to false whenever the AC mode changes (see control() function),
   // ensuring a proper initialization sequence after mode changes.
   if (followMeInit) {
-    TXData[10] = 2;  // Follow-Me update
+    TXData[10] = C6_SUBCOMMAND_FOLLOW_ME_UPDATE;  // Follow-Me update
   } else {
-    TXData[10] = 6;  // Follow-Me initialization
+    TXData[10] = C6_SUBCOMMAND_FOLLOW_ME_INIT;  // Follow-Me initialization
     followMeInit = true;
   }
   lastFollowMeTemperature = static_cast<uint8_t>(lroundf(temperature));
@@ -635,7 +631,7 @@ void AirConditioner::set_static_pressure(uint8_t static_pressure) {
   // Prepare 0xC6 command for static pressure setting
   prepareTXData(0xC6);
   TXData[8] = 0x10 | (static_pressure & 0x0F);
-  TXData[10] = 4;  // Subcommand type: Static pressure setting
+  TXData[10] = C6_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);
 
