@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  esphome-build:
+    runs-on: ubuntu-latest
+    name: ESPHome Build Test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install ESPHome
+        run: |
+          pip install esphome
+
+      - name: Compile test configuration
+        run: |
+          esphome compile test.yaml
