@@ -274,6 +274,7 @@ void AirConditioner::update() {
   if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state()) {
     uint32_t now = millis();
     // Update every 30 seconds (30000ms)
+    // This handles millis() overflow correctly using unsigned arithmetic
     if (now - this->last_follow_me_update_ >= 30000) {
       this->update_follow_me_();
     }
@@ -659,7 +660,13 @@ void AirConditioner::on_follow_me_sensor_update_(float state) {
   if (std::isnan(state)) {
     return;
   }
-  this->update_follow_me_();
+  
+  // Check if enough time has passed since last update (minimum 5 seconds to avoid excessive updates)
+  uint32_t now = millis();
+  // Handle millis() overflow correctly using unsigned arithmetic
+  if (now - this->last_follow_me_update_ >= 5000) {
+    this->update_follow_me_();
+  }
 }
 
 void AirConditioner::update_follow_me_() {
