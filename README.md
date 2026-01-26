@@ -1,10 +1,10 @@
 # ESPHome-Midea-XYE
 
-ESPHome external component for controlling Midea HVAC systems over the XYE/CCM RS‑485 bus. Provides a native Home Assistant climate entity with full mode, fan, and setpoint support.
+ESPHome external component for controlling Midea HVAC systems over the XYE/CCM RS-485 bus. Provides a native Home Assistant climate entity with full mode, fan, and setpoint support.
 
 ## Overview
 
-This component communicates with Midea-like air conditioners (heat pumps) via the XYE protocol over RS485.
+This component communicates with Midea-like air conditioners (heat pumps) via the XYE protocol over RS-485.
 
 ### Acknowledgments
 
@@ -16,8 +16,8 @@ Kudos to these projects:
 ## Hardware Requirements
 
 - ESP8266 or ESP32 board (e.g., D1 Mini)
-- RS485 to TTL converter dongle
-- Connection to your Midea HVAC unit's XYE/CCM RS485 bus
+- RS-485 to TTL converter dongle
+- Connection to your Midea HVAC unit's XYE/CCM RS-485 bus
 
 ## Installation
 
@@ -55,7 +55,7 @@ external_components:
       ref: main
     components: [midea_xye]
 
-# UART settings for RS485 converter dongle (required)
+# UART settings for RS-485 converter dongle (required)
 uart:
   tx_pin: TX
   rx_pin: RX

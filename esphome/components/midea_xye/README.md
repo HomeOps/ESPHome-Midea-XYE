@@ -1,6 +1,6 @@
 # Overview
 
-This component communicates with Midea-like air conditioners (heat pumps) via the XYE protocol over RS485.
+This component communicates with Midea-like air conditioners (heat pumps) via the XYE protocol over RS-485.
 Kudos to these projects:
 - Reverse engineering of the protocol: https://codeberg.org/xye/xye
 - Working implementation using ESP32: https://github.com/Bunicutz/ESP32_Midea_RS485
@@ -27,7 +27,7 @@ external_components:
       ref: dev
     components: [midea_xye]
   
-# UART settings for RS485 covnerter dongle (required)
+# UART settings for RS-485 converter dongle (required)
 uart:
   tx_pin: TX
   rx_pin: RX
