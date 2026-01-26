@@ -371,7 +371,19 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           // Don't update the fan mode. Assume it set correctly.
           // Show Heating vs Heat at least in Heat mode. Will figure
           // out how to determine if compressor is on in other modes later.
-          update_property(this->current_temperature, CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]), need_publish);
+          
+          // Get the internal temperature from the XYE bus
+          float internal_temp = CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]);
+          
+          // Publish the internal temperature to the sensor if configured
+          set_sensor(this->internal_current_temperature_sensor_, internal_temp);
+          
+          // Use follow_me_sensor as current_temperature if available, otherwise use internal temperature
+          if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state()) {
+            update_property(this->current_temperature, this->follow_me_sensor_->state, need_publish);
+          } else {
+            update_property(this->current_temperature, internal_temp, need_publish);
+          }
 
 #ifndef SET_TARGET_TEMP_ON_QUERY
           // Target temperature always comes in as C, but user may want it in F.
@@ -669,6 +681,12 @@ void AirConditioner::do_display_toggle() {
 void AirConditioner::on_follow_me_sensor_update_(float state) {
   if (std::isnan(state)) {
     return;
+  }
+  
+  // Update current_temperature with the sensor value
+  if (this->current_temperature != state) {
+    this->current_temperature = state;
+    this->publish_state();
   }
   
   // Check if enough time has passed since last update (minimum 5 seconds to avoid excessive updates)
