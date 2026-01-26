@@ -226,6 +226,9 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   uint8_t ForceReadNextCycle;
   uint8_t queuedCommand;
   uint32_t response_timeout;
+  // Tracks whether Follow-Me has been initialized after mode change.
+  // When false, next Follow-Me update sends initialization (TXData[10]=6).
+  // When true, Follow-Me updates send regular update (TXData[10]=2).
   bool followMeInit;
   uint8_t lastFollowMeTemperature;
 
