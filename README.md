@@ -88,7 +88,7 @@ climate:
       temperature_step: 1.0 °C  # min: 0.5
     supported_modes:            # Optional
       - FAN_ONLY
-      - HEAT_COOL              
+      - HEAT_COOL
       - COOL
       - HEAT
       - DRY
