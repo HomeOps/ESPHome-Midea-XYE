@@ -28,4 +28,4 @@ jobs:
 
       - name: Compile test configuration
         run: |
-          esphome compile test.yaml
+          esphome compile tests/midea_xye.yaml
