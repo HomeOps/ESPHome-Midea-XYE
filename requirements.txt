@@ -1,0 +1,2 @@
+# Python requirements for ESPHome component development and CI
+esphome==2026.1.2
