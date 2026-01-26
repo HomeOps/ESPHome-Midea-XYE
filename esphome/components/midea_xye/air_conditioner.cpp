@@ -372,18 +372,14 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           // Show Heating vs Heat at least in Heat mode. Will figure
           // out how to determine if compressor is on in other modes later.
           
-          // Get the internal temperature from the XYE bus
-          float internal_temp = CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]);
+          // Store the internal temperature from the XYE bus
+          this->internal_temperature_ = CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]);
           
           // Publish the internal temperature to the sensor if configured
-          set_sensor(this->internal_current_temperature_sensor_, internal_temp);
+          set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
           
-          // Use follow_me_sensor as current_temperature if available, otherwise use internal temperature
-          if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state()) {
-            update_property(this->current_temperature, this->follow_me_sensor_->state, need_publish);
-          } else {
-            update_property(this->current_temperature, internal_temp, need_publish);
-          }
+          // Update current_temperature based on sensor availability
+          this->update_current_temperature_from_sensors_(need_publish);
 
 #ifndef SET_TARGET_TEMP_ON_QUERY
           // Target temperature always comes in as C, but user may want it in F.
@@ -684,8 +680,9 @@ void AirConditioner::on_follow_me_sensor_update_(float state) {
   }
   
   // Update current_temperature with the sensor value
-  if (this->current_temperature != state) {
-    this->current_temperature = state;
+  bool need_publish = false;
+  this->update_current_temperature_from_sensors_(need_publish);
+  if (need_publish) {
     this->publish_state();
   }
   
@@ -710,6 +707,16 @@ void AirConditioner::update_follow_me_() {
   // Call the existing do_follow_me method with the sensor temperature
   this->do_follow_me(temperature, false);
   this->last_follow_me_update_ = millis();
+}
+
+void AirConditioner::update_current_temperature_from_sensors_(bool &need_publish) {
+  // Use follow_me_sensor as current_temperature if available, otherwise use internal temperature
+  if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state() &&
+      !std::isnan(this->follow_me_sensor_->state)) {
+    update_property(this->current_temperature, this->follow_me_sensor_->state, need_publish);
+  } else if (!std::isnan(this->internal_temperature_)) {
+    update_property(this->current_temperature, this->internal_temperature_, need_publish);
+  }
 }
 
 }  // namespace ac
