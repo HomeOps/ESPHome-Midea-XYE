@@ -42,7 +42,7 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    fahrenheit: false           # Optional. Defaults to false.
+    use_fahrenheit: false       # Optional. Defaults to false.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.
       min_temperature: 17 °C    # min: 17
