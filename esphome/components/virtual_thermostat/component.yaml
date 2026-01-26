@@ -1,0 +1,8 @@
+name: "virtual_thermostat"
+version: "1.0.0"
+components:
+  - id: virtual_thermostat
+    files:
+      - virtual_thermostat.h
+      - virtual_thermostat.cpp
+
