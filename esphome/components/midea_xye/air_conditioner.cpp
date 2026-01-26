@@ -58,9 +58,17 @@ void AirConditioner::setup() {
   controlState = STATE_SEND_C0;
   ForceReadNextCycle = 1;
   followMeInit = false;
+  last_follow_me_update_ = 0;
 
   // Start up in Auto fan mode (since unit doesn't report it correctly)
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
+}
+
+void AirConditioner::set_follow_me_sensor(Sensor *sensor) {
+  this->follow_me_sensor_ = sensor;
+  if (sensor != nullptr) {
+    sensor->add_on_state_callback([this](float state) { this->on_follow_me_sensor_update_(state); });
+  }
 }
 
 // TODO: Not sure if we really need this.
@@ -259,6 +267,16 @@ void AirConditioner::update() {
     case STATE_WAIT_DATA: {
       // Wait for data to processed. Do nothing during the loop.
       break;
+    }
+  }
+  
+  // Periodically update follow_me every 30 seconds if sensor is configured
+  if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state()) {
+    uint32_t now = millis();
+    // Update every 30 seconds (30000ms)
+    // This handles millis() overflow correctly using unsigned arithmetic
+    if (now - this->last_follow_me_update_ >= 30000) {
+      this->update_follow_me_();
     }
   }
 }
@@ -636,6 +654,34 @@ void AirConditioner::do_display_toggle() {
 #else
   ESP_LOGW(Constants::TAG, "Action needs remote_transmitter component");
 #endif
+}
+
+void AirConditioner::on_follow_me_sensor_update_(float state) {
+  if (std::isnan(state)) {
+    return;
+  }
+  
+  // Check if enough time has passed since last update (minimum 5 seconds to avoid excessive updates)
+  uint32_t now = millis();
+  // Handle millis() overflow correctly using unsigned arithmetic
+  if (now - this->last_follow_me_update_ >= 5000) {
+    this->update_follow_me_();
+  }
+}
+
+void AirConditioner::update_follow_me_() {
+  if (this->follow_me_sensor_ == nullptr || !this->follow_me_sensor_->has_state()) {
+    return;
+  }
+  
+  float temperature = this->follow_me_sensor_->state;
+  if (std::isnan(temperature)) {
+    return;
+  }
+  
+  // Call the existing do_follow_me method with the sensor temperature
+  this->do_follow_me(temperature, false);
+  this->last_follow_me_update_ = millis();
 }
 
 }  // namespace ac

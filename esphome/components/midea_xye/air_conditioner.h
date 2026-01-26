@@ -185,6 +185,7 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   void set_protect_flags_sensor(Sensor *sensor) { this->protect_flags_sensor_ = sensor; }
   void set_humidity_setpoint_sensor(Sensor *sensor) { this->humidity_sensor_ = sensor; }
   void set_power_sensor(Sensor *sensor) { this->power_sensor_ = sensor; }
+  void set_follow_me_sensor(Sensor *sensor);
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
   void set_static_pressure_number(StaticPressureNumber *number) {
     this->static_pressure_number_ = number;
@@ -252,14 +253,18 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   Sensor *protect_flags_sensor_{nullptr};
   Sensor *humidity_sensor_{nullptr};
   Sensor *power_sensor_{nullptr};
+  Sensor *follow_me_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
+  uint32_t last_follow_me_update_{0};
 
   static uint8_t CalculateCRC(uint8_t *Data, uint8_t len);
   void ParseResponse(uint8_t cmdSent);
   uint8_t CalculateSetTime(uint32_t time);
   uint32_t CalculateGetTime(uint8_t time);
   static float CalculateTemp(uint8_t byte);
+  void update_follow_me_();
+  void on_follow_me_sensor_update_(float state);
 };
 
 }  // namespace ac
