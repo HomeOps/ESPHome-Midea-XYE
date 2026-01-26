@@ -15,10 +15,10 @@
 
 // STATES
 #define STATE_WAIT_DATA 0
-#define STATE_SEND_C3 1
-#define STATE_SEND_C6 2
-#define STATE_SEND_C0 3
-#define STATE_SEND_C4 4
+#define STATE_SEND_SET 1
+#define STATE_SEND_FOLLOWME 2
+#define STATE_SEND_QUERY 3
+#define STATE_SEND_QUERY_EXTENDED 4
 
 // CLIENT command structure
 #define PREAMBLE 0xAA
