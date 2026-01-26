@@ -15,10 +15,10 @@
 
 // STATES
 #define STATE_WAIT_DATA 0
-#define STATE_SEND_C3 1
-#define STATE_SEND_C6 2
-#define STATE_SEND_C0 3
-#define STATE_SEND_C4 4
+#define STATE_SEND_SET 1
+#define STATE_SEND_FOLLOWME 2
+#define STATE_SEND_QUERY 3
+#define STATE_SEND_QUERY_EXTENDED 4
 
 // CLIENT command structure
 #define PREAMBLE 0xAA
@@ -27,6 +27,7 @@
 #define CLIENT_COMMAND_QUERY 0xC0
 #define CLIENT_COMMAND_QUERY_EXTENDED 0xC4
 #define CLIENT_COMMAND_SET 0xC3
+#define CLIENT_COMMAND_FOLLOWME 0xC6
 #define CLIENT_COMMAND_LOCK 0xCC
 #define CLIENT_COMMAND_UNLOCK 0xCD
 #define CLIENT_COMMAND_CELCIUS 0xC4
@@ -64,6 +65,11 @@
 #define TIMER_INVALID 0x80
 
 #define COMMAND_UNKNOWN 0x00
+
+// Follow-Me command subcommand types (TXData[10])
+#define FOLLOWME_SUBCOMMAND_UPDATE 0x02
+#define FOLLOWME_SUBCOMMAND_STATIC_PRESSURE 0x04
+#define FOLLOWME_SUBCOMMAND_INIT 0x06
 
 // SERVER Response
 
@@ -226,6 +232,9 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   uint8_t ForceReadNextCycle;
   uint8_t queuedCommand;
   uint32_t response_timeout;
+  // Tracks whether Follow-Me has been initialized after mode change.
+  // When false, next Follow-Me update sends initialization (TXData[10]=6).
+  // When true, Follow-Me updates send regular update (TXData[10]=2).
   bool followMeInit;
   uint8_t lastFollowMeTemperature;
 

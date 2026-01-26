@@ -33,6 +33,8 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
 void AirConditioner::control(const ClimateCall &call) {
   if (call.get_mode().has_value()) {
     this->mode = call.get_mode().value();
+    // Reset Follow-Me initialization flag when mode changes to ensure
+    // proper initialization sequence is sent on next Follow-Me update
     followMeInit = false;
   }
   if (call.get_target_temperature().has_value())
@@ -46,16 +48,16 @@ void AirConditioner::control(const ClimateCall &call) {
   this->publish_state();
 
   if (controlState != STATE_WAIT_DATA) {
-    controlState = STATE_SEND_C3;
+    controlState = STATE_SEND_SET;
   } else {
-    queuedCommand = STATE_SEND_C3;
+    queuedCommand = STATE_SEND_SET;
   }
 }
 
 void AirConditioner::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
   this->last_on_mode_ = *this->supported_modes_.begin();
-  controlState = STATE_SEND_C0;
+  controlState = STATE_SEND_QUERY;
   ForceReadNextCycle = 1;
   followMeInit = false;
   last_follow_me_update_ = 0;
@@ -79,9 +81,9 @@ void AirConditioner::setPowerState(bool state) {
     this->mode = ClimateMode::CLIMATE_MODE_OFF;
 
   if (controlState != STATE_WAIT_DATA) {
-    controlState = STATE_SEND_C3;
+    controlState = STATE_SEND_SET;
   } else {
-    queuedCommand = STATE_SEND_C3;
+    queuedCommand = STATE_SEND_SET;
   }
 }
 
@@ -195,7 +197,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
-      if (cmdSent != 0xC3) {
+      if (cmdSent != CLIENT_COMMAND_SET) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
@@ -203,17 +205,17 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
         queuedCommand = 0;
       } else {
         switch (cmdSent) {
-          case 0xC0:
-            controlState = STATE_SEND_C4;
+          case CLIENT_COMMAND_QUERY:
+            controlState = STATE_SEND_QUERY_EXTENDED;
             break;
-          case 0xC3:
-            controlState = STATE_SEND_C6;
+          case CLIENT_COMMAND_SET:
+            controlState = STATE_SEND_FOLLOWME;
             break;
-          case 0xC4:
-            controlState = STATE_SEND_C0;
+          case CLIENT_COMMAND_QUERY_EXTENDED:
+            controlState = STATE_SEND_QUERY;
             break;
-          case 0xC6:
-            controlState = STATE_SEND_C0;
+          case CLIENT_COMMAND_FOLLOWME:
+            controlState = STATE_SEND_QUERY;
             break;
         }
       }
@@ -232,17 +234,17 @@ void AirConditioner::update() {
   // 3: Sending Query C0 Command
   // 4: Sending Query C4 Command
   switch (controlState) {
-    case STATE_SEND_C3: {
+    case STATE_SEND_SET: {
       setACParams();
       cmdSent = CLIENT_COMMAND_SET;
       sendRecv(cmdSent);
       break;
     }
-    case STATE_SEND_C6: {
+    case STATE_SEND_FOLLOWME: {
       // If the AC mode changed, follow-me should be
       // refreshed, if emulating the wired controller's
       // behavior.
-      cmdSent = 0xC6;
+      cmdSent = CLIENT_COMMAND_FOLLOWME;
       sendRecv(cmdSent);
       if (this->mode == ClimateMode::CLIMATE_MODE_OFF) {
         ESP_LOGI(Constants::TAG, "Set static pressure.");
@@ -251,16 +253,16 @@ void AirConditioner::update() {
       }
       break;
     }
-    case STATE_SEND_C0: {
+    case STATE_SEND_QUERY: {
       // construct query command
       prepareTXData(CLIENT_COMMAND_QUERY);
       cmdSent = CLIENT_COMMAND_QUERY;
       sendRecv(cmdSent);
       break;
     }
-    case STATE_SEND_C4: {
-      prepareTXData(0xC4);
-      cmdSent = 0xC4;
+    case STATE_SEND_QUERY_EXTENDED: {
+      prepareTXData(CLIENT_COMMAND_QUERY_EXTENDED);
+      cmdSent = CLIENT_COMMAND_QUERY_EXTENDED;
       sendRecv(cmdSent);
       break;
     }
@@ -591,23 +593,30 @@ void AirConditioner::do_follow_me(float temperature, bool beeper) {
   IrFollowMeData data(static_cast<uint8_t>(lroundf(temperature)), beeper);
   this->transmitter_.transmit(data);
 #else
-  prepareTXData(0xC6);
+  // Prepare Follow-Me command for temperature update
+  prepareTXData(CLIENT_COMMAND_FOLLOWME);
+  
+  // TXData[10] is a subcommand type field for Follow-Me commands.
+  // Subcommand values: 0x06=Init, 0x02=Update, 0x04=Static pressure
+  // The followMeInit flag tracks whether we've sent the initialization command.
+  // It gets reset to false whenever the AC mode changes (see control() function),
+  // ensuring a proper initialization sequence after mode changes.
   if (followMeInit) {
-    TXData[10] = 2;
+    TXData[10] = FOLLOWME_SUBCOMMAND_UPDATE;  // Follow-Me update
   } else {
-    TXData[10] = 6;
+    TXData[10] = FOLLOWME_SUBCOMMAND_INIT;  // Follow-Me initialization
     followMeInit = true;
   }
   lastFollowMeTemperature = static_cast<uint8_t>(lroundf(temperature));
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);
   // Only send if mode is something other than off.
-  // Wired controller does not send 0xC6 when off.
+  // Wired controller does not send Follow-Me command when off.
   if (this->mode != ClimateMode::CLIMATE_MODE_OFF) {
     if (controlState != STATE_WAIT_DATA) {
-      controlState = STATE_SEND_C6;
+      controlState = STATE_SEND_FOLLOWME;
     } else {
-      queuedCommand = STATE_SEND_C6;
+      queuedCommand = STATE_SEND_FOLLOWME;
     }
     ESP_LOGI(Constants::TAG, "Queued Follow-Me data.");
   }
@@ -620,17 +629,18 @@ void AirConditioner::set_static_pressure(uint8_t static_pressure) {
     return;
   }
 
-  prepareTXData(0xC6);
+  // Prepare Follow-Me command for static pressure setting
+  prepareTXData(CLIENT_COMMAND_FOLLOWME);
   TXData[8] = 0x10 | (static_pressure & 0x0F);
-  TXData[10] = 4;
+  TXData[10] = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);
 
   if (this->mode == ClimateMode::CLIMATE_MODE_OFF) {
     if (controlState != STATE_WAIT_DATA) {
-      controlState = STATE_SEND_C6;
+      controlState = STATE_SEND_FOLLOWME;
     } else {
-      queuedCommand = STATE_SEND_C6;
+      queuedCommand = STATE_SEND_FOLLOWME;
     }
     ESP_LOGI(Constants::TAG, "Queued setting static pressure to %d", static_pressure);
   } else {
