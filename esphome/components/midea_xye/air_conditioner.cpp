@@ -597,6 +597,7 @@ void AirConditioner::do_follow_me(float temperature, bool beeper) {
   prepareTXData(0xC6);
   
   // TXData[10] is a subcommand type field for 0xC6 commands.
+  // Subcommand values: 0x06=Follow-Me init, 0x02=Follow-Me update, 0x04=Static pressure
   // The followMeInit flag tracks whether we've sent the initialization command.
   // It gets reset to false whenever the AC mode changes (see control() function),
   // ensuring a proper initialization sequence after mode changes.
