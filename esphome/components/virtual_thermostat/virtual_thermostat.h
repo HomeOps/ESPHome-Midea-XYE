@@ -33,7 +33,7 @@ public:
   void loop() override;
 
  private:
-  std::pair<bool, bool> apply_preset(const Preset& p);
+  void apply_preset(const Preset& p);
   const Preset& getActivePreset() const;
   const Preset& getActivePresetFromId(climate::ClimatePreset id) const;
   void update_real_climate();

@@ -41,7 +41,7 @@ climate::ClimateTraits VirtualThermostat::traits() {
   return traits;
 }
 
-std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
+void VirtualThermostat::apply_preset(const Preset& p) {
   bool virtual_changed = false;
   bool real_changed = false;
   
@@ -97,8 +97,6 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
   if (virtual_changed) {
     this->publish_state();
   }
-  
-  return {virtual_changed, real_changed};
 }
 
 const Preset& VirtualThermostat::getActivePreset() const {
