@@ -40,6 +40,8 @@ climate:
     timeout: 100ms
     use_fahrenheit: false
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
+    internal_current_temperature:
+      name: "Internal Current Temperature"
   
   # Virtual thermostat for testing
   - platform: virtual_thermostat
