@@ -139,7 +139,7 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
     this->fan_mode = *call.get_fan_mode();
     this->real_climate_->fan_mode = *call.get_fan_mode();
     this->real_climate_->publish_state();
-    this->publish_state(); // Do we need to publish state here?
+    this->publish_state();
   }
 
   // PRESET CHANGE
@@ -182,11 +182,13 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
       return; // apply_preset already publishes state
     }
 
-    // Update mode
+    // Update mode and sync to real climate
     this->mode = new_mode;
-    this->real_climate_->mode = new_mode;
+    this->real_climate_->mode = active_preset.getModeForRealClimate();
     this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
     this->real_climate_->publish_state();
+    this->publish_state();
+    return; // Already published state
   }
 
   if (call.get_target_temperature().has_value()) {
@@ -195,63 +197,8 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
     this->real_climate_->target_temperature = temp;
     this->real_climate_->publish_state();
     exit_preset_mode();
+    return; // exit_preset_mode already publishes state
   }
-
-  this->publish_state();
-}
-
-void VirtualThermostat::calculateRealClimateState() {
-
-  if (!this->room_sensor_ || !this->real_climate_) return;
-
-  const float room = this->room_sensor_->state;
-
-  // AUTO MODE
-  if (this->mode == climate::CLIMATE_MODE_AUTO) {
-    const auto minv = this->target_temperature_low;
-    const auto maxv = this->target_temperature_high;
-
-    if (room < minv) {
-      this->action = climate::CLIMATE_ACTION_HEATING;
-      this->real_climate_->mode = climate::CLIMATE_MODE_HEAT;
-      this->real_climate_->target_temperature = minv;
-    }
-    else if (room > maxv) {
-      this->action = climate::CLIMATE_ACTION_COOLING;
-      this->real_climate_->mode = climate::CLIMATE_MODE_COOL;
-      this->real_climate_->target_temperature = maxv;
-    }
-    else {
-      this->action = climate::CLIMATE_ACTION_IDLE;
-      // Do NOT turn off the real AC
-    }
-  }
-
-  // HEAT MODE
-  if (this->mode == climate::CLIMATE_MODE_HEAT) {
-    const auto t = this->target_temperature;
-    this->action = climate::CLIMATE_ACTION_HEATING;
-    this->real_climate_->mode = climate::CLIMATE_MODE_HEAT;
-    this->real_climate_->target_temperature = t;
-  }
-
-  // COOL MODE
-  if (this->mode == climate::CLIMATE_MODE_COOL) {
-    const auto t = this->target_temperature;
-    this->action = climate::CLIMATE_ACTION_COOLING;
-    this->real_climate_->mode = climate::CLIMATE_MODE_COOL;
-    this->real_climate_->target_temperature = t;
-  }
-
-  // FAN MODE PASSTHROUGH
-  if (this->fan_mode == climate::CLIMATE_FAN_AUTO)
-    this->real_climate_->fan_mode = climate::CLIMATE_FAN_AUTO;
-  else if (this->fan_mode == climate::CLIMATE_FAN_LOW)
-    this->real_climate_->fan_mode = climate::CLIMATE_FAN_LOW;
-  else if (this->fan_mode == climate::CLIMATE_FAN_MEDIUM)
-    this->real_climate_->fan_mode = climate::CLIMATE_FAN_MEDIUM;
-  else if (this->fan_mode == climate::CLIMATE_FAN_HIGH)
-    this->real_climate_->fan_mode = climate::CLIMATE_FAN_HIGH;
 
   this->publish_state();
 }

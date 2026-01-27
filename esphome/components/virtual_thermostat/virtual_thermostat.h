@@ -58,7 +58,6 @@ public:
   void loop() override;
 
  private:
-  void calculateRealClimateState();
   void apply_preset(const Preset& p);
   const Preset& getActivePreset() const;
   const Preset& getActivePresetFromId(climate::ClimatePreset id) const;
