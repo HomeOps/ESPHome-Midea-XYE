@@ -57,6 +57,11 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
   if (id != climate::CLIMATE_PRESET_NONE) {
     const auto temp = getTargetTemperatureForRealClimate();
     const auto room_temp = getCurrentRoomTemperatureForRealClimate();
+    // Handle NaN case when room sensor is unavailable
+    if (std::isnan(room_temp)) {
+      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, defaulting to OFF mode");
+      return climate::CLIMATE_MODE_OFF;
+    }
     if (room_temp < min()) {
       return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
     } else if (room_temp > max()) {
@@ -78,7 +83,7 @@ void Preset::on_min_changed(float new_min) {
   updating_ = true;
   
   // If new min is greater than or equal to current max, update max to be greater than min
-  if (new_min >= max_entity_->state) {
+  if (max_entity_->has_state() && new_min >= max_entity_->state) {
     float new_max = new_min + MIN_TEMP_DIFF;
     // Ensure new_max is within the number entity's configured range
     if (max_entity_->traits.get_max_value() >= new_max) {
@@ -86,6 +91,13 @@ void Preset::on_min_changed(float new_min) {
     } else {
       ESP_LOGW("virtual_thermostat", "Cannot adjust max temperature to %.1f (exceeds maximum %.1f)",
                new_max, max_entity_->traits.get_max_value());
+      // Revert min to maintain valid state where min < max
+      if (min_entity_) {
+        float safe_min = max_entity_->state - MIN_TEMP_DIFF;
+        if (min_entity_->traits.get_min_value() <= safe_min) {
+          min_entity_->publish_state(safe_min);
+        }
+      }
     }
   }
   
@@ -108,7 +120,7 @@ void Preset::on_max_changed(float new_max) {
   updating_ = true;
   
   // If new max is less than or equal to current min, update min to be less than max
-  if (new_max <= min_entity_->state) {
+  if (min_entity_->has_state() && new_max <= min_entity_->state) {
     float new_min = new_max - MIN_TEMP_DIFF;
     // Ensure new_min is within the number entity's configured range
     if (min_entity_->traits.get_min_value() <= new_min) {
@@ -116,6 +128,13 @@ void Preset::on_max_changed(float new_max) {
     } else {
       ESP_LOGW("virtual_thermostat", "Cannot adjust min temperature to %.1f (below minimum %.1f)",
                new_min, min_entity_->traits.get_min_value());
+      // Revert max to maintain valid state where max > min
+      if (max_entity_) {
+        float safe_max = min_entity_->state + MIN_TEMP_DIFF;
+        if (max_entity_->traits.get_max_value() >= safe_max) {
+          max_entity_->publish_state(safe_max);
+        }
+      }
     }
   }
   

@@ -15,6 +15,9 @@ struct Preset {
   number::Number *max_entity_{nullptr};
   VirtualThermostat *thermostat{nullptr};
   bool updating_{false};  // Guard flag to prevent recursive updates
+  // Note: min_entity() and max_entity() register callbacks that capture 'this'.
+  // These Preset objects have the same lifetime as VirtualThermostat (member variables),
+  // so the callbacks remain valid throughout the VirtualThermostat's lifetime.
   void min_entity(number::Number *n);
   void max_entity(number::Number *n);
 
@@ -44,7 +47,7 @@ public:
   climate::Climate *real_climate_{nullptr};
   void real_climate(climate::Climate *c) { this->real_climate_ = c; }
   
-  // Update interval (configurable from YAML)
+  // Update interval (configured from YAML via codegen) for periodic sync with real climate
   void set_update_interval(uint32_t interval_ms) { this->update_interval_ms_ = interval_ms; }
 
   // Presets (entities wired from YAML/codegen)
