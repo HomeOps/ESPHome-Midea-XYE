@@ -16,9 +16,12 @@ struct Preset {
   Preset(climate::ClimatePreset id, VirtualThermostat *thermostat) : id(id), thermostat(thermostat) {}
   climate::ClimatePreset id;
   
-  // Note: min_entity() and max_entity() register callbacks that capture 'this'.
-  // These Preset objects have the same lifetime as VirtualThermostat (member variables),
-  // so the callbacks remain valid throughout the VirtualThermostat's lifetime.
+  // IMPORTANT: Callback lifetime safety
+  // min_entity() and max_entity() register callbacks that capture 'this' pointer.
+  // These Preset objects are member variables of VirtualThermostat (not dynamically allocated),
+  // ensuring they have the same lifetime as the VirtualThermostat instance.
+  // The number entities are also owned by ESPHome's component system and will not outlive
+  // the VirtualThermostat, making these callbacks safe from dangling pointer issues.
   void min_entity(number::Number *n);
   void max_entity(number::Number *n);
 
