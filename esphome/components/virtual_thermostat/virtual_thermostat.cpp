@@ -44,6 +44,9 @@ void Preset::on_min_changed(float new_min) {
     // Ensure new_max is within the number entity's configured range
     if (max_entity_->traits.get_max_value() >= new_max) {
       max_entity_->publish_state(new_max);
+    } else {
+      ESP_LOGW("virtual_thermostat", "Cannot adjust max temperature to %.1f (exceeds maximum %.1f)",
+               new_max, max_entity_->traits.get_max_value());
     }
   }
   
@@ -71,6 +74,9 @@ void Preset::on_max_changed(float new_max) {
     // Ensure new_min is within the number entity's configured range
     if (min_entity_->traits.get_min_value() <= new_min) {
       min_entity_->publish_state(new_min);
+    } else {
+      ESP_LOGW("virtual_thermostat", "Cannot adjust min temperature to %.1f (below minimum %.1f)",
+               new_min, min_entity_->traits.get_min_value());
     }
   }
   
