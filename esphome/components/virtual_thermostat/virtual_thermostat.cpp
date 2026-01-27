@@ -21,11 +21,11 @@ void Preset::max_entity(number::Number *n) {
 }
 
 float Preset::min() const {
-  return min_entity_ ? min_entity_->state : thermostat->target_temperature_low;
+  return (min_entity_ && min_entity_->has_state()) ? min_entity_->state : thermostat->target_temperature_low;
 }
 
 float Preset::max() const {
-  return max_entity_ ? max_entity_->state : thermostat->target_temperature_high;
+  return (max_entity_ && max_entity_->has_state()) ? max_entity_->state : thermostat->target_temperature_high;
 }
 
 float Preset::getTargetTemperatureForRealClimate() const {
