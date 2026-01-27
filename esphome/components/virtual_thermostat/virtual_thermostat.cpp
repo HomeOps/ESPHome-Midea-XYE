@@ -60,7 +60,7 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
     if (room_temp < min()) {
       return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
     } else if (room_temp > max()) {
-      return climate::CLIMATE_MODE_COOL; // root_temp too hot, need cooling
+      return climate::CLIMATE_MODE_COOL; // room_temp too hot, need cooling
     } else {
       return climate::CLIMATE_MODE_OFF; // within range, turn off
     }
