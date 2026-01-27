@@ -5,4 +5,6 @@ components:
     files:
       - virtual_thermostat.h
       - virtual_thermostat.cpp
+      - preset.h
+      - preset.cpp
 
