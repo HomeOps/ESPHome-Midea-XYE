@@ -15,10 +15,7 @@ struct Preset {
   Preset() = delete;
   Preset(climate::ClimatePreset id, VirtualThermostat *thermostat) : id(id), thermostat(thermostat) {}
   climate::ClimatePreset id;
-  number::Number *min_entity_{nullptr};
-  number::Number *max_entity_{nullptr};
-  VirtualThermostat *thermostat{nullptr};
-  bool updating_{false};  // Guard flag to prevent recursive updates
+  
   // Note: min_entity() and max_entity() register callbacks that capture 'this'.
   // These Preset objects have the same lifetime as VirtualThermostat (member variables),
   // so the callbacks remain valid throughout the VirtualThermostat's lifetime.
@@ -38,6 +35,12 @@ struct Preset {
 
   climate::ClimateMode getModeForRealClimate() const;
 
+private:
+  number::Number *min_entity_{nullptr};
+  number::Number *max_entity_{nullptr};
+  VirtualThermostat *thermostat{nullptr};
+  bool updating_{false};  // Guard flag to prevent recursive updates
+  
   void on_min_changed(float new_min);
   void on_max_changed(float new_max);
 };

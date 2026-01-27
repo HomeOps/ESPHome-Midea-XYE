@@ -30,7 +30,7 @@ float Preset::getTargetTemperatureForRealClimate() const {
 }
 
 float Preset::getCurrentRoomTemperatureForRealClimate() const {
-  if (thermostat->room_sensor_ != nullptr) {
+  if (thermostat->room_sensor_ != nullptr && thermostat->room_sensor_->has_state()) {
     return thermostat->room_sensor_->state;
   }
   return NAN;
