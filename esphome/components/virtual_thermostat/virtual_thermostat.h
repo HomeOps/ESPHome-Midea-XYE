@@ -39,6 +39,9 @@ public:
   void room_sensor(sensor::Sensor *s) { this->room_sensor_ = s; }
   climate::Climate *real_climate_{nullptr};
   void real_climate(climate::Climate *c) { this->real_climate_ = c; }
+  
+  // Update interval (configurable from YAML)
+  void set_update_interval(uint32_t interval_ms) { this->update_interval_ms_ = interval_ms; }
 
   // Presets (entities wired from YAML/codegen)
   Preset home { climate::CLIMATE_PRESET_HOME, this };
@@ -55,9 +58,14 @@ public:
   void loop() override;
 
  private:
-  void calculateRealClimateState();
   void apply_preset(const Preset& p);
   const Preset& getActivePreset() const;
+  const Preset& getActivePresetFromId(climate::ClimatePreset id) const;
+  void exit_preset_mode();
+  void update_real_climate();
+  
+  uint32_t update_interval_ms_{30000}; // Default 30 seconds
+  uint32_t last_update_time_{0};
 };
 
 }  // namespace virtual_thermostat
