@@ -3,8 +3,19 @@
 namespace esphome {
 namespace virtual_thermostat {
 
-void Preset::min_entity(number::Number *n) { min_entity_ = n; }
-void Preset::max_entity(number::Number *n) { max_entity_ = n; }
+void Preset::min_entity(number::Number *n) {
+  min_entity_ = n;
+  if (n) {
+    n->add_on_state_callback([this](float new_min) { on_min_changed(new_min); });
+  }
+}
+
+void Preset::max_entity(number::Number *n) {
+  max_entity_ = n;
+  if (n) {
+    n->add_on_state_callback([this](float new_max) { on_max_changed(new_max); });
+  }
+}
 
 float Preset::min() const {
   return min_entity_ ? min_entity_->state : thermostat->target_temperature_low;
@@ -16,6 +27,42 @@ float Preset::max() const {
 
 float Preset::getTemp() const {
   return (min() + max()) / 2.0f;
+}
+
+void Preset::on_min_changed(float new_min) {
+  if (!max_entity_) return;
+  
+  // If new min is greater than or equal to current max, update max to be greater than min
+  if (new_min >= max_entity_->state) {
+    max_entity_->publish_state(new_min + 0.5f);
+  }
+  
+  // If this is the active preset, update the thermostat's target temperatures
+  if (thermostat->preset == id && thermostat->mode == climate::CLIMATE_MODE_AUTO) {
+    thermostat->target_temperature_low = new_min;
+    if (new_min >= thermostat->target_temperature_high) {
+      thermostat->target_temperature_high = new_min + 0.5f;
+    }
+    thermostat->publish_state();
+  }
+}
+
+void Preset::on_max_changed(float new_max) {
+  if (!min_entity_) return;
+  
+  // If new max is less than or equal to current min, update min to be less than max
+  if (new_max <= min_entity_->state) {
+    min_entity_->publish_state(new_max - 0.5f);
+  }
+  
+  // If this is the active preset, update the thermostat's target temperatures
+  if (thermostat->preset == id && thermostat->mode == climate::CLIMATE_MODE_AUTO) {
+    thermostat->target_temperature_high = new_max;
+    if (new_max <= thermostat->target_temperature_low) {
+      thermostat->target_temperature_low = new_max - 0.5f;
+    }
+    thermostat->publish_state();
+  }
 }
 
 VirtualThermostat::VirtualThermostat() {

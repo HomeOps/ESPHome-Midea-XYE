@@ -20,6 +20,9 @@ struct Preset {
   float min() const;
   float max() const;
   float getTemp() const;
+
+  void on_min_changed(float new_min);
+  void on_max_changed(float new_max);
 };
 
 class VirtualThermostat : public climate::Climate, public Component {
