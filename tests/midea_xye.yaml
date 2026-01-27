@@ -60,6 +60,10 @@ sensor:
   - platform: homeassistant
     id: test_sensor
     entity_id: sensor.test_temperature
+    # Use heartbeat filter to force periodic updates to follow_me
+    # This replaces the need for internal periodic update logic
+    filters:
+      - heartbeat: 30s
 
 # Number entities for virtual thermostat presets
 number:
