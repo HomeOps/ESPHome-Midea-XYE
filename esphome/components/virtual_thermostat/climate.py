@@ -2,9 +2,11 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import climate, sensor, number
 from esphome.const import CONF_ID
+import esphome.core as core
 
 CONF_ROOM_SENSOR = "room_sensor"
 CONF_REAL_CLIMATE = "real_climate"
+CONF_UPDATE_INTERVAL = "update_interval"
 
 CONF_HOME_MIN = "home_min"
 CONF_HOME_MAX = "home_max"
@@ -29,6 +31,8 @@ CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
         cv.Required(CONF_SLEEP_MAX): cv.use_id(number.Number),
         cv.Required(CONF_AWAY_MIN): cv.use_id(number.Number),
         cv.Required(CONF_AWAY_MAX): cv.use_id(number.Number),
+        
+        cv.Optional(CONF_UPDATE_INTERVAL, default="30s"): cv.positive_time_period_milliseconds,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -59,4 +63,6 @@ async def to_code(config):
 
     cg.add(var.away.min_entity(away_min))
     cg.add(var.away.max_entity(away_max))
+    
+    cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
 
