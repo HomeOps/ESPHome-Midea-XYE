@@ -3,9 +3,6 @@
 namespace esphome {
 namespace virtual_thermostat {
 
-// Minimum temperature difference between min and max presets
-const float MIN_TEMP_DIFF = 1.0f;
-
 void Preset::min_entity(number::Number *n) {
   min_entity_ = n;
   if (n) {

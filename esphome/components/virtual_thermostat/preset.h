@@ -9,7 +9,7 @@ namespace virtual_thermostat {
 class VirtualThermostat;
 
 // Minimum temperature difference between min and max presets
-extern const float MIN_TEMP_DIFF;
+constexpr float MIN_TEMP_DIFF = 1.0f;
 
 struct Preset {
   Preset() = delete;
