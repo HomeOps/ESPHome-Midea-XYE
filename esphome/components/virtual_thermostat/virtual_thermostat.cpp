@@ -14,8 +14,44 @@ float Preset::max() const {
   return max_entity_ ? max_entity_->state : thermostat->target_temperature_high;
 }
 
-float Preset::getTemp() const {
+float Preset::getTargetTemperatureForRealClimate() const {
   return (min() + max()) / 2.0f;
+}
+
+float Preset::getCurrentRoomTemperatureForRealClimate() const {
+  if (thermostat->room_sensor_ != nullptr) {
+    return thermostat->room_sensor_->state;
+  }
+  return NAN;
+}
+
+climate::ClimateFanMode Preset::getFanModeForRealClimate() const {
+  return thermostat->fan_mode;
+}
+
+climate::ClimateMode Preset::getModeForVirtualThermostat() const {
+  if (id != climate::CLIMATE_PRESET_NONE) {
+    return climate::CLIMATE_MODE_AUTO;
+  } else {
+    return getModeForRealClimate(); // passthrough to the real climate
+  }
+}
+
+climate::ClimateMode Preset::getModeForRealClimate() const {
+  if (id != climate::CLIMATE_PRESET_NONE) {
+    const auto temp = getTargetTemperatureForRealClimate();
+    const auto room_temp = getCurrentRoomTemperatureForRealClimate();
+    if (room_temp < min()) {
+      return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
+    } else if (room_temp > max()) {
+      return climate::CLIMATE_MODE_COOL; // root_temp too hot, need cooling
+    } else {
+      return climate::CLIMATE_MODE_OFF; // within range, turn off
+    }
+  }
+  else {
+    return thermostat->real_climate_->mode;
+  }
 }
 
 VirtualThermostat::VirtualThermostat() {
@@ -58,19 +94,21 @@ climate::ClimateTraits VirtualThermostat::traits() {
 
 void VirtualThermostat::apply_preset(const Preset& p) {
   this->preset = p.id;
-  const temp = p.getTemp();
+  const temp = p.getTargetTemperatureForRealClimate();
   if (p.id != manual.id) {
     this->target_temperature_low  = p.min();
     this->target_temperature_high = p.max();
     this->real_climate_->target_temperature = temp;
-    this->real_climate_->publish_state();
-    this->publish_state();
   } else {
     this->target_temperature = temp;
     this->real_climate_->target_temperature = temp;
-    this->real_climate_->publish_state();
-    this->publish_state();
   }
+  this->mode = p.getModeForVirtualThermostat();
+  this->real_climate_->mode = p.getModeForRealClimate();
+  this->real_climate_->fan_mode = p.getFanModeForRealClimate();
+  
+  this->real_climate_->publish_state();
+  this->publish_state();
 }
 
 const Preset& VirtualThermostat::getActivePreset() const {

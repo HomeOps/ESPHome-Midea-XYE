@@ -19,7 +19,16 @@ struct Preset {
 
   float min() const;
   float max() const;
-  float getTemp() const;
+
+  float getTargetTemperatureForRealClimate() const;
+
+  float getCurrentRoomTemperatureForRealClimate() const;
+
+  climate::ClimateFanMode getFanModeForRealClimate() const;
+
+  climate::ClimateMode getModeForVirtualThermostat() const;
+
+  climate::ClimateMode getModeForRealClimate() const;
 };
 
 class VirtualThermostat : public climate::Climate, public Component {
