@@ -92,7 +92,7 @@ void Preset::on_min_changed(float new_min) {
       ESP_LOGW("virtual_thermostat", "Cannot adjust max temperature to %.1f (exceeds maximum %.1f)",
                new_max, max_entity_->traits.get_max_value());
       // Revert min to maintain valid state where min < max
-      if (min_entity_) {
+      if (min_entity_ && max_entity_->has_state()) {
         float safe_min = max_entity_->state - MIN_TEMP_DIFF;
         if (min_entity_->traits.get_min_value() <= safe_min) {
           min_entity_->publish_state(safe_min);
@@ -129,7 +129,7 @@ void Preset::on_max_changed(float new_max) {
       ESP_LOGW("virtual_thermostat", "Cannot adjust min temperature to %.1f (below minimum %.1f)",
                new_min, min_entity_->traits.get_min_value());
       // Revert max to maintain valid state where max > min
-      if (max_entity_) {
+      if (max_entity_ && min_entity_->has_state()) {
         float safe_max = min_entity_->state + MIN_TEMP_DIFF;
         if (max_entity_->traits.get_max_value() >= safe_max) {
           max_entity_->publish_state(safe_max);
