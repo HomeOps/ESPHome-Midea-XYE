@@ -3,6 +3,9 @@
 namespace esphome {
 namespace virtual_thermostat {
 
+// Minimum temperature difference between min and max presets
+static const float MIN_TEMP_DIFF = 0.5f;
+
 void Preset::min_entity(number::Number *n) {
   min_entity_ = n;
   if (n) {
@@ -30,39 +33,57 @@ float Preset::getTemp() const {
 }
 
 void Preset::on_min_changed(float new_min) {
-  if (!max_entity_) return;
+  if (updating_ || !max_entity_) return;
+  
+  // Set guard to prevent recursive updates
+  updating_ = true;
   
   // If new min is greater than or equal to current max, update max to be greater than min
   if (new_min >= max_entity_->state) {
-    max_entity_->publish_state(new_min + 0.5f);
+    float new_max = new_min + MIN_TEMP_DIFF;
+    // Ensure new_max is within the number entity's configured range
+    if (max_entity_->traits.get_max_value() >= new_max) {
+      max_entity_->publish_state(new_max);
+    }
   }
   
   // If this is the active preset, update the thermostat's target temperatures
   if (thermostat->preset == id && thermostat->mode == climate::CLIMATE_MODE_AUTO) {
     thermostat->target_temperature_low = new_min;
     if (new_min >= thermostat->target_temperature_high) {
-      thermostat->target_temperature_high = new_min + 0.5f;
+      thermostat->target_temperature_high = new_min + MIN_TEMP_DIFF;
     }
     thermostat->publish_state();
   }
+  
+  updating_ = false;
 }
 
 void Preset::on_max_changed(float new_max) {
-  if (!min_entity_) return;
+  if (updating_ || !min_entity_) return;
+  
+  // Set guard to prevent recursive updates
+  updating_ = true;
   
   // If new max is less than or equal to current min, update min to be less than max
   if (new_max <= min_entity_->state) {
-    min_entity_->publish_state(new_max - 0.5f);
+    float new_min = new_max - MIN_TEMP_DIFF;
+    // Ensure new_min is within the number entity's configured range
+    if (min_entity_->traits.get_min_value() <= new_min) {
+      min_entity_->publish_state(new_min);
+    }
   }
   
   // If this is the active preset, update the thermostat's target temperatures
   if (thermostat->preset == id && thermostat->mode == climate::CLIMATE_MODE_AUTO) {
     thermostat->target_temperature_high = new_max;
     if (new_max <= thermostat->target_temperature_low) {
-      thermostat->target_temperature_low = new_max - 0.5f;
+      thermostat->target_temperature_low = new_max - MIN_TEMP_DIFF;
     }
     thermostat->publish_state();
   }
+  
+  updating_ = false;
 }
 
 VirtualThermostat::VirtualThermostat() {

@@ -14,6 +14,7 @@ struct Preset {
   number::Number *min_entity_{nullptr};
   number::Number *max_entity_{nullptr};
   VirtualThermostat *thermostat{nullptr};
+  bool updating_{false};  // Guard flag to prevent recursive updates
   void min_entity(number::Number *n);
   void max_entity(number::Number *n);
 
