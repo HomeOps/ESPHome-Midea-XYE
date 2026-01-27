@@ -40,6 +40,7 @@ climate:
     timeout: 100ms
     use_fahrenheit: false
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
+    follow_me_update_interval: 5s  # Minimum interval between follow_me updates (default: 5s)
     internal_current_temperature:
       name: "Internal Current Temperature"
   
@@ -60,12 +61,12 @@ sensor:
   - platform: homeassistant
     id: test_sensor
     entity_id: sensor.test_temperature
-    # Use filters to control Follow-Me update behavior:
-    # - throttle limits maximum update rate to avoid high-frequency traffic
-    # - heartbeat ensures a periodic update even if the value doesn't change
-    filters:
-      - throttle: 30s
-      - heartbeat: 30s
+    # Optional: Use filters for additional control over Follow-Me updates:
+    # - throttle limits maximum update rate (in addition to component's follow_me_update_interval)
+    # - heartbeat ensures periodic updates even if the sensor value doesn't change
+    # filters:
+    #   - throttle: 30s
+    #   - heartbeat: 30s
 
 # Number entities for virtual thermostat presets
 number:

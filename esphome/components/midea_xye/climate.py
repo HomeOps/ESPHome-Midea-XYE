@@ -62,6 +62,7 @@ CONF_POWER_USAGE = "power_usage"
 CONF_HUMIDITY_SETPOINT = "humidity_setpoint"
 CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
+CONF_FOLLOW_ME_UPDATE_INTERVAL = "follow_me_update_interval"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
 midea_ac_ns = cg.esphome_ns.namespace("midea").namespace("ac")
 AirConditioner = midea_ac_ns.class_("AirConditioner", climate.Climate, cg.Component)
@@ -236,6 +237,7 @@ CONFIG_SCHEMA = cv.All(
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
             cv.Optional(CONF_FOLLOW_ME_SENSOR): cv.use_id(sensor.Sensor),
+            cv.Optional(CONF_FOLLOW_ME_UPDATE_INTERVAL, default="5s"): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_INTERNAL_CURRENT_TEMPERATURE): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -421,6 +423,7 @@ async def to_code(config):
     if CONF_FOLLOW_ME_SENSOR in config:
         sens = await cg.get_variable(config[CONF_FOLLOW_ME_SENSOR])
         cg.add(var.set_follow_me_sensor(sens))
+        cg.add(var.set_follow_me_update_interval(config[CONF_FOLLOW_ME_UPDATE_INTERVAL]))
     if CONF_INTERNAL_CURRENT_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_INTERNAL_CURRENT_TEMPERATURE])
         cg.add(var.set_internal_current_temperature_sensor(sens))
