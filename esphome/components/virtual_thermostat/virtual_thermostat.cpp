@@ -113,13 +113,13 @@ const Preset& VirtualThermostat::getActivePresetFromId(climate::ClimatePreset id
 }
 
 void VirtualThermostat::control(const climate::ClimateCall &call) {
-  bool needs_publish = false;
 
   if (call.get_fan_mode().has_value()) {
     this->fan_mode = *call.get_fan_mode();
     this->real_climate_->fan_mode = *call.get_fan_mode();
     this->real_climate_->publish_state();
-    needs_publish = true;
+    this->publish_state();
+    return;
   }
 
   // PRESET CHANGE
@@ -132,15 +132,17 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
 
   // MANUAL EDITS → EXIT PRESET MODE
   if (call.get_target_temperature_low().has_value()) {
-    this->target_temperature_low = *call.get_target_temperature_low();
     apply_preset(manual);
-    return; // apply_preset handles publishing
+    this->target_temperature_low = *call.get_target_temperature_low();
+    this->publish_state();
+    return;
   }
 
   if (call.get_target_temperature_high().has_value()) {
-    this->target_temperature_high = *call.get_target_temperature_high();
     apply_preset(manual);
-    return; // apply_preset handles publishing
+    this->target_temperature_high = *call.get_target_temperature_high();
+    this->publish_state();
+    return;
   }
 
   // MODE CHANGE
@@ -154,7 +156,6 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
         this->mode == climate::CLIMATE_MODE_AUTO) {
       const float temp = active_preset.getTargetTemperatureForRealClimate();
       this->target_temperature = temp;
-      needs_publish = true;
     }
 
     // HEAT/COOL → AUTO (only re-apply preset if in a real preset, not manual)
@@ -176,16 +177,13 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   }
 
   if (call.get_target_temperature().has_value()) {
+    apply_preset(manual);
     const float temp = *call.get_target_temperature();
     this->target_temperature = temp;
     this->real_climate_->target_temperature = temp;
     this->real_climate_->publish_state();
-    apply_preset(manual);
-    return; // apply_preset handles publishing
-  }
-
-  if (needs_publish) {
     this->publish_state();
+    return;
   }
 }
 
