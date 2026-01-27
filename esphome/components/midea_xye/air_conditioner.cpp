@@ -558,7 +558,7 @@ climate::ClimateTraits AirConditioner::traits() {
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
   traits.set_visual_min_temperature(17);
   traits.set_visual_max_temperature(30);
-  traits.set_visual_temperature_step(0.5);
+  traits.set_visual_temperature_step(1.0);
   traits.set_supported_modes(this->supported_modes_);
   traits.set_supported_swing_modes(this->supported_swing_modes_);
   traits.set_supported_presets(this->supported_presets_);
