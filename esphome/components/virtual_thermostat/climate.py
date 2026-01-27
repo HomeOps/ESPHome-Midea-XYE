@@ -2,7 +2,6 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import climate, sensor, number
 from esphome.const import CONF_ID
-import esphome.core as core
 
 CONF_ROOM_SENSOR = "room_sensor"
 CONF_REAL_CLIMATE = "real_climate"
