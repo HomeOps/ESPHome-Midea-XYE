@@ -72,6 +72,29 @@ climate:
     use_fahrenheit: false       # Optional. Defaults to false
 ```
 
+### Follow-Me Example
+
+The Follow-Me feature allows the AC unit to use a remote temperature sensor (like one in your living room) instead of its built-in sensor. This provides better temperature control for the entire room.
+
+```yaml
+# Temperature sensor (example using Home Assistant)
+sensor:
+  - platform: homeassistant
+    id: living_room_temp
+    entity_id: sensor.living_room_temperature
+
+climate:
+  - platform: midea_xye
+    name: Heatpump
+    follow_me_sensor: living_room_temp  # AC uses this sensor for temperature readings
+```
+
+The component will automatically:
+- Send temperature updates when the sensor value changes
+- Send periodic updates every 30 seconds to keep the AC informed
+- No lambda or automation needed!
+
+
 ### Advanced Configuration
 
 ```yaml
@@ -106,6 +129,8 @@ climate:
       - SLEEP
     supported_swing_modes:      # Optional
       - VERTICAL
+    follow_me_sensor: room_temp_sensor  # Optional. Automatically sends room temperature to AC for better temperature control
+                                        # The sensor is updated on state change and every 30 seconds
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
     temperature_2a:             # Optional. Inside coil temperature
@@ -135,7 +160,7 @@ climate:
 - Reading inside and outside air temperatures
 - Reading inside coil temperature and outside coil temperature
 - Reading timer start/stop times (set by remote)
-- Follow-Me temperature (point it at a sensor and this works well)
+- Follow-Me temperature - automatically sends room temperature from a configured sensor to the AC unit. Updates on sensor state changes and every 30 seconds.
 
 ### Known Issues
 - Current reading always shows 255

@@ -39,6 +39,7 @@ climate:
     period: 1s
     timeout: 100ms
     use_fahrenheit: false
+    follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
   
   # Virtual thermostat for testing
   - platform: virtual_thermostat

@@ -15,10 +15,10 @@
 
 // STATES
 #define STATE_WAIT_DATA 0
-#define STATE_SEND_C3 1
-#define STATE_SEND_C6 2
-#define STATE_SEND_C0 3
-#define STATE_SEND_C4 4
+#define STATE_SEND_SET 1
+#define STATE_SEND_FOLLOWME 2
+#define STATE_SEND_QUERY 3
+#define STATE_SEND_QUERY_EXTENDED 4
 
 // CLIENT command structure
 #define PREAMBLE 0xAA
@@ -27,6 +27,7 @@
 #define CLIENT_COMMAND_QUERY 0xC0
 #define CLIENT_COMMAND_QUERY_EXTENDED 0xC4
 #define CLIENT_COMMAND_SET 0xC3
+#define CLIENT_COMMAND_FOLLOWME 0xC6
 #define CLIENT_COMMAND_LOCK 0xCC
 #define CLIENT_COMMAND_UNLOCK 0xCD
 #define CLIENT_COMMAND_CELCIUS 0xC4
@@ -64,6 +65,11 @@
 #define TIMER_INVALID 0x80
 
 #define COMMAND_UNKNOWN 0x00
+
+// Follow-Me command subcommand types (TXData[10])
+#define FOLLOWME_SUBCOMMAND_UPDATE 0x02
+#define FOLLOWME_SUBCOMMAND_STATIC_PRESSURE 0x04
+#define FOLLOWME_SUBCOMMAND_INIT 0x06
 
 // SERVER Response
 
@@ -185,6 +191,7 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   void set_protect_flags_sensor(Sensor *sensor) { this->protect_flags_sensor_ = sensor; }
   void set_humidity_setpoint_sensor(Sensor *sensor) { this->humidity_sensor_ = sensor; }
   void set_power_sensor(Sensor *sensor) { this->power_sensor_ = sensor; }
+  void set_follow_me_sensor(Sensor *sensor);
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
   void set_static_pressure_number(StaticPressureNumber *number) {
     this->static_pressure_number_ = number;
@@ -225,6 +232,9 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   uint8_t ForceReadNextCycle;
   uint8_t queuedCommand;
   uint32_t response_timeout;
+  // Tracks whether Follow-Me has been initialized after mode change.
+  // When false, next Follow-Me update sends initialization (TXData[10]=6).
+  // When true, Follow-Me updates send regular update (TXData[10]=2).
   bool followMeInit;
   uint8_t lastFollowMeTemperature;
 
@@ -252,14 +262,18 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   Sensor *protect_flags_sensor_{nullptr};
   Sensor *humidity_sensor_{nullptr};
   Sensor *power_sensor_{nullptr};
+  Sensor *follow_me_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
+  uint32_t last_follow_me_update_{0};
 
   static uint8_t CalculateCRC(uint8_t *Data, uint8_t len);
   void ParseResponse(uint8_t cmdSent);
   uint8_t CalculateSetTime(uint32_t time);
   uint32_t CalculateGetTime(uint8_t time);
   static float CalculateTemp(uint8_t byte);
+  void update_follow_me_();
+  void on_follow_me_sensor_update_(float state);
 };
 
 }  // namespace ac
