@@ -267,7 +267,6 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   Sensor *internal_current_temperature_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
-  uint32_t last_follow_me_update_{0};
   float internal_temperature_{NAN};
 
   static uint8_t CalculateCRC(uint8_t *Data, uint8_t len);
@@ -276,7 +275,6 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   uint32_t CalculateGetTime(uint8_t time);
   static float CalculateTemp(uint8_t byte);
   void update_current_temperature_from_sensors_(bool &need_publish);
-  void update_follow_me_();
   void on_follow_me_sensor_update_(float state);
 };
 

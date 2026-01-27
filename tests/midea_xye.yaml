@@ -60,6 +60,12 @@ sensor:
   - platform: homeassistant
     id: test_sensor
     entity_id: sensor.test_temperature
+    # Use filters to control Follow-Me update behavior:
+    # - throttle limits maximum update rate to avoid high-frequency traffic
+    # - heartbeat ensures a periodic update even if the value doesn't change
+    filters:
+      - throttle: 30s
+      - heartbeat: 30s
 
 # Number entities for virtual thermostat presets
 number:
