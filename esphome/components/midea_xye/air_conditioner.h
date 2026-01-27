@@ -192,7 +192,6 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   void set_humidity_setpoint_sensor(Sensor *sensor) { this->humidity_sensor_ = sensor; }
   void set_power_sensor(Sensor *sensor) { this->power_sensor_ = sensor; }
   void set_follow_me_sensor(Sensor *sensor);
-  void set_follow_me_update_interval(uint32_t interval) { this->follow_me_update_interval_ = interval; }
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
   void set_static_pressure_number(StaticPressureNumber *number) {
@@ -269,8 +268,6 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
   float internal_temperature_{NAN};
-  uint32_t follow_me_update_interval_{5000};  // Default 5 seconds
-  uint32_t last_follow_me_update_{0};
 
   static uint8_t CalculateCRC(uint8_t *Data, uint8_t len);
   void ParseResponse(uint8_t cmdSent);

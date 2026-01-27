@@ -60,7 +60,6 @@ void AirConditioner::setup() {
   controlState = STATE_SEND_QUERY;
   ForceReadNextCycle = 1;
   followMeInit = false;
-  last_follow_me_update_ = 0;
 
   // Start up in Auto fan mode (since unit doesn't report it correctly)
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
@@ -675,13 +674,8 @@ void AirConditioner::on_follow_me_sensor_update_(float state) {
     this->publish_state();
   }
 
-  // Check if enough time has passed since last update to prevent excessive RS-485 traffic
-  uint32_t now = millis();
-  // Handle millis() overflow correctly using unsigned arithmetic
-  if (now - this->last_follow_me_update_ >= this->follow_me_update_interval_) {
-    this->do_follow_me(state, false);
-    this->last_follow_me_update_ = now;
-  }
+  // Send follow_me command with the sensor temperature
+  this->do_follow_me(state, false);
 }
 
 void AirConditioner::update_current_temperature_from_sensors_(bool &need_publish) {
