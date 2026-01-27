@@ -33,7 +33,9 @@ climate::ClimateMode Preset::getModeForVirtualThermostat() const {
   if (id != climate::CLIMATE_PRESET_NONE) {
     return climate::CLIMATE_MODE_AUTO;
   } else {
-    return getModeForRealClimate(); // passthrough to the real climate
+    // In manual mode, keep the current mode of the virtual thermostat
+    // This should only be called during initial setup; normally we don't change the mode when switching to manual
+    return thermostat->mode;
   }
 }
 
@@ -50,7 +52,8 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
     }
   }
   else {
-    return thermostat->real_climate_->mode;
+    // In manual mode, use the virtual thermostat's mode directly
+    return thermostat->mode;
   }
 }
 
@@ -161,26 +164,29 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     const auto new_mode = *call.get_mode();
     const auto& active_preset = getActivePreset();
-    const float temp = active_preset.getTargetTemperatureForRealClimate();
 
     // AUTO → HEAT/COOL
     if ((new_mode == climate::CLIMATE_MODE_HEAT ||
          new_mode == climate::CLIMATE_MODE_COOL) &&
         this->mode == climate::CLIMATE_MODE_AUTO) {
+      const float temp = active_preset.getTargetTemperatureForRealClimate();
       this->target_temperature = temp;
-      this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
-      this->real_climate_->publish_state();
-      this->publish_state();
     }
 
-    // HEAT/COOL → AUTO
+    // HEAT/COOL → AUTO (only re-apply preset if in a real preset, not manual)
     if (new_mode == climate::CLIMATE_MODE_AUTO &&
         (this->mode == climate::CLIMATE_MODE_HEAT ||
-         this->mode == climate::CLIMATE_MODE_COOL)) {
+         this->mode == climate::CLIMATE_MODE_COOL) &&
+        active_preset.id != manual.id) {
       apply_preset(active_preset);
+      return; // apply_preset already publishes state
     }
 
+    // Update mode
     this->mode = new_mode;
+    this->real_climate_->mode = new_mode;
+    this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
+    this->real_climate_->publish_state();
   }
 
   if (call.get_target_temperature().has_value()) {
