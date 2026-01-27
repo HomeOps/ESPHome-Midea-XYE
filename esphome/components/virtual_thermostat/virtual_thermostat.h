@@ -1,35 +1,10 @@
 #pragma once
 
 #include "esphome.h"
+#include "preset.h"
 
 namespace esphome {
 namespace virtual_thermostat {
-
-class VirtualThermostat;
-
-struct Preset {
-  Preset() = delete;
-  Preset(climate::ClimatePreset id, VirtualThermostat *thermostat) : id(id), thermostat(thermostat) {}
-  climate::ClimatePreset id;
-  number::Number *min_entity_{nullptr};
-  number::Number *max_entity_{nullptr};
-  VirtualThermostat *thermostat{nullptr};
-  void min_entity(number::Number *n);
-  void max_entity(number::Number *n);
-
-  float min() const;
-  float max() const;
-
-  float getTargetTemperatureForRealClimate() const;
-
-  float getCurrentRoomTemperatureForRealClimate() const;
-
-  climate::ClimateFanMode getFanModeForRealClimate() const;
-
-  climate::ClimateMode getModeForVirtualThermostat() const;
-
-  climate::ClimateMode getModeForRealClimate() const;
-};
 
 class VirtualThermostat : public climate::Climate, public Component {
 friend class Preset;
@@ -40,7 +15,7 @@ public:
   climate::Climate *real_climate_{nullptr};
   void real_climate(climate::Climate *c) { this->real_climate_ = c; }
   
-  // Update interval (configurable from YAML)
+  // Update interval (configured from YAML via codegen) for periodic sync with real climate
   void set_update_interval(uint32_t interval_ms) { this->update_interval_ms_ = interval_ms; }
 
   // Presets (entities wired from YAML/codegen)

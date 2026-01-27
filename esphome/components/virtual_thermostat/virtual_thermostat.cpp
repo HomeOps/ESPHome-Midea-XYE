@@ -3,60 +3,6 @@
 namespace esphome {
 namespace virtual_thermostat {
 
-void Preset::min_entity(number::Number *n) { min_entity_ = n; }
-void Preset::max_entity(number::Number *n) { max_entity_ = n; }
-
-float Preset::min() const {
-  return min_entity_ ? min_entity_->state : thermostat->target_temperature_low;
-}
-
-float Preset::max() const {
-  return max_entity_ ? max_entity_->state : thermostat->target_temperature_high;
-}
-
-float Preset::getTargetTemperatureForRealClimate() const {
-  return (min() + max()) / 2.0f;
-}
-
-float Preset::getCurrentRoomTemperatureForRealClimate() const {
-  if (thermostat->room_sensor_ != nullptr) {
-    return thermostat->room_sensor_->state;
-  }
-  return NAN;
-}
-
-climate::ClimateFanMode Preset::getFanModeForRealClimate() const {
-  return thermostat->fan_mode.value_or(climate::CLIMATE_FAN_AUTO);
-}
-
-climate::ClimateMode Preset::getModeForVirtualThermostat() const {
-  if (id != climate::CLIMATE_PRESET_NONE) {
-    return climate::CLIMATE_MODE_AUTO;
-  } else {
-    // In manual mode, keep the current mode of the virtual thermostat
-    // This should only be called during initial setup; normally we don't change the mode when switching to manual
-    return thermostat->mode;
-  }
-}
-
-climate::ClimateMode Preset::getModeForRealClimate() const {
-  if (id != climate::CLIMATE_PRESET_NONE) {
-    const auto temp = getTargetTemperatureForRealClimate();
-    const auto room_temp = getCurrentRoomTemperatureForRealClimate();
-    if (room_temp < min()) {
-      return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
-    } else if (room_temp > max()) {
-      return climate::CLIMATE_MODE_COOL; // root_temp too hot, need cooling
-    } else {
-      return climate::CLIMATE_MODE_OFF; // within range, turn off
-    }
-  }
-  else {
-    // In manual mode, use the virtual thermostat's mode directly
-    return thermostat->mode;
-  }
-}
-
 VirtualThermostat::VirtualThermostat() {
 }
 
