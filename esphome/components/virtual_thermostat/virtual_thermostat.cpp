@@ -7,6 +7,20 @@ VirtualThermostat::VirtualThermostat() {
 }
 
 void VirtualThermostat::setup() {
+  // Subscribe to room sensor state changes for real-time temperature updates
+  if (this->room_sensor_ != nullptr) {
+    this->room_sensor_->add_on_state_callback([this](float temperature) { 
+      this->on_room_sensor_update(temperature); 
+    });
+  }
+  
+  // Subscribe to real climate state changes
+  if (this->real_climate_ != nullptr) {
+    this->real_climate_->add_on_state_callback([this](climate::Climate &climate) { 
+      this->on_real_climate_update(); 
+    });
+  }
+  
   // Restore previous state if available
   auto restored = this->restore_state_();
 
@@ -114,6 +128,14 @@ const Preset& VirtualThermostat::getActivePresetFromId(climate::ClimatePreset id
 }
 
 void VirtualThermostat::control(const climate::ClimateCall &call) {
+  // Set guard flag to indicate we're updating from control, not from external changes
+  if (this->updating_from_real_) {
+    // Avoid processing control calls while we're processing real climate updates
+    return;
+  }
+  
+  this->updating_from_control_ = true;
+  
   bool virtual_needs_publish = false;
   bool real_needs_publish = false;
 
@@ -198,20 +220,13 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   if (virtual_needs_publish) {
     this->publish_state();
   }
+  
+  this->updating_from_control_ = false;
 }
 
 void VirtualThermostat::loop() {
-  // Periodic update to synchronize real climate with virtual state
-  uint32_t now = millis();
-  if (now - this->last_update_time_ >= this->update_interval_ms_) {
-    this->last_update_time_ = now;
-    update_real_climate();
-  }
-  
-  // Update current temperature from room sensor
-  if (this->room_sensor_ != nullptr && !std::isnan(this->room_sensor_->state)) {
-    this->current_temperature = this->room_sensor_->state;
-  }
+  // State updates are now handled via callbacks, no periodic polling needed
+  // The loop is kept for future extensions if needed
 }
 
 void VirtualThermostat::update_real_climate() {
@@ -225,6 +240,89 @@ void VirtualThermostat::update_real_climate() {
   this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
   
   this->real_climate_->publish_state();
+}
+
+void VirtualThermostat::on_room_sensor_update(float temperature) {
+  // Update current temperature from room sensor in real-time
+  if (!std::isnan(temperature)) {
+    bool changed = (this->current_temperature != temperature);
+    this->current_temperature = temperature;
+    
+    // If we're in a preset mode (AUTO), room temperature changes may affect real climate mode
+    const auto& active_preset = getActivePreset();
+    if (active_preset.id != manual.id && !this->updating_from_control_) {
+      auto new_real_mode = active_preset.getModeForRealClimate();
+      if (this->real_climate_ && this->real_climate_->mode != new_real_mode) {
+        this->real_climate_->mode = new_real_mode;
+        this->real_climate_->publish_state();
+      }
+    }
+    
+    // Publish virtual state if temperature changed
+    if (changed) {
+      this->publish_state();
+    }
+  }
+}
+
+void VirtualThermostat::on_real_climate_update() {
+  // Avoid feedback loops
+  if (this->updating_from_control_ || !this->real_climate_) {
+    return;
+  }
+  
+  this->updating_from_real_ = true;
+  
+  bool virtual_needs_publish = false;
+  const auto& active_preset = getActivePreset();
+  
+  // Track changes from the real climate device
+  // External changes are authoritative and may exit preset mode
+  
+  // Check if target temperature changed externally (not from our control)
+  const float expected_temp = active_preset.getTargetTemperatureForRealClimate();
+  if (!std::isnan(this->real_climate_->target_temperature) && 
+      std::abs(this->real_climate_->target_temperature - expected_temp) > 0.1f) {
+    // Real climate target temperature changed externally - exit preset mode
+    ESP_LOGD("virtual_thermostat", "Real climate target temperature changed externally, exiting preset mode");
+    
+    // Switch to manual mode
+    if (this->preset != manual.id) {
+      this->preset = manual.id;
+      virtual_needs_publish = true;
+    }
+    
+    // Update virtual thermostat to match real climate
+    if (this->mode == climate::CLIMATE_MODE_AUTO) {
+      // In AUTO mode, keep both low and high
+      // Just sync the target temp without changing mode
+    } else {
+      // In single-point mode (HEAT/COOL), update target temperature
+      this->target_temperature = this->real_climate_->target_temperature;
+      virtual_needs_publish = true;
+    }
+  }
+  
+  // Check if mode changed externally
+  const auto expected_mode = active_preset.getModeForRealClimate();
+  if (this->real_climate_->mode != expected_mode && active_preset.id != manual.id) {
+    // Real climate mode changed externally - this could be from the device itself
+    // We'll log it but not necessarily exit preset mode, as mode changes in preset are normal
+    ESP_LOGD("virtual_thermostat", "Real climate mode changed: %d (expected: %d)", 
+             this->real_climate_->mode, expected_mode);
+  }
+  
+  // Sync hvac_action to virtual thermostat (for display purposes)
+  if (this->action != this->real_climate_->action) {
+    this->action = this->real_climate_->action;
+    virtual_needs_publish = true;
+  }
+  
+  if (virtual_needs_publish) {
+    this->publish_state();
+  }
+  
+  this->updating_from_real_ = false;
 }
 
 }  // namespace virtual_thermostat
