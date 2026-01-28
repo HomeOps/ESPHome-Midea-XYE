@@ -19,8 +19,15 @@ void VirtualThermostat::setup() {
       this->target_temperature_high = restored->target_temperature_high;
   }
   const auto& active_preset = getActivePreset();
-  apply_preset(active_preset);
-  // apply_preset handles publishing when state changes
+  auto [virtual_changed, real_changed] = apply_preset(active_preset);
+  
+  // Publish state if anything changed
+  if (real_changed) {
+    this->real_climate_->publish_state();
+  }
+  if (virtual_changed) {
+    this->publish_state();
+  }
 }
 
 climate::ClimateTraits VirtualThermostat::traits() {
@@ -91,13 +98,7 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
     real_changed = true;
   }
   
-  if (real_changed) {
-    this->real_climate_->publish_state();
-  }
-  if (virtual_changed) {
-    this->publish_state();
-  }
-  
+  // Return what changed but don't publish - let caller decide when to publish
   return {virtual_changed, real_changed};
 }
 
