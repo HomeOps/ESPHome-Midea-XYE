@@ -56,8 +56,13 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
     const auto room_temp = getCurrentRoomTemperatureForRealClimate();
     // Handle NaN case when room sensor is unavailable
     if (std::isnan(room_temp)) {
-      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, defaulting to HEAT mode");
-      // Default to HEAT mode to keep device ready (never OFF in preset mode)
+      // Don't change the real device mode when room temperature is unavailable
+      // Return current mode to keep device unchanged
+      if (thermostat->real_climate_ != nullptr) {
+        ESP_LOGD("virtual_thermostat", "Room temperature unavailable, keeping current mode");
+        return thermostat->real_climate_->mode;
+      }
+      // Fallback to HEAT if real_climate is somehow null
       return climate::CLIMATE_MODE_HEAT;
     }
     if (room_temp < min()) {
