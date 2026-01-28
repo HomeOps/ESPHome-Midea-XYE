@@ -29,7 +29,7 @@ float Preset::getTargetTemperatureForRealClimate() const {
   return (min() + max()) / 2.0f;
 }
 
-float Preset::getCurrentRoomTemperatureForRealClimate() const {
+float Preset::getCurrentInsideTemperatureForRealClimate() const {
   if (thermostat->inside_sensor_ != nullptr && thermostat->inside_sensor_->has_state()) {
     return thermostat->inside_sensor_->state;
   }
@@ -58,7 +58,7 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
   
   if (id != climate::CLIMATE_PRESET_NONE) {
     const auto temp = getTargetTemperatureForRealClimate();
-    const auto inside_temp = getCurrentRoomTemperatureForRealClimate();
+    const auto inside_temp = getCurrentInsideTemperatureForRealClimate();
     // Handle NaN case when inside sensor is unavailable
     if (std::isnan(inside_temp)) {
       // Don't change the real device mode when inside temperature is unavailable
@@ -74,6 +74,9 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
       return climate::CLIMATE_MODE_COOL; // inside_temp too hot, need cooling
     } else {
       // Inside temperature is within range
+      // Calculate midpoint once for use in both outside sensor logic and fallback
+      const float mid_point = (min() + max()) / 2.0f;
+      
       // Use outside temperature sensor to decide between cool or heat
       // This keeps the real thermostat ready in the appropriate mode
       if (thermostat->outside_sensor_ != nullptr && thermostat->outside_sensor_->has_state()) {
@@ -81,7 +84,6 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
         if (!std::isnan(outside_temp)) {
           // Use outside temp to decide mode - if it's hot outside, stay ready to cool
           // if it's cold outside, stay ready to heat
-          const float mid_point = (min() + max()) / 2.0f;
           if (outside_temp < mid_point) {
             return climate::CLIMATE_MODE_HEAT; // cold outside, stay ready to heat
           } else {
@@ -91,7 +93,6 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
       }
       
       // Fallback: If outside sensor unavailable, use inside temp position within range
-      const float mid_point = (min() + max()) / 2.0f;
       if (inside_temp < mid_point) {
         return climate::CLIMATE_MODE_HEAT; // closer to min, stay ready to heat
       } else {

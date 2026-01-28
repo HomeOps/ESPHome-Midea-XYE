@@ -30,7 +30,7 @@ struct Preset {
 
   float getTargetTemperatureForRealClimate() const;
 
-  float getCurrentRoomTemperatureForRealClimate() const;
+  float getCurrentInsideTemperatureForRealClimate() const;
 
   climate::ClimateFanMode getFanModeForRealClimate() const;
 
