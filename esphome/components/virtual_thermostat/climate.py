@@ -4,7 +4,8 @@ from esphome.components import climate, sensor, number
 from esphome.const import CONF_ID
 import esphome.core as core
 
-CONF_ROOM_SENSOR = "room_sensor"
+CONF_INSIDE_SENSOR = "inside_sensor"
+CONF_OUTSIDE_SENSOR = "outside_sensor"
 CONF_REAL_CLIMATE = "real_climate"
 CONF_UPDATE_INTERVAL = "update_interval"
 
@@ -22,7 +23,8 @@ CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(VirtualThermostat),
 
-        cv.Required(CONF_ROOM_SENSOR): cv.use_id(sensor.Sensor),
+        cv.Required(CONF_INSIDE_SENSOR): cv.use_id(sensor.Sensor),
+        cv.Required(CONF_OUTSIDE_SENSOR): cv.use_id(sensor.Sensor),
         cv.Required(CONF_REAL_CLIMATE): cv.use_id(climate.Climate),
 
         cv.Required(CONF_HOME_MIN): cv.use_id(number.Number),
@@ -38,15 +40,13 @@ CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
 
 
 async def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
+    inside = await cg.get_variable(config[CONF_INSIDE_SENSOR])
+    outside = await cg.get_variable(config[CONF_OUTSIDE_SENSOR])
+    real = await cg.get_variable(config[CONF_REAL_CLIMATE])
+    
+    var = cg.new_Pvariable(config[CONF_ID], inside, outside, real)
     await cg.register_component(var, config)
     await climate.register_climate(var, config)
-
-    room = await cg.get_variable(config[CONF_ROOM_SENSOR])
-    cg.add(var.room_sensor(room))
-
-    real = await cg.get_variable(config[CONF_REAL_CLIMATE])
-    cg.add(var.real_climate(real))
 
     home_min = await cg.get_variable(config[CONF_HOME_MIN])
     home_max = await cg.get_variable(config[CONF_HOME_MAX])

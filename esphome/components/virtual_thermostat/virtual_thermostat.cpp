@@ -3,17 +3,27 @@
 namespace esphome {
 namespace virtual_thermostat {
 
-VirtualThermostat::VirtualThermostat() {
+VirtualThermostat::VirtualThermostat(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate) 
+  : inside_sensor_(inside_sensor), outside_sensor_(outside_sensor), real_climate_(real_climate) {
 }
 
 void VirtualThermostat::setup() {
-  // Subscribe to room sensor state changes for real-time temperature updates
+  // Subscribe to inside sensor state changes for real-time temperature updates
   // CALLBACK LIFETIME SAFETY: The lambda captures 'this' pointer, which is safe because
   // VirtualThermostat is a Component managed by ESPHome's lifecycle system, and the
-  // room_sensor is also managed by the same system and will not outlive VirtualThermostat.
-  if (this->room_sensor_ != nullptr) {
-    this->room_sensor_->add_on_state_callback([this](float temperature) { 
-      this->on_room_sensor_update(temperature); 
+  // inside_sensor is also managed by the same system and will not outlive VirtualThermostat.
+  if (this->inside_sensor_ != nullptr) {
+    this->inside_sensor_->add_on_state_callback([this](float temperature) { 
+      this->on_inside_sensor_update(temperature); 
+    });
+  }
+  
+  // Subscribe to outside sensor state changes
+  // CALLBACK LIFETIME SAFETY: Same as above - both the VirtualThermostat and outside_sensor
+  // are managed by ESPHome's component system with synchronized lifecycles.
+  if (this->outside_sensor_ != nullptr) {
+    this->outside_sensor_->add_on_state_callback([this](float temperature) { 
+      this->on_outside_sensor_update(temperature); 
     });
   }
   
@@ -253,14 +263,14 @@ void VirtualThermostat::update_real_climate() {
   }
 }
 
-void VirtualThermostat::on_room_sensor_update(float temperature) {
-  // Update current temperature from room sensor in real-time
+void VirtualThermostat::on_inside_sensor_update(float temperature) {
+  // Update current temperature from inside sensor in real-time
   if (!std::isnan(temperature)) {
     // Use epsilon for float comparison to avoid precision issues
     bool changed = (std::abs(this->current_temperature - temperature) > 0.01f);
     this->current_temperature = temperature;
     
-    // If we're in a preset mode (AUTO), room temperature changes may affect real climate mode
+    // If we're in a preset mode (AUTO), inside temperature changes may affect real climate mode
     const auto& active_preset = getActivePreset();
     if (active_preset.id != manual.id && !this->updating_from_control_) {
       auto new_real_mode = active_preset.getModeForRealClimate();
@@ -273,6 +283,21 @@ void VirtualThermostat::on_room_sensor_update(float temperature) {
     // Publish virtual state if temperature changed
     if (changed) {
       this->publish_state();
+    }
+  }
+}
+
+void VirtualThermostat::on_outside_sensor_update(float temperature) {
+  // When outside temperature changes, reevaluate real climate mode if in preset mode
+  // This is important when inside temp is in range and we use outside temp to decide mode
+  if (!std::isnan(temperature)) {
+    const auto& active_preset = getActivePreset();
+    if (active_preset.id != manual.id && !this->updating_from_control_) {
+      auto new_real_mode = active_preset.getModeForRealClimate();
+      if (new_real_mode.has_value() && this->real_climate_ && this->real_climate_->mode != *new_real_mode) {
+        this->real_climate_->mode = *new_real_mode;
+        this->real_climate_->publish_state();
+      }
     }
   }
 }

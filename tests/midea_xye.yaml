@@ -46,7 +46,8 @@ climate:
   # Virtual thermostat for testing
   - platform: virtual_thermostat
     name: Virtual Thermostat Test
-    room_sensor: test_sensor
+    inside_sensor: test_sensor
+    outside_sensor: outside_sensor
     real_climate: main_climate
     home_min: home_min_temp
     home_max: home_max_temp
@@ -66,6 +67,10 @@ sensor:
     filters:
       - throttle: 30s
       - heartbeat: 30s
+  
+  - platform: homeassistant
+    id: outside_sensor
+    entity_id: sensor.outside_temperature
 
 # Number entities for virtual thermostat presets
 number:
