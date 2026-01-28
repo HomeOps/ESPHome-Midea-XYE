@@ -81,8 +81,13 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
     }
   }
   else {
-    // In manual mode, use the virtual thermostat's mode directly
-    return thermostat->mode;
+    // In manual mode, the real climate device is in control
+    // Return its current mode to avoid changing it (don't send virtual mode which may be AUTO)
+    if (thermostat->real_climate_ != nullptr) {
+      return thermostat->real_climate_->mode;
+    }
+    // Fallback if real_climate is somehow null
+    return climate::CLIMATE_MODE_HEAT;
   }
 }
 
