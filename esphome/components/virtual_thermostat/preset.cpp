@@ -52,10 +52,28 @@ climate::ClimateMode Preset::getModeForVirtualThermostat() const {
 
 climate::ClimateMode Preset::getModeForRealClimate() const {
   if (id != climate::CLIMATE_PRESET_NONE) {
-    // When in a preset mode (home, sleep, away), keep the real device in AUTO mode
-    // so it never turns off but intelligently switches between heating and cooling
-    // based on its target temperature. This ensures the HVAC stays ready.
-    return climate::CLIMATE_MODE_AUTO;
+    const auto temp = getTargetTemperatureForRealClimate();
+    const auto room_temp = getCurrentRoomTemperatureForRealClimate();
+    // Handle NaN case when room sensor is unavailable
+    if (std::isnan(room_temp)) {
+      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, defaulting to HEAT mode");
+      // Default to HEAT mode to keep device ready (never OFF in preset mode)
+      return climate::CLIMATE_MODE_HEAT;
+    }
+    if (room_temp < min()) {
+      return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
+    } else if (room_temp > max()) {
+      return climate::CLIMATE_MODE_COOL; // room_temp too hot, need cooling
+    } else {
+      // Temperature is within range - keep device ready by choosing mode
+      // based on which boundary we're closer to (never OFF in preset mode)
+      const float mid_point = (min() + max()) / 2.0f;
+      if (room_temp < mid_point) {
+        return climate::CLIMATE_MODE_HEAT; // closer to min, stay ready to heat
+      } else {
+        return climate::CLIMATE_MODE_COOL; // closer to max, stay ready to cool
+      }
+    }
   }
   else {
     // In manual mode, use the virtual thermostat's mode directly
