@@ -9,11 +9,10 @@ namespace virtual_thermostat {
 class VirtualThermostat : public climate::Climate, public Component {
 friend class Preset;
 public:
-  // External inputs (wired from YAML/codegen)
-  sensor::Sensor *room_sensor_{nullptr};
-  void room_sensor(sensor::Sensor *s) { this->room_sensor_ = s; }
+  // External inputs (required sensors and climate device)
+  sensor::Sensor *inside_sensor_{nullptr};
+  sensor::Sensor *outside_sensor_{nullptr};
   climate::Climate *real_climate_{nullptr};
-  void real_climate(climate::Climate *c) { this->real_climate_ = c; }
   
   // Update interval (configured from YAML via codegen) for periodic sync with real climate
   void set_update_interval(uint32_t interval_ms) { this->update_interval_ms_ = interval_ms; }
@@ -24,7 +23,7 @@ public:
   Preset away { climate::CLIMATE_PRESET_AWAY, this };
   Preset manual { climate::CLIMATE_PRESET_NONE, this };
 
-  VirtualThermostat();
+  VirtualThermostat(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate);
 
   
   void setup() override;
@@ -39,7 +38,8 @@ public:
   void update_real_climate();
   
   // State change callbacks
-  void on_room_sensor_update(float temperature);
+  void on_inside_sensor_update(float temperature);
+  void on_outside_sensor_update(float temperature);
   void on_real_climate_update();
   
   // Guard flags to prevent infinite update loops

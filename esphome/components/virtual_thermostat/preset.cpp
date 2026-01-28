@@ -29,9 +29,9 @@ float Preset::getTargetTemperatureForRealClimate() const {
   return (min() + max()) / 2.0f;
 }
 
-float Preset::getCurrentRoomTemperatureForRealClimate() const {
-  if (thermostat->room_sensor_ != nullptr && thermostat->room_sensor_->has_state()) {
-    return thermostat->room_sensor_->state;
+float Preset::getCurrentInsideTemperatureForRealClimate() const {
+  if (thermostat->inside_sensor_ != nullptr && thermostat->inside_sensor_->has_state()) {
+    return thermostat->inside_sensor_->state;
   }
   return NAN;
 }
@@ -58,23 +58,42 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
   
   if (id != climate::CLIMATE_PRESET_NONE) {
     const auto temp = getTargetTemperatureForRealClimate();
-    const auto room_temp = getCurrentRoomTemperatureForRealClimate();
-    // Handle NaN case when room sensor is unavailable
-    if (std::isnan(room_temp)) {
-      // Don't change the real device mode when room temperature is unavailable
+    const auto inside_temp = getCurrentInsideTemperatureForRealClimate();
+    // Handle NaN case when inside sensor is unavailable
+    if (std::isnan(inside_temp)) {
+      // Don't change the real device mode when inside temperature is unavailable
       // Return current mode to keep device unchanged
-      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, keeping current mode");
+      ESP_LOGD("virtual_thermostat", "Inside temperature unavailable, keeping current mode");
       return thermostat->real_climate_->mode;
     }
-    if (room_temp < min()) {
-      return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
-    } else if (room_temp > max()) {
-      return climate::CLIMATE_MODE_COOL; // room_temp too hot, need cooling
+    
+    // Check if inside temperature is outside the range
+    if (inside_temp < min()) {
+      return climate::CLIMATE_MODE_HEAT; // inside_temp too cold, need heating
+    } else if (inside_temp > max()) {
+      return climate::CLIMATE_MODE_COOL; // inside_temp too hot, need cooling
     } else {
-      // Temperature is within range - keep device ready by choosing mode
-      // based on which boundary we're closer to (never OFF in preset mode)
+      // Inside temperature is within range
+      // Calculate midpoint once for use in both outside sensor logic and fallback
       const float mid_point = (min() + max()) / 2.0f;
-      if (room_temp < mid_point) {
+      
+      // Use outside temperature sensor to decide between cool or heat
+      // This keeps the real thermostat ready in the appropriate mode
+      if (thermostat->outside_sensor_ != nullptr && thermostat->outside_sensor_->has_state()) {
+        const auto outside_temp = thermostat->outside_sensor_->state;
+        if (!std::isnan(outside_temp)) {
+          // Use outside temp to decide mode - if it's hot outside, stay ready to cool
+          // if it's cold outside, stay ready to heat
+          if (outside_temp < mid_point) {
+            return climate::CLIMATE_MODE_HEAT; // cold outside, stay ready to heat
+          } else {
+            return climate::CLIMATE_MODE_COOL; // warm outside, stay ready to cool
+          }
+        }
+      }
+      
+      // Fallback: If outside sensor unavailable, use inside temp position within range
+      if (inside_temp < mid_point) {
         return climate::CLIMATE_MODE_HEAT; // closer to min, stay ready to heat
       } else {
         return climate::CLIMATE_MODE_COOL; // closer to max, stay ready to cool
