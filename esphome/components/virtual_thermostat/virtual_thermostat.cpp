@@ -8,6 +8,9 @@ VirtualThermostat::VirtualThermostat() {
 
 void VirtualThermostat::setup() {
   // Subscribe to room sensor state changes for real-time temperature updates
+  // CALLBACK LIFETIME SAFETY: The lambda captures 'this' pointer, which is safe because
+  // VirtualThermostat is a Component managed by ESPHome's lifecycle system, and the
+  // room_sensor is also managed by the same system and will not outlive VirtualThermostat.
   if (this->room_sensor_ != nullptr) {
     this->room_sensor_->add_on_state_callback([this](float temperature) { 
       this->on_room_sensor_update(temperature); 
@@ -15,6 +18,8 @@ void VirtualThermostat::setup() {
   }
   
   // Subscribe to real climate state changes
+  // CALLBACK LIFETIME SAFETY: Same as above - both the VirtualThermostat and real_climate
+  // are managed by ESPHome's component system with synchronized lifecycles.
   if (this->real_climate_ != nullptr) {
     this->real_climate_->add_on_state_callback([this](climate::Climate &climate) { 
       this->on_real_climate_update(); 
@@ -79,7 +84,7 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
       this->target_temperature_high = p.max();
       virtual_changed = true;
     }
-    if (this->real_climate_->target_temperature != temp) {
+    if (this->real_climate_ && this->real_climate_->target_temperature != temp) {
       this->real_climate_->target_temperature = temp;
       real_changed = true;
     }
@@ -88,7 +93,7 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
       this->target_temperature = temp;
       virtual_changed = true;
     }
-    if (this->real_climate_->target_temperature != temp) {
+    if (this->real_climate_ && this->real_climate_->target_temperature != temp) {
       this->real_climate_->target_temperature = temp;
       real_changed = true;
     }
@@ -101,13 +106,13 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
   }
   
   auto new_real_mode = p.getModeForRealClimate();
-  if (this->real_climate_->mode != new_real_mode) {
+  if (this->real_climate_ && this->real_climate_->mode != new_real_mode) {
     this->real_climate_->mode = new_real_mode;
     real_changed = true;
   }
   
   auto new_fan_mode = p.getFanModeForRealClimate();
-  if (this->real_climate_->fan_mode != new_fan_mode) {
+  if (this->real_climate_ && this->real_climate_->fan_mode != new_fan_mode) {
     this->real_climate_->fan_mode = new_fan_mode;
     real_changed = true;
   }
@@ -245,7 +250,8 @@ void VirtualThermostat::update_real_climate() {
 void VirtualThermostat::on_room_sensor_update(float temperature) {
   // Update current temperature from room sensor in real-time
   if (!std::isnan(temperature)) {
-    bool changed = (this->current_temperature != temperature);
+    // Use epsilon for float comparison to avoid precision issues
+    bool changed = (std::abs(this->current_temperature - temperature) > 0.01f);
     this->current_temperature = temperature;
     
     // If we're in a preset mode (AUTO), room temperature changes may affect real climate mode
@@ -284,7 +290,8 @@ void VirtualThermostat::on_real_climate_update() {
   if (!std::isnan(this->real_climate_->target_temperature) && 
       std::abs(this->real_climate_->target_temperature - expected_temp) > 0.1f) {
     // Real climate target temperature changed externally - exit preset mode
-    ESP_LOGD("virtual_thermostat", "Real climate target temperature changed externally, exiting preset mode");
+    ESP_LOGD("virtual_thermostat", "Real climate target temperature changed externally (%.1f -> %.1f), exiting preset mode",
+             expected_temp, this->real_climate_->target_temperature);
     
     // Switch to manual mode
     if (this->preset != manual.id) {
@@ -294,8 +301,15 @@ void VirtualThermostat::on_real_climate_update() {
     
     // Update virtual thermostat to match real climate
     if (this->mode == climate::CLIMATE_MODE_AUTO) {
-      // In AUTO mode, keep both low and high
-      // Just sync the target temp without changing mode
+      // In AUTO mode, we need to adjust both low and high target temperatures
+      // to center around the new target temperature from real climate
+      const float new_temp = this->real_climate_->target_temperature;
+      const float current_range = this->target_temperature_high - this->target_temperature_low;
+      const float half_range = current_range / 2.0f;
+      
+      this->target_temperature_low = new_temp - half_range;
+      this->target_temperature_high = new_temp + half_range;
+      virtual_needs_publish = true;
     } else {
       // In single-point mode (HEAT/COOL), update target temperature
       this->target_temperature = this->real_climate_->target_temperature;
@@ -309,7 +323,7 @@ void VirtualThermostat::on_real_climate_update() {
     // Real climate mode changed externally - this could be from the device itself
     // We'll log it but not necessarily exit preset mode, as mode changes in preset are normal
     ESP_LOGD("virtual_thermostat", "Real climate mode changed: %d (expected: %d)", 
-             this->real_climate_->mode, expected_mode);
+             static_cast<int>(this->real_climate_->mode), static_cast<int>(expected_mode));
   }
   
   // Sync hvac_action to virtual thermostat (for display purposes)
