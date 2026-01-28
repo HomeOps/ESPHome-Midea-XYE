@@ -19,8 +19,15 @@ void VirtualThermostat::setup() {
       this->target_temperature_high = restored->target_temperature_high;
   }
   const auto& active_preset = getActivePreset();
-  apply_preset(active_preset);
-  this->publish_state();
+  auto [virtual_changed, real_changed] = apply_preset(active_preset);
+  
+  // Publish state if anything changed
+  if (real_changed) {
+    this->real_climate_->publish_state();
+  }
+  if (virtual_changed) {
+    this->publish_state();
+  }
 }
 
 climate::ClimateTraits VirtualThermostat::traits() {
@@ -41,31 +48,62 @@ climate::ClimateTraits VirtualThermostat::traits() {
   return traits;
 }
 
-void VirtualThermostat::apply_preset(const Preset& p) {
-  this->preset = p.id;
+std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
+  bool virtual_changed = false;
+  bool real_changed = false;
+  
+  // Update virtual thermostat state
+  if (this->preset != p.id) {
+    this->preset = p.id;
+    virtual_changed = true;
+  }
+  
   const float temp = p.getTargetTemperatureForRealClimate();
   if (p.id != manual.id) {
-    this->target_temperature_low  = p.min();
-    this->target_temperature_high = p.max();
-    this->real_climate_->target_temperature = temp;
+    if (this->target_temperature_low != p.min() || this->target_temperature_high != p.max()) {
+      this->target_temperature_low  = p.min();
+      this->target_temperature_high = p.max();
+      virtual_changed = true;
+    }
+    if (this->real_climate_->target_temperature != temp) {
+      this->real_climate_->target_temperature = temp;
+      real_changed = true;
+    }
   } else {
-    this->target_temperature = temp;
-    this->real_climate_->target_temperature = temp;
+    if (this->target_temperature != temp) {
+      this->target_temperature = temp;
+      virtual_changed = true;
+    }
+    if (this->real_climate_->target_temperature != temp) {
+      this->real_climate_->target_temperature = temp;
+      real_changed = true;
+    }
   }
-  this->mode = p.getModeForVirtualThermostat();
-  this->real_climate_->mode = p.getModeForRealClimate();
-  this->real_climate_->fan_mode = p.getFanModeForRealClimate();
   
-  this->real_climate_->publish_state();
-  this->publish_state();
+  auto new_virtual_mode = p.getModeForVirtualThermostat();
+  if (this->mode != new_virtual_mode) {
+    this->mode = new_virtual_mode;
+    virtual_changed = true;
+  }
+  
+  auto new_real_mode = p.getModeForRealClimate();
+  if (this->real_climate_->mode != new_real_mode) {
+    this->real_climate_->mode = new_real_mode;
+    real_changed = true;
+  }
+  
+  auto new_fan_mode = p.getFanModeForRealClimate();
+  if (this->real_climate_->fan_mode != new_fan_mode) {
+    this->real_climate_->fan_mode = new_fan_mode;
+    real_changed = true;
+  }
+  
+  // Return what changed but don't publish - let caller decide when to publish
+  return {virtual_changed, real_changed};
 }
 
 const Preset& VirtualThermostat::getActivePreset() const {
-  const auto id = this->preset;
-  if (id == home.id)  return home;
-  if (id == sleep.id) return sleep;
-  if (id == away.id)  return away;
-  return manual;  // unknown or empty → manual
+  return getActivePresetFromId(this->preset.value_or(climate::CLIMATE_PRESET_NONE));
 }
 
 const Preset& VirtualThermostat::getActivePresetFromId(climate::ClimatePreset id) const {
@@ -75,35 +113,40 @@ const Preset& VirtualThermostat::getActivePresetFromId(climate::ClimatePreset id
   return manual;  // unknown or empty → manual
 }
 
-void VirtualThermostat::exit_preset_mode() {
-  apply_preset(manual);
-}
-
 void VirtualThermostat::control(const climate::ClimateCall &call) {
+  bool virtual_needs_publish = false;
+  bool real_needs_publish = false;
 
+  // FAN MODE CHANGE
   if (call.get_fan_mode().has_value()) {
     this->fan_mode = *call.get_fan_mode();
     this->real_climate_->fan_mode = *call.get_fan_mode();
-    this->real_climate_->publish_state();
-    this->publish_state();
+    virtual_needs_publish = true;
+    real_needs_publish = true;
   }
 
   // PRESET CHANGE
   if (call.get_preset().has_value()) {
     const auto preset_id = *call.get_preset();
     const auto& active_preset = getActivePresetFromId(preset_id);
-    apply_preset(active_preset);
+    auto [virtual_changed, real_changed] = apply_preset(active_preset);
+    virtual_needs_publish |= virtual_changed;
+    real_needs_publish |= real_changed;
   }
 
   // MANUAL EDITS → EXIT PRESET MODE
   if (call.get_target_temperature_low().has_value()) {
+    auto [virtual_changed, real_changed] = apply_preset(manual);
     this->target_temperature_low = *call.get_target_temperature_low();
-    apply_preset(manual);
+    virtual_needs_publish = true;  // Always publish when user changes value
+    real_needs_publish |= real_changed;
   }
 
   if (call.get_target_temperature_high().has_value()) {
+    auto [virtual_changed, real_changed] = apply_preset(manual);
     this->target_temperature_high = *call.get_target_temperature_high();
-    apply_preset(manual);
+    virtual_needs_publish = true;  // Always publish when user changes value
+    real_needs_publish |= real_changed;
   }
 
   // MODE CHANGE
@@ -117,6 +160,7 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
         this->mode == climate::CLIMATE_MODE_AUTO) {
       const float temp = active_preset.getTargetTemperatureForRealClimate();
       this->target_temperature = temp;
+      virtual_needs_publish = true;
     }
 
     // HEAT/COOL → AUTO (only re-apply preset if in a real preset, not manual)
@@ -124,29 +168,36 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
         (this->mode == climate::CLIMATE_MODE_HEAT ||
          this->mode == climate::CLIMATE_MODE_COOL) &&
         active_preset.id != manual.id) {
-      apply_preset(active_preset);
-      return; // apply_preset already publishes state
+      auto [virtual_changed, real_changed] = apply_preset(active_preset);
+      virtual_needs_publish |= virtual_changed;
+      real_needs_publish |= real_changed;
+    } else {
+      // Update mode and sync to real climate
+      this->mode = new_mode;
+      this->real_climate_->mode = active_preset.getModeForRealClimate();
+      this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
+      virtual_needs_publish = true;
+      real_needs_publish = true;
     }
-
-    // Update mode and sync to real climate
-    this->mode = new_mode;
-    this->real_climate_->mode = active_preset.getModeForRealClimate();
-    this->real_climate_->target_temperature = active_preset.getTargetTemperatureForRealClimate();
-    this->real_climate_->publish_state();
-    this->publish_state();
-    return; // Already published state
   }
 
+  // TARGET TEMPERATURE CHANGE
   if (call.get_target_temperature().has_value()) {
+    auto [virtual_changed, real_changed] = apply_preset(manual);
     const float temp = *call.get_target_temperature();
     this->target_temperature = temp;
     this->real_climate_->target_temperature = temp;
-    this->real_climate_->publish_state();
-    exit_preset_mode();
-    return; // exit_preset_mode already publishes state
+    virtual_needs_publish = true;  // Always publish when user changes value
+    real_needs_publish = true;
   }
 
-  this->publish_state();
+  // Publish state if any changes were made
+  if (real_needs_publish) {
+    this->real_climate_->publish_state();
+  }
+  if (virtual_needs_publish) {
+    this->publish_state();
+  }
 }
 
 void VirtualThermostat::loop() {

@@ -33,10 +33,9 @@ public:
   void loop() override;
 
  private:
-  void apply_preset(const Preset& p);
+  std::pair<bool, bool> apply_preset(const Preset& p);
   const Preset& getActivePreset() const;
   const Preset& getActivePresetFromId(climate::ClimatePreset id) const;
-  void exit_preset_mode();
   void update_real_climate();
   
   uint32_t update_interval_ms_{30000}; // Default 30 seconds
