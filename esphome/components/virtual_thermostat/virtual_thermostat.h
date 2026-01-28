@@ -38,6 +38,14 @@ public:
   const Preset& getActivePresetFromId(climate::ClimatePreset id) const;
   void update_real_climate();
   
+  // State change callbacks
+  void on_room_sensor_update(float temperature);
+  void on_real_climate_update();
+  
+  // Guard flags to prevent infinite update loops
+  bool updating_from_real_{false};
+  bool updating_from_control_{false};
+  
   uint32_t update_interval_ms_{30000}; // Default 30 seconds
   uint32_t last_update_time_{0};
 };

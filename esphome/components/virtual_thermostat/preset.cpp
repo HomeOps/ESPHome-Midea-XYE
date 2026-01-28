@@ -50,26 +50,41 @@ climate::ClimateMode Preset::getModeForVirtualThermostat() const {
   }
 }
 
-climate::ClimateMode Preset::getModeForRealClimate() const {
+optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
+  // If there's no real climate device, return empty optional
+  if (thermostat->real_climate_ == nullptr) {
+    return {};
+  }
+  
   if (id != climate::CLIMATE_PRESET_NONE) {
     const auto temp = getTargetTemperatureForRealClimate();
     const auto room_temp = getCurrentRoomTemperatureForRealClimate();
     // Handle NaN case when room sensor is unavailable
     if (std::isnan(room_temp)) {
-      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, defaulting to OFF mode");
-      return climate::CLIMATE_MODE_OFF;
+      // Don't change the real device mode when room temperature is unavailable
+      // Return current mode to keep device unchanged
+      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, keeping current mode");
+      return thermostat->real_climate_->mode;
     }
     if (room_temp < min()) {
       return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
     } else if (room_temp > max()) {
       return climate::CLIMATE_MODE_COOL; // room_temp too hot, need cooling
     } else {
-      return climate::CLIMATE_MODE_OFF; // within range, turn off
+      // Temperature is within range - keep device ready by choosing mode
+      // based on which boundary we're closer to (never OFF in preset mode)
+      const float mid_point = (min() + max()) / 2.0f;
+      if (room_temp < mid_point) {
+        return climate::CLIMATE_MODE_HEAT; // closer to min, stay ready to heat
+      } else {
+        return climate::CLIMATE_MODE_COOL; // closer to max, stay ready to cool
+      }
     }
   }
   else {
-    // In manual mode, use the virtual thermostat's mode directly
-    return thermostat->mode;
+    // In manual mode, the real climate device is in control
+    // Return its current mode to avoid changing it (don't send virtual mode which may be AUTO)
+    return thermostat->real_climate_->mode;
   }
 }
 

@@ -36,7 +36,7 @@ struct Preset {
 
   climate::ClimateMode getModeForVirtualThermostat() const;
 
-  climate::ClimateMode getModeForRealClimate() const;
+  optional<climate::ClimateMode> getModeForRealClimate() const;
 
 private:
   number::Number *min_entity_{nullptr};
