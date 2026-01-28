@@ -50,7 +50,12 @@ climate::ClimateMode Preset::getModeForVirtualThermostat() const {
   }
 }
 
-climate::ClimateMode Preset::getModeForRealClimate() const {
+optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
+  // If there's no real climate device, return empty optional
+  if (thermostat->real_climate_ == nullptr) {
+    return {};
+  }
+  
   if (id != climate::CLIMATE_PRESET_NONE) {
     const auto temp = getTargetTemperatureForRealClimate();
     const auto room_temp = getCurrentRoomTemperatureForRealClimate();
@@ -58,12 +63,8 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
     if (std::isnan(room_temp)) {
       // Don't change the real device mode when room temperature is unavailable
       // Return current mode to keep device unchanged
-      if (thermostat->real_climate_ != nullptr) {
-        ESP_LOGD("virtual_thermostat", "Room temperature unavailable, keeping current mode");
-        return thermostat->real_climate_->mode;
-      }
-      // Fallback to HEAT if real_climate is somehow null
-      return climate::CLIMATE_MODE_HEAT;
+      ESP_LOGD("virtual_thermostat", "Room temperature unavailable, keeping current mode");
+      return thermostat->real_climate_->mode;
     }
     if (room_temp < min()) {
       return climate::CLIMATE_MODE_HEAT; // room_temp too cold, need heating
@@ -83,11 +84,7 @@ climate::ClimateMode Preset::getModeForRealClimate() const {
   else {
     // In manual mode, the real climate device is in control
     // Return its current mode to avoid changing it (don't send virtual mode which may be AUTO)
-    if (thermostat->real_climate_ != nullptr) {
-      return thermostat->real_climate_->mode;
-    }
-    // Fallback if real_climate is somehow null
-    return climate::CLIMATE_MODE_HEAT;
+    return thermostat->real_climate_->mode;
   }
 }
 
