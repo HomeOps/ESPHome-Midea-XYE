@@ -375,11 +375,15 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 #endif
 
           if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[9] & 0x0F) != 0x00) {
-            this->action = climate::CLIMATE_ACTION_HEATING;
-            need_publish = true;
+            if (this->action != climate::CLIMATE_ACTION_HEATING) {
+              this->action = climate::CLIMATE_ACTION_HEATING;
+              need_publish = true;
+            }
           } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[9] & 0x0F) != 0x00) {
-            this->action = climate::CLIMATE_ACTION_COOLING;
-            need_publish = true;
+            if (this->action != climate::CLIMATE_ACTION_COOLING) {
+              this->action = climate::CLIMATE_ACTION_COOLING;
+              need_publish = true;
+            }
           } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[9] & 0x0F) == 0x00) {
             this->action = climate::CLIMATE_ACTION_IDLE;
             need_publish = true;
