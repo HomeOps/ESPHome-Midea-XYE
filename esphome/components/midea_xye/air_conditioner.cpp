@@ -374,17 +374,17 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           update_property(this->target_temperature, static_cast<float>(RXData[RX_C0_BYTE_SET_TEMP]), need_publish);
 #endif
 
-          if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[9] & 0x0F) != 0x00) {
+          if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
             if (this->action != climate::CLIMATE_ACTION_HEATING) {
               this->action = climate::CLIMATE_ACTION_HEATING;
               need_publish = true;
             }
-          } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[9] & 0x0F) != 0x00) {
+          } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
             if (this->action != climate::CLIMATE_ACTION_COOLING) {
               this->action = climate::CLIMATE_ACTION_COOLING;
               need_publish = true;
             }
-          } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[9] & 0x0F) == 0x00) {
+          } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
             this->action = climate::CLIMATE_ACTION_IDLE;
             need_publish = true;
           }
@@ -415,7 +415,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           if (this->preset != preset)
             need_publish = true;
           this->preset = preset;
-        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[9] & 0x0F) == 0x00) {
+        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
           this->action = climate::CLIMATE_ACTION_IDLE;
           need_publish = true;
         }
