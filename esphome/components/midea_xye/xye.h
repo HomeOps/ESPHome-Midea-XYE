@@ -46,9 +46,9 @@ constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
 
 /**
  * @brief Command types sent from client (thermostat) to server (HVAC unit)
- * 
+ *
  * Note: Server responses use the same command codes, so there's no separate
- * ServerCommand enum. The response is distinguished by the direction field.
+ * ServerCommand enum in this protocol variant.
  */
 enum class Command : uint8_t {
   QUERY = 0xC0,                      ///< Query current status (basic)
