@@ -261,16 +261,6 @@ struct __attribute__((packed)) TransmitMessageData {
 };
 
 /**
- * @brief Transmit message structure (Client to Server)
- * Total size: 16 bytes
- */
-struct __attribute__((packed)) TransmitMessage {
-  TransmitMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  TransmitMessageData data;          ///< [6-13] Message data
-  MessageFrameEnd frame_end;         ///< [14-15] CRC and prologue
-};
-
-/**
  * @brief Common header fields for all receive messages (without preamble)
  */
 struct __attribute__((packed)) ReceiveMessageHeader {
@@ -321,16 +311,6 @@ struct __attribute__((packed)) QueryResponseData {
 };
 
 /**
- * @brief Query response message structure (Server to Client, command 0xC0)
- * Total size: 32 bytes
- */
-struct __attribute__((packed)) QueryResponseMessage {
-  ReceiveMessageFrame frame;       ///< [0-5] Common frame (preamble + header)
-  QueryResponseData data;          ///< [6-29] Query response specific data
-  MessageFrameEnd frame_end;       ///< [30-31] CRC and prologue
-};
-
-/**
  * @brief Extended query response data (Server to Client, command 0xC4)
  * Contains outdoor temperature and static pressure information
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
@@ -363,16 +343,6 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 };
 
 /**
- * @brief Extended query response message structure (Server to Client, command 0xC4)
- * Total size: 32 bytes
- */
-struct __attribute__((packed)) ExtendedQueryResponseMessage {
-  ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  ExtendedQueryResponseData data;   ///< [6-29] Extended query response specific data
-  MessageFrameEnd frame_end;        ///< [30-31] CRC and prologue
-};
-
-/**
  * @brief Generic receive message data
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  */
@@ -381,35 +351,75 @@ struct __attribute__((packed)) ReceiveMessageData {
 };
 
 /**
- * @brief Generic receive message that can be any response type
- * Total size: 32 bytes
+ * @brief Union for transmit message data payloads
+ * Provides type-safe access to different data types based on command
  */
-struct __attribute__((packed)) ReceiveMessage {
-  ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  ReceiveMessageData data;          ///< [6-29] Variable data
-  MessageFrameEnd frame_end;        ///< [30-31] CRC and prologue
+union TransmitMessageDataUnion {
+  TransmitMessageData standard;  ///< Standard transmit data (SET, QUERY, etc.)
 };
+
+static_assert(sizeof(TransmitMessageDataUnion) == TX_MESSAGE_LENGTH - sizeof(TransmitMessageFrame) - sizeof(MessageFrameEnd), 
+              "TransmitMessageDataUnion size must match TX_DATA_LENGTH");
 
 /**
  * @brief Union for transmit data - allows access as both byte array and struct
  */
 union TransmitData {
   uint8_t raw[TX_MESSAGE_LENGTH];  ///< Raw byte array for UART transmission
-  TransmitMessage message;         ///< Structured access to message fields
+  struct __attribute__((packed)) {
+    TransmitMessageFrame frame;         ///< [0-5] Common frame (preamble + header)
+    TransmitMessageDataUnion data;      ///< [6-13] Data union for different message types
+    MessageFrameEnd frame_end;          ///< [14-15] CRC and prologue
+  } message;
 
   /**
    * @brief Pretty print the transmit message for debugging
+   * Takes into account the kind of message based on command type
    * @param tag Log tag to use
    */
   void print_debug(const char *tag) const {
     ESP_LOGD(tag, "TX Message:");
     ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.frame.header.command));
-    ESP_LOGD(tag, "  Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.operation_mode));
-    ESP_LOGD(tag, "  Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.fan_mode));
-    ESP_LOGD(tag, "  Target Temp: 0x%02X (%.1f°C)", message.data.target_temperature.value, message.data.target_temperature.to_celsius());
-    ESP_LOGD(tag, "  Timer Start: 0x%02X", message.data.timer_start);
-    ESP_LOGD(tag, "  Timer Stop/Subcmd: 0x%02X", message.data.timer_stop);
-    ESP_LOGD(tag, "  Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.mode_flags));
+    
+    switch (message.frame.header.command) {
+      case Command::SET:
+        ESP_LOGD(tag, "  Set Command:");
+        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.standard.operation_mode));
+        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.standard.fan_mode));
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.standard.target_temperature.value, message.data.standard.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    Timer Start: 0x%02X", message.data.standard.timer_start);
+        ESP_LOGD(tag, "    Timer Stop: 0x%02X", message.data.standard.timer_stop);
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.standard.mode_flags));
+        break;
+      
+      case Command::QUERY:
+        ESP_LOGD(tag, "  Query Command");
+        break;
+      
+      case Command::QUERY_EXTENDED:
+        ESP_LOGD(tag, "  Extended Query Command");
+        break;
+      
+      case Command::FOLLOW_ME:
+        ESP_LOGD(tag, "  Follow-Me Command:");
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.standard.target_temperature.value, message.data.standard.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    Subcommand: 0x%02X", message.data.standard.timer_stop);  // timer_stop field is used as subcommand for FOLLOW_ME
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.standard.mode_flags));  // mode_flags field is used for temperature in FOLLOW_ME
+        break;
+      
+      case Command::LOCK:
+        ESP_LOGD(tag, "  Lock Command");
+        break;
+      
+      case Command::UNLOCK:
+        ESP_LOGD(tag, "  Unlock Command");
+        break;
+      
+      default:
+        ESP_LOGD(tag, "  Unknown command type");
+        break;
+    }
+    
     ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
              raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
              raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]);
@@ -506,15 +516,11 @@ static_assert(sizeof(MessageFrameEnd) == 2, "MessageFrameEnd must be 2 bytes (CR
 static_assert(sizeof(TransmitMessageHeader) == 5, "TransmitMessageHeader must be 5 bytes");
 static_assert(sizeof(TransmitMessageFrame) == sizeof(ProtocolMarker) + sizeof(TransmitMessageHeader), "TransmitMessageFrame must be preamble + header");
 static_assert(sizeof(TransmitMessageData) == TX_MESSAGE_LENGTH - sizeof(TransmitMessageFrame) - sizeof(MessageFrameEnd), "TransmitMessageData size must exclude frame and frame_end");
-static_assert(sizeof(TransmitMessage) == TX_MESSAGE_LENGTH, "TransmitMessage size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageHeader) == 5, "ReceiveMessageHeader must be 5 bytes");
 static_assert(sizeof(ReceiveMessageFrame) == sizeof(ProtocolMarker) + sizeof(ReceiveMessageHeader), "ReceiveMessageFrame must be preamble + header");
 static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "QueryResponseData size must exclude frame and frame_end");
-static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must match RX_MESSAGE_LENGTH");
 static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ExtendedQueryResponseData size must exclude frame and frame_end");
-static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must match RX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ReceiveMessageData size must exclude frame and frame_end");
-static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must match RX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageDataUnion) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ReceiveMessageDataUnion size must be 24 bytes");
 static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must match RX_MESSAGE_LENGTH");
