@@ -36,7 +36,7 @@ constexpr uint8_t CLIENT_COMMAND_SET = static_cast<uint8_t>(ClientCommand::SET);
 constexpr uint8_t CLIENT_COMMAND_FOLLOWME = static_cast<uint8_t>(ClientCommand::FOLLOW_ME);
 constexpr uint8_t CLIENT_COMMAND_LOCK = static_cast<uint8_t>(ClientCommand::LOCK);
 constexpr uint8_t CLIENT_COMMAND_UNLOCK = static_cast<uint8_t>(ClientCommand::UNLOCK);
-constexpr uint8_t CLIENT_COMMAND_CELCIUS = static_cast<uint8_t>(ClientCommand::QUERY_EXTENDED);
+constexpr uint8_t CLIENT_COMMAND_CELSIUS = static_cast<uint8_t>(ClientCommand::QUERY_EXTENDED);  // Legacy typo preserved for backward compatibility
 
 constexpr uint8_t OP_MODE_OFF = static_cast<uint8_t>(OperationMode::OFF);
 constexpr uint8_t OP_MODE_AUTO = static_cast<uint8_t>(OperationMode::AUTO);
@@ -216,8 +216,8 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   TransmitData tx_data;
   ReceiveData rx_data;
   
-  // Legacy array access for backward compatibility during refactoring
-  // These are defined as pointers to the union's raw arrays
+  // Legacy array access for permanent backward compatibility
+  // Note: These must be declared after tx_data and rx_data to ensure proper initialization order
   uint8_t *const TXData{tx_data.raw};
   uint8_t *const RXData{rx_data.raw};
 

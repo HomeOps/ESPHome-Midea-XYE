@@ -192,7 +192,7 @@ struct __attribute__((packed)) QueryResponseMessage {
   uint8_t error_flags_high;        ///< [23] Error flags byte 2
   uint8_t protect_flags_low;       ///< [24] Protection flags byte 1
   uint8_t protect_flags_high;      ///< [25] Protection flags byte 2
-  uint8_t ccm_communication_error; ///< [26] CCM communication error flags
+  uint8_t ccm_communication_error_flags; ///< [26] CCM communication error flags
   uint8_t unknown4;                ///< [27] Unknown/reserved
   uint8_t unknown5;                ///< [28] Unknown/reserved
   uint8_t unknown6;                ///< [29] Unknown/reserved
