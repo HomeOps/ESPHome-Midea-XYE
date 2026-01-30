@@ -12,10 +12,12 @@ extern const std::map<Command, const char*> COMMAND_MAP;
 extern const std::map<OperationMode, const char*> OPERATION_MODE_MAP;
 extern const std::map<FanMode, const char*> FAN_MODE_MAP;
 extern const std::map<ModeFlags, const char*> MODE_FLAGS_MAP;
+extern const std::map<Direction, const char*> DIRECTION_MAP;
 extern const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP;
 
 // TransmitMessageData methods
 void TransmitMessageData::print_debug(const char *tag, Command command) const {
+  (void)command;  // Unused parameter, kept for API consistency
   ESP_LOGD(tag, "  TransmitMessageData:");
   ESP_LOGD(tag, "    operation_mode: 0x%02X (%s)", 
            static_cast<uint8_t>(operation_mode),
@@ -45,7 +47,9 @@ void TransmitData::print_debug(const char *tag) const {
            enum_to_string(message.frame.header.command, COMMAND_MAP));
   ESP_LOGD(tag, "    server_id: 0x%02X", message.frame.header.server_id);
   ESP_LOGD(tag, "    client_id1: 0x%02X", message.frame.header.client_id1);
-  ESP_LOGD(tag, "    direction: 0x%02X", static_cast<uint8_t>(message.frame.header.direction_node.direction));
+  ESP_LOGD(tag, "    direction: 0x%02X (%s)", 
+           static_cast<uint8_t>(message.frame.header.direction_node.direction),
+           enum_to_string(message.frame.header.direction_node.direction, DIRECTION_MAP));
   ESP_LOGD(tag, "    node_id: 0x%02X", message.frame.header.direction_node.node_id);
   
   // Delegate to the data struct's print_debug method

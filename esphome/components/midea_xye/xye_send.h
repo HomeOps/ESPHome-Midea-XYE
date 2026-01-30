@@ -45,7 +45,7 @@ struct __attribute__((packed)) TransmitMessageData {
   /**
    * @brief Print debug information for this data struct
    * @param tag Log tag to use
-   * @param command The command type to determine which fields are relevant
+   * @param command The command type (for context, all fields are always printed)
    */
   void print_debug(const char *tag, Command command) const;
 };

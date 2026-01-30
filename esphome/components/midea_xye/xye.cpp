@@ -27,7 +27,7 @@ void Flags16::set(uint16_t val) {
 }
 
 // Static maps for enum-to-string conversion
-static const std::map<Command, const char*> COMMAND_MAP = {
+const std::map<Command, const char*> COMMAND_MAP = {
   {Command::QUERY, "QUERY"},
   {Command::QUERY_EXTENDED, "QUERY_EXTENDED"},
   {Command::SET, "SET"},
@@ -36,7 +36,7 @@ static const std::map<Command, const char*> COMMAND_MAP = {
   {Command::UNLOCK, "UNLOCK"},
 };
 
-static const std::map<OperationMode, const char*> OPERATION_MODE_MAP = {
+const std::map<OperationMode, const char*> OPERATION_MODE_MAP = {
   {OperationMode::OFF, "OFF"},
   {OperationMode::AUTO, "AUTO"},
   {OperationMode::FAN, "FAN"},
@@ -45,7 +45,7 @@ static const std::map<OperationMode, const char*> OPERATION_MODE_MAP = {
   {OperationMode::COOL, "COOL"},
 };
 
-static const std::map<FanMode, const char*> FAN_MODE_MAP = {
+const std::map<FanMode, const char*> FAN_MODE_MAP = {
   {FanMode::FAN_OFF, "FAN_OFF"},
   {FanMode::FAN_HIGH, "FAN_HIGH"},
   {FanMode::FAN_MEDIUM, "FAN_MEDIUM"},
@@ -53,7 +53,7 @@ static const std::map<FanMode, const char*> FAN_MODE_MAP = {
   {FanMode::FAN_AUTO, "FAN_AUTO"},
 };
 
-static const std::map<ModeFlags, const char*> MODE_FLAGS_MAP = {
+const std::map<ModeFlags, const char*> MODE_FLAGS_MAP = {
   {ModeFlags::NORMAL, "NORMAL"},
   {ModeFlags::ECO, "ECO"},
   {ModeFlags::AUX_HEAT, "AUX_HEAT"},
@@ -61,29 +61,29 @@ static const std::map<ModeFlags, const char*> MODE_FLAGS_MAP = {
   {ModeFlags::VENTILATION, "VENTILATION"},
 };
 
-static const std::map<OperationFlags, const char*> OPERATION_FLAGS_MAP = {
+const std::map<OperationFlags, const char*> OPERATION_FLAGS_MAP = {
   {OperationFlags::WATER_PUMP, "WATER_PUMP"},
   {OperationFlags::WATER_LOCK, "WATER_LOCK"},
 };
 
-static const std::map<Capabilities, const char*> CAPABILITIES_MAP = {
+const std::map<Capabilities, const char*> CAPABILITIES_MAP = {
   {Capabilities::EXTERNAL_TEMP, "EXTERNAL_TEMP"},
   {Capabilities::SWING, "SWING"},
 };
 
-static const std::map<Direction, const char*> DIRECTION_MAP = {
+const std::map<Direction, const char*> DIRECTION_MAP = {
   {Direction::FROM_CLIENT, "FROM_CLIENT"},
   {Direction::TO_CLIENT, "TO_CLIENT"},
 };
 
-static const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP = {
+const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP = {
   {CcmErrorFlags::NO_ERROR, "NO_ERROR"},
   {CcmErrorFlags::TIMEOUT, "TIMEOUT"},
   {CcmErrorFlags::CRC_ERROR, "CRC_ERROR"},
   {CcmErrorFlags::PROTOCOL_ERROR, "PROTOCOL_ERROR"},
 };
 
-static const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP = {
+const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP = {
   {FollowMeSubcommand::UPDATE, "UPDATE"},
   {FollowMeSubcommand::STATIC_PRESSURE, "STATIC_PRESSURE"},
   {FollowMeSubcommand::INIT, "INIT"},
