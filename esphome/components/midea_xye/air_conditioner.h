@@ -13,6 +13,8 @@
 #include "ir_transmitter.h"
 #include "static_pressure_number.h"
 #include "xye.h"
+#include "xye_send.h"
+#include "xye_recv.h"
 
 namespace esphome {
 namespace midea {
