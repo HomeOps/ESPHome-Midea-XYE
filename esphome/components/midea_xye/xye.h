@@ -515,6 +515,7 @@ static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - sizeof(Re
 static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must match RX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ReceiveMessageData size must exclude frame and frame_end");
 static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must match RX_MESSAGE_LENGTH");
+static_assert(sizeof(ReceiveMessageDataUnion) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ReceiveMessageDataUnion size must be 24 bytes");
 static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must match RX_MESSAGE_LENGTH");
 
