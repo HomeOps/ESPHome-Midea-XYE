@@ -217,23 +217,39 @@ struct __attribute__((packed)) Flags16 {
 };
 
 /**
- * @brief Transmit message payload (without framing)
- * Total size: 14 bytes (bytes 1-14)
+ * @brief Transmit message header (without preamble)
+ * Size: 5 bytes (bytes 1-5)
  */
-struct __attribute__((packed)) TransmitPayload {
-  Command command;                   ///< [1] Command type
-  NodeId server_id;                  ///< [2] Server (HVAC) ID
-  NodeId client_id1;                 ///< [3] Client (thermostat) ID
-  DirectionNode direction_node;      ///< [4-5] Direction and client ID
-  OperationMode operation_mode;      ///< [6] Operation mode for SET command
-  FanMode fan_mode;                  ///< [7] Fan speed for SET command
-  Temperature target_temperature;    ///< [8] Target temperature for SET/FOLLOW_ME
-  uint8_t timer_start;               ///< [9] Start timer flags for SET command (combinable TimerFlags)
-  uint8_t timer_stop;                ///< [10] Stop timer flags for SET (combinable TimerFlags), or FollowMeSubcommand
-  ModeFlags mode_flags;              ///< [11] Mode flags for SET, or temperature for FOLLOW_ME
-  uint8_t reserved1;                 ///< [12] Reserved/unused
-  uint8_t complement;                ///< [13] Bitwise complement of command byte (0xFF - command)
-  uint8_t crc;                       ///< [14] Checksum (CRC)
+struct __attribute__((packed)) TransmitMessageHeader {
+  Command command;                   ///< [0] Command type
+  NodeId server_id;                  ///< [1] Server (HVAC) ID
+  NodeId client_id1;                 ///< [2] Client (thermostat) ID
+  DirectionNode direction_node;      ///< [3-4] Direction and client ID
+};
+
+/**
+ * @brief Common frame for transmit messages (preamble + header)
+ * Size: 6 bytes (preamble + 5-byte header)
+ */
+struct __attribute__((packed)) TransmitMessageFrame {
+  ProtocolMarker preamble;           ///< [0] Must be 0xAA
+  TransmitMessageHeader header;      ///< [1-5] Common header for all transmit messages
+};
+
+/**
+ * @brief Transmit message data (without frame and prologue)
+ * Size: 9 bytes (bytes 6-14)
+ */
+struct __attribute__((packed)) TransmitMessageData {
+  OperationMode operation_mode;      ///< [0] Operation mode for SET command
+  FanMode fan_mode;                  ///< [1] Fan speed for SET command
+  Temperature target_temperature;    ///< [2] Target temperature for SET/FOLLOW_ME
+  uint8_t timer_start;               ///< [3] Start timer flags for SET command (combinable TimerFlags)
+  uint8_t timer_stop;                ///< [4] Stop timer flags for SET (combinable TimerFlags), or FollowMeSubcommand
+  ModeFlags mode_flags;              ///< [5] Mode flags for SET, or temperature for FOLLOW_ME
+  uint8_t reserved1;                 ///< [6] Reserved/unused
+  uint8_t complement;                ///< [7] Bitwise complement of command byte (0xFF - command)
+  uint8_t crc;                       ///< [8] Checksum (CRC)
 };
 
 /**
@@ -241,8 +257,8 @@ struct __attribute__((packed)) TransmitPayload {
  * Total size: 16 bytes
  */
 struct __attribute__((packed)) TransmitMessage {
-  ProtocolMarker preamble;           ///< [0] Must be 0xAA
-  TransmitPayload payload;           ///< [1-14] Message payload
+  TransmitMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
+  TransmitMessageData data;          ///< [6-14] Message data
   ProtocolMarker prologue;           ///< [15] Must be 0x55
 };
 
@@ -382,13 +398,13 @@ union TransmitData {
    */
   void print_debug(const char *tag) const {
     ESP_LOGD(tag, "TX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.payload.command));
-    ESP_LOGD(tag, "  Operation Mode: 0x%02X", static_cast<uint8_t>(message.payload.operation_mode));
-    ESP_LOGD(tag, "  Fan Mode: 0x%02X", static_cast<uint8_t>(message.payload.fan_mode));
-    ESP_LOGD(tag, "  Target Temp: 0x%02X (%.1f°C)", message.payload.target_temperature.value, message.payload.target_temperature.to_celsius());
-    ESP_LOGD(tag, "  Timer Start: 0x%02X", message.payload.timer_start);
-    ESP_LOGD(tag, "  Timer Stop/Subcmd: 0x%02X", message.payload.timer_stop);
-    ESP_LOGD(tag, "  Mode Flags: 0x%02X", static_cast<uint8_t>(message.payload.mode_flags));
+    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.frame.header.command));
+    ESP_LOGD(tag, "  Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.operation_mode));
+    ESP_LOGD(tag, "  Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.fan_mode));
+    ESP_LOGD(tag, "  Target Temp: 0x%02X (%.1f°C)", message.data.target_temperature.value, message.data.target_temperature.to_celsius());
+    ESP_LOGD(tag, "  Timer Start: 0x%02X", message.data.timer_start);
+    ESP_LOGD(tag, "  Timer Stop/Subcmd: 0x%02X", message.data.timer_stop);
+    ESP_LOGD(tag, "  Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.mode_flags));
     ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
              raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
              raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]);
@@ -469,18 +485,20 @@ union ReceiveData {
 
 // Static assertions to ensure struct sizes are correct
 static_assert(sizeof(ProtocolMarker) == 1, "ProtocolMarker must be 1 byte");
+static_assert(sizeof(TransmitMessageHeader) == 5, "TransmitMessageHeader must be 5 bytes");
+static_assert(sizeof(TransmitMessageFrame) == sizeof(ProtocolMarker) + sizeof(TransmitMessageHeader), "TransmitMessageFrame must be preamble + header");
+static_assert(sizeof(TransmitMessageData) == TX_MESSAGE_LENGTH - sizeof(TransmitMessageFrame) - sizeof(ProtocolMarker), "TransmitMessageData size must exclude frame and prologue");
+static_assert(sizeof(TransmitMessage) == TX_MESSAGE_LENGTH, "TransmitMessage size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageHeader) == 5, "ReceiveMessageHeader must be 5 bytes");
-static_assert(sizeof(ReceiveMessageFrame) == 6, "ReceiveMessageFrame must be 6 bytes (preamble + header)");
-static_assert(sizeof(TransmitPayload) == TX_MESSAGE_LENGTH - 2, "TransmitPayload size must be 14 bytes (excluding preamble and prologue)");
-static_assert(sizeof(TransmitMessage) == TX_MESSAGE_LENGTH, "TransmitMessage size must be 16 bytes (including preamble and prologue)");
-static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - 7, "QueryResponseData size must be 25 bytes (excluding frame and prologue)");
-static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must be 32 bytes (including frame and prologue)");
-static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - 7, "ExtendedQueryResponseData size must be 25 bytes (excluding frame and prologue)");
-static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must be 32 bytes (including frame and prologue)");
-static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - 7, "ReceiveMessageData size must be 25 bytes (excluding frame and prologue)");
-static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must be 32 bytes (including frame and prologue)");
-static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must be 16 bytes");
-static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must be 32 bytes");
+static_assert(sizeof(ReceiveMessageFrame) == sizeof(ProtocolMarker) + sizeof(ReceiveMessageHeader), "ReceiveMessageFrame must be preamble + header");
+static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "QueryResponseData size must exclude frame and prologue");
+static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must match RX_MESSAGE_LENGTH");
+static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "ExtendedQueryResponseData size must exclude frame and prologue");
+static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must match RX_MESSAGE_LENGTH");
+static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "ReceiveMessageData size must exclude frame and prologue");
+static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must match RX_MESSAGE_LENGTH");
+static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must match TX_MESSAGE_LENGTH");
+static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must match RX_MESSAGE_LENGTH");
 
 }  // namespace xye
 }  // namespace midea
