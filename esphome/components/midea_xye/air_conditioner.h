@@ -14,22 +14,6 @@
 #include "static_pressure_number.h"
 #include "xye.h"
 
-// Control state machine states
-enum class ControlState : uint8_t {
-  WAIT_DATA = 0,            ///< Waiting for response from command
-  SEND_SET = 1,             ///< Sending Set (0xC3) command
-  SEND_FOLLOWME = 2,        ///< Sending Follow-Me (0xC6) command
-  SEND_QUERY = 3,           ///< Sending Query (0xC0) command
-  SEND_QUERY_EXTENDED = 4   ///< Sending Extended Query (0xC4) command
-};
-
-// Legacy compatibility
-constexpr uint8_t STATE_WAIT_DATA = static_cast<uint8_t>(ControlState::WAIT_DATA);
-constexpr uint8_t STATE_SEND_SET = static_cast<uint8_t>(ControlState::SEND_SET);
-constexpr uint8_t STATE_SEND_FOLLOWME = static_cast<uint8_t>(ControlState::SEND_FOLLOWME);
-constexpr uint8_t STATE_SEND_QUERY = static_cast<uint8_t>(ControlState::SEND_QUERY);
-constexpr uint8_t STATE_SEND_QUERY_EXTENDED = static_cast<uint8_t>(ControlState::SEND_QUERY_EXTENDED);
-
 namespace esphome {
 namespace midea {
 namespace xye {
@@ -40,19 +24,16 @@ using xye::OperationMode;
 using xye::FanMode;
 using xye::FollowMeSubcommand;
 using xye::ControlState;
+using xye::ResponseCode;
 using xye::TransmitData;
 using xye::ReceiveData;
 
-/**
- * @brief Response/status codes
- */
-enum class ResponseCode : uint8_t {
-  UNKNOWN = 0x00,
-  OK = 0x30,
-  UNKNOWN1 = 0xFF,
-  UNKNOWN2 = 0x01,
-  UNKNOWN3 = 0x00
-};
+// Legacy compatibility for state machine
+constexpr uint8_t STATE_WAIT_DATA = static_cast<uint8_t>(ControlState::WAIT_DATA);
+constexpr uint8_t STATE_SEND_SET = static_cast<uint8_t>(ControlState::SEND_SET);
+constexpr uint8_t STATE_SEND_FOLLOWME = static_cast<uint8_t>(ControlState::SEND_FOLLOWME);
+constexpr uint8_t STATE_SEND_QUERY = static_cast<uint8_t>(ControlState::SEND_QUERY);
+constexpr uint8_t STATE_SEND_QUERY_EXTENDED = static_cast<uint8_t>(ControlState::SEND_QUERY_EXTENDED);
 
 // Legacy compatibility - map old defines to new protocol definitions
 // These provide backward compatibility for existing code using old names
