@@ -250,43 +250,51 @@ struct __attribute__((packed)) TransmitMessage {
  * @brief Common header fields for all receive messages (without preamble)
  */
 struct __attribute__((packed)) ReceiveMessageHeader {
-  Command command;      ///< [1] Response command type
-  Direction direction;  ///< [2] Direction: TO_CLIENT
-  NodeId destination1;  ///< [3] Destination client ID
-  NodeId source;        ///< [4] Source server ID
-  NodeId destination2;  ///< [5] Destination client ID (repeated)
+  Command command;      ///< [0] Response command type
+  Direction direction;  ///< [1] Direction: TO_CLIENT
+  NodeId destination1;  ///< [2] Destination client ID
+  NodeId source;        ///< [3] Source server ID
+  NodeId destination2;  ///< [4] Destination client ID (repeated)
 };
 
 /**
- * @brief Query response payload (Server to Client, command 0xC0)
- * Contains current unit status and sensor readings
- * Size: 26 bytes (bytes 0-25, excluding preamble and prologue)
+ * @brief Common frame for all receive messages (preamble + header)
+ * Size: 6 bytes (preamble + 5-byte header)
  */
-struct __attribute__((packed)) QueryResponsePayload {
-  ReceiveMessageHeader header;    ///< [0-4] Common header (command at byte 1)
-  uint8_t unknown1;                ///< [5] Unknown/reserved
-  Capabilities capabilities;       ///< [6] Unit capabilities flags
-  OperationMode operation_mode;    ///< [7] Current operation mode
-  FanMode fan_mode;                ///< [8] Current fan mode
-  Temperature target_temperature;  ///< [9] Target temperature setpoint
-  Temperature t1_temperature;      ///< [10] Internal temperature sensor (T1)
-  Temperature t2a_temperature;     ///< [11] Temperature sensor 2A
-  Temperature t2b_temperature;     ///< [12] Temperature sensor 2B
-  Temperature t3_temperature;      ///< [13] Temperature sensor 3
-  uint8_t current;                 ///< [14] Current draw (units TBD)
-  uint8_t unknown2;                ///< [15] Unknown/reserved
-  uint8_t timer_start;             ///< [16] Start timer setting (combinable TimerFlags)
-  uint8_t timer_stop;              ///< [17] Stop timer setting (combinable TimerFlags)
-  uint8_t unknown3;                ///< [18] Unknown/reserved
-  ModeFlags mode_flags;            ///< [19] Mode flags
-  OperationFlags operation_flags;  ///< [20] Operation status flags
-  Flags16 error_flags;             ///< [21-22] Error flags (16-bit)
-  Flags16 protect_flags;           ///< [23-24] Protection flags (16-bit)
-  CcmErrorFlags ccm_communication_error_flags; ///< [25] CCM communication error flags
-  uint8_t unknown4;                ///< [26] Unknown/reserved
-  uint8_t unknown5;                ///< [27] Unknown/reserved
-  uint8_t unknown6;                ///< [28] Unknown/reserved
-  uint8_t crc;                     ///< [29] Checksum (CRC)
+struct __attribute__((packed)) ReceiveMessageFrame {
+  ProtocolMarker preamble;      ///< [0] Must be 0xAA
+  ReceiveMessageHeader header;  ///< [1-5] Common header for all receive messages
+};
+
+/**
+ * @brief Query response data (Server to Client, command 0xC0)
+ * Contains current unit status and sensor readings
+ * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
+ */
+struct __attribute__((packed)) QueryResponseData {
+  uint8_t unknown1;                ///< [0] Unknown/reserved
+  Capabilities capabilities;       ///< [1] Unit capabilities flags
+  OperationMode operation_mode;    ///< [2] Current operation mode
+  FanMode fan_mode;                ///< [3] Current fan mode
+  Temperature target_temperature;  ///< [4] Target temperature setpoint
+  Temperature t1_temperature;      ///< [5] Internal temperature sensor (T1)
+  Temperature t2a_temperature;     ///< [6] Temperature sensor 2A
+  Temperature t2b_temperature;     ///< [7] Temperature sensor 2B
+  Temperature t3_temperature;      ///< [8] Temperature sensor 3
+  uint8_t current;                 ///< [9] Current draw (units TBD)
+  uint8_t unknown2;                ///< [10] Unknown/reserved
+  uint8_t timer_start;             ///< [11] Start timer setting (combinable TimerFlags)
+  uint8_t timer_stop;              ///< [12] Stop timer setting (combinable TimerFlags)
+  uint8_t unknown3;                ///< [13] Unknown/reserved
+  ModeFlags mode_flags;            ///< [14] Mode flags
+  OperationFlags operation_flags;  ///< [15] Operation status flags
+  Flags16 error_flags;             ///< [16-17] Error flags (16-bit)
+  Flags16 protect_flags;           ///< [18-19] Protection flags (16-bit)
+  CcmErrorFlags ccm_communication_error_flags; ///< [20] CCM communication error flags
+  uint8_t unknown4;                ///< [21] Unknown/reserved
+  uint8_t unknown5;                ///< [22] Unknown/reserved
+  uint8_t unknown6;                ///< [23] Unknown/reserved
+  uint8_t crc;                     ///< [24] Checksum (CRC)
 };
 
 /**
@@ -294,43 +302,42 @@ struct __attribute__((packed)) QueryResponsePayload {
  * Total size: 32 bytes
  */
 struct __attribute__((packed)) QueryResponseMessage {
-  ProtocolMarker preamble;         ///< [0] Must be 0xAA
-  QueryResponsePayload payload;    ///< [1-30] Message payload
+  ReceiveMessageFrame frame;       ///< [0-5] Common frame (preamble + header)
+  QueryResponseData data;          ///< [6-30] Query response specific data
   ProtocolMarker prologue;         ///< [31] Must be 0x55
 };
 
 /**
- * @brief Extended query response payload (Server to Client, command 0xC4)
+ * @brief Extended query response data (Server to Client, command 0xC4)
  * Contains outdoor temperature and static pressure information
- * Size: 30 bytes (bytes 1-30, excluding preamble and prologue)
+ * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
  */
-struct __attribute__((packed)) ExtendedQueryResponsePayload {
-  ReceiveMessageHeader header;  ///< [0-4] Common header
-  uint8_t unknown1;             ///< [5] Unknown/reserved
-  uint8_t unknown2;             ///< [6] Unknown/reserved
-  uint8_t unknown3;             ///< [7] Unknown/reserved
-  uint8_t unknown4;             ///< [8] Unknown/reserved
-  uint8_t unknown5;             ///< [9] Unknown/reserved
-  uint8_t unknown6;             ///< [10] Unknown/reserved
-  uint8_t unknown7;             ///< [11] Unknown/reserved
-  uint8_t unknown8;             ///< [12] Unknown/reserved
-  uint8_t unknown9;             ///< [13] Unknown/reserved
-  uint8_t unknown10;            ///< [14] Unknown/reserved
-  uint8_t unknown11;            ///< [15] Unknown/reserved
-  uint8_t unknown12;            ///< [16] Unknown/reserved
-  Temperature target_temperature;   ///< [17] Target temperature (may be in Fahrenheit with offset)
-  uint8_t unknown13;            ///< [18] Unknown/reserved
-  uint8_t unknown14;            ///< [19] Unknown/reserved
-  Temperature outdoor_temperature;  ///< [20] Outdoor temperature sensor reading
-  uint8_t unknown15;            ///< [21] Unknown/reserved
-  uint8_t unknown16;            ///< [22] Unknown/reserved
-  uint8_t static_pressure;      ///< [23] Static pressure setting (lower 4 bits)
-  uint8_t unknown17;            ///< [24] Unknown/reserved
-  uint8_t unknown18;            ///< [25] Unknown/reserved
-  uint8_t unknown19;            ///< [26] Unknown/reserved
-  uint8_t unknown20;            ///< [27] Unknown/reserved
-  uint8_t unknown21;            ///< [28] Unknown/reserved
-  uint8_t crc;                  ///< [29] Checksum (CRC)
+struct __attribute__((packed)) ExtendedQueryResponseData {
+  uint8_t unknown1;             ///< [0] Unknown/reserved
+  uint8_t unknown2;             ///< [1] Unknown/reserved
+  uint8_t unknown3;             ///< [2] Unknown/reserved
+  uint8_t unknown4;             ///< [3] Unknown/reserved
+  uint8_t unknown5;             ///< [4] Unknown/reserved
+  uint8_t unknown6;             ///< [5] Unknown/reserved
+  uint8_t unknown7;             ///< [6] Unknown/reserved
+  uint8_t unknown8;             ///< [7] Unknown/reserved
+  uint8_t unknown9;             ///< [8] Unknown/reserved
+  uint8_t unknown10;            ///< [9] Unknown/reserved
+  uint8_t unknown11;            ///< [10] Unknown/reserved
+  uint8_t unknown12;            ///< [11] Unknown/reserved
+  Temperature target_temperature;   ///< [12] Target temperature (may be in Fahrenheit with offset)
+  uint8_t unknown13;            ///< [13] Unknown/reserved
+  uint8_t unknown14;            ///< [14] Unknown/reserved
+  Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
+  uint8_t unknown15;            ///< [16] Unknown/reserved
+  uint8_t unknown16;            ///< [17] Unknown/reserved
+  uint8_t static_pressure;      ///< [18] Static pressure setting (lower 4 bits)
+  uint8_t unknown17;            ///< [19] Unknown/reserved
+  uint8_t unknown18;            ///< [20] Unknown/reserved
+  uint8_t unknown19;            ///< [21] Unknown/reserved
+  uint8_t unknown20;            ///< [22] Unknown/reserved
+  uint8_t unknown21;            ///< [23] Unknown/reserved
+  uint8_t crc;                  ///< [24] Checksum (CRC)
 };
 
 /**
@@ -338,26 +345,27 @@ struct __attribute__((packed)) ExtendedQueryResponsePayload {
  * Total size: 32 bytes
  */
 struct __attribute__((packed)) ExtendedQueryResponseMessage {
-  ProtocolMarker preamble;              ///< [0] Must be 0xAA
-  ExtendedQueryResponsePayload payload; ///< [1-30] Message payload
-  ProtocolMarker prologue;              ///< [31] Must be 0x55
+  ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
+  ExtendedQueryResponseData data;   ///< [6-30] Extended query response specific data
+  ProtocolMarker prologue;          ///< [31] Must be 0x55
 };
 
 /**
- * @brief Generic receive message payload
+ * @brief Generic receive message data
+ * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
  */
-struct __attribute__((packed)) ReceiveMessagePayload {
-  ReceiveMessageHeader header;  ///< [0-4] Common header
-  uint8_t data[24];             ///< [5-28] Variable data depending on command type
-  uint8_t crc;                  ///< [29] Checksum (CRC)
+struct __attribute__((packed)) ReceiveMessageData {
+  uint8_t data[24];             ///< [0-23] Variable data depending on command type
+  uint8_t crc;                  ///< [24] Checksum (CRC)
 };
 
 /**
  * @brief Generic receive message that can be any response type
+ * Total size: 32 bytes
  */
 struct __attribute__((packed)) ReceiveMessage {
-  ProtocolMarker preamble;          ///< [0] Must be 0xAA
-  ReceiveMessagePayload payload;    ///< [1-30] Message payload
+  ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
+  ReceiveMessageData data;          ///< [6-30] Variable data
   ProtocolMarker prologue;          ///< [31] Must be 0x55
 };
 
@@ -402,7 +410,7 @@ union ReceiveData {
    * @return The command type
    */
   Command get_command() const {
-    return message.payload.header.command;
+    return message.frame.header.command;
   }
 
   /**
@@ -412,29 +420,29 @@ union ReceiveData {
    */
   void print_debug(const char *tag) const {
     ESP_LOGD(tag, "RX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.payload.header.command));
+    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.frame.header.command));
     
-    switch (message.payload.header.command) {
+    switch (message.frame.header.command) {
       case Command::QUERY:
         ESP_LOGD(tag, "  Query Response:");
-        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.payload.operation_mode));
-        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.payload.fan_mode));
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", query_response.payload.target_temperature.value, query_response.payload.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", query_response.payload.t1_temperature.value, query_response.payload.t1_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", query_response.payload.t2a_temperature.value, query_response.payload.t2a_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", query_response.payload.t2b_temperature.value, query_response.payload.t2b_temperature.to_celsius());
-        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", query_response.payload.t3_temperature.value, query_response.payload.t3_temperature.to_celsius());
-        ESP_LOGD(tag, "    Current: %d", query_response.payload.current);
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(query_response.payload.mode_flags));
-        ESP_LOGD(tag, "    Error Flags: 0x%04X", query_response.payload.error_flags.value());
-        ESP_LOGD(tag, "    Protect Flags: 0x%04X", query_response.payload.protect_flags.value());
+        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.data.operation_mode));
+        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.data.fan_mode));
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", query_response.data.target_temperature.value, query_response.data.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", query_response.data.t1_temperature.value, query_response.data.t1_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", query_response.data.t2a_temperature.value, query_response.data.t2a_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", query_response.data.t2b_temperature.value, query_response.data.t2b_temperature.to_celsius());
+        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", query_response.data.t3_temperature.value, query_response.data.t3_temperature.to_celsius());
+        ESP_LOGD(tag, "    Current: %d", query_response.data.current);
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(query_response.data.mode_flags));
+        ESP_LOGD(tag, "    Error Flags: 0x%04X", query_response.data.error_flags.value());
+        ESP_LOGD(tag, "    Protect Flags: 0x%04X", query_response.data.protect_flags.value());
         break;
       
       case Command::QUERY_EXTENDED:
         ESP_LOGD(tag, "  Extended Query Response:");
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", extended_query_response.payload.target_temperature.value, extended_query_response.payload.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", extended_query_response.payload.outdoor_temperature.value, extended_query_response.payload.outdoor_temperature.to_celsius());
-        ESP_LOGD(tag, "    Static Pressure: 0x%02X", extended_query_response.payload.static_pressure);
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", extended_query_response.data.target_temperature.value, extended_query_response.data.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", extended_query_response.data.outdoor_temperature.value, extended_query_response.data.outdoor_temperature.to_celsius());
+        ESP_LOGD(tag, "    Static Pressure: 0x%02X", extended_query_response.data.static_pressure);
         break;
       
       case Command::SET:
@@ -461,13 +469,16 @@ union ReceiveData {
 
 // Static assertions to ensure struct sizes are correct
 static_assert(sizeof(ProtocolMarker) == 1, "ProtocolMarker must be 1 byte");
+static_assert(sizeof(ReceiveMessageHeader) == 5, "ReceiveMessageHeader must be 5 bytes");
+static_assert(sizeof(ReceiveMessageFrame) == 6, "ReceiveMessageFrame must be 6 bytes (preamble + header)");
 static_assert(sizeof(TransmitPayload) == TX_MESSAGE_LENGTH - 2, "TransmitPayload size must be 14 bytes (excluding preamble and prologue)");
 static_assert(sizeof(TransmitMessage) == TX_MESSAGE_LENGTH, "TransmitMessage size must be 16 bytes (including preamble and prologue)");
-static_assert(sizeof(QueryResponsePayload) == RX_MESSAGE_LENGTH - 2, "QueryResponsePayload size must be 30 bytes (excluding preamble and prologue)");
-static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must be 32 bytes (including preamble and prologue)");
-static_assert(sizeof(ExtendedQueryResponsePayload) == RX_MESSAGE_LENGTH - 2, "ExtendedQueryResponsePayload size must be 30 bytes (excluding preamble and prologue)");
-static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must be 32 bytes (including preamble and prologue)");
-static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must be 32 bytes (including preamble and prologue)");
+static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - 7, "QueryResponseData size must be 25 bytes (excluding frame and prologue)");
+static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must be 32 bytes (including frame and prologue)");
+static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - 7, "ExtendedQueryResponseData size must be 25 bytes (excluding frame and prologue)");
+static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must be 32 bytes (including frame and prologue)");
+static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - 7, "ReceiveMessageData size must be 25 bytes (excluding frame and prologue)");
+static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must be 32 bytes (including frame and prologue)");
 static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must be 16 bytes");
 static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must be 32 bytes");
 
