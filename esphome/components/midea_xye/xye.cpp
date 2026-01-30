@@ -132,10 +132,12 @@ void ReceiveData::print_debug(const char *tag) const {
     
     case Command::SET:
       ESP_LOGD(tag, "  Set Response");
+      message.data.generic.print_debug(tag);
       break;
     
     case Command::FOLLOW_ME:
       ESP_LOGD(tag, "  Follow-Me Response");
+      message.data.generic.print_debug(tag);
       break;
     
     default:

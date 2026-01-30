@@ -259,38 +259,7 @@ struct __attribute__((packed)) TransmitMessageData {
    * @param tag Log tag to use
    * @param command The command type to determine which fields are relevant
    */
-  void print_debug(const char *tag, Command command) const {
-    switch (command) {
-      case Command::SET:
-        ESP_LOGD(tag, "  TransmitMessageData (SET):");
-        ESP_LOGD(tag, "    operation_mode: 0x%02X", static_cast<uint8_t>(operation_mode));
-        ESP_LOGD(tag, "    fan_mode: 0x%02X", static_cast<uint8_t>(fan_mode));
-        ESP_LOGD(tag, "    target_temperature: 0x%02X (%.1f°C)", target_temperature.value, target_temperature.to_celsius());
-        ESP_LOGD(tag, "    timer_start: 0x%02X", timer_start);
-        ESP_LOGD(tag, "    timer_stop: 0x%02X", timer_stop);
-        ESP_LOGD(tag, "    mode_flags: 0x%02X", static_cast<uint8_t>(mode_flags));
-        break;
-      
-      case Command::FOLLOW_ME:
-        ESP_LOGD(tag, "  TransmitMessageData (FOLLOW_ME):");
-        ESP_LOGD(tag, "    target_temperature: 0x%02X (%.1f°C)", target_temperature.value, target_temperature.to_celsius());
-        ESP_LOGD(tag, "    subcommand (timer_stop): 0x%02X", timer_stop);
-        ESP_LOGD(tag, "    mode_flags: 0x%02X", static_cast<uint8_t>(mode_flags));
-        break;
-      
-      case Command::QUERY:
-      case Command::QUERY_EXTENDED:
-      case Command::LOCK:
-      case Command::UNLOCK:
-        // These commands typically don't use the data payload
-        ESP_LOGD(tag, "  TransmitMessageData (command-only)");
-        break;
-      
-      default:
-        ESP_LOGD(tag, "  TransmitMessageData (unknown command)");
-        break;
-    }
-  }
+  void print_debug(const char *tag, Command command) const;
 };
 
 /**
@@ -346,25 +315,7 @@ struct __attribute__((packed)) QueryResponseData {
    * @brief Print debug information for query response data
    * @param tag Log tag to use
    */
-  void print_debug(const char *tag) const {
-    ESP_LOGD(tag, "  QueryResponseData:");
-    ESP_LOGD(tag, "    capabilities: 0x%02X", static_cast<uint8_t>(capabilities));
-    ESP_LOGD(tag, "    operation_mode: 0x%02X", static_cast<uint8_t>(operation_mode));
-    ESP_LOGD(tag, "    fan_mode: 0x%02X", static_cast<uint8_t>(fan_mode));
-    ESP_LOGD(tag, "    target_temperature: 0x%02X (%.1f°C)", target_temperature.value, target_temperature.to_celsius());
-    ESP_LOGD(tag, "    t1_temperature: 0x%02X (%.1f°C)", t1_temperature.value, t1_temperature.to_celsius());
-    ESP_LOGD(tag, "    t2a_temperature: 0x%02X (%.1f°C)", t2a_temperature.value, t2a_temperature.to_celsius());
-    ESP_LOGD(tag, "    t2b_temperature: 0x%02X (%.1f°C)", t2b_temperature.value, t2b_temperature.to_celsius());
-    ESP_LOGD(tag, "    t3_temperature: 0x%02X (%.1f°C)", t3_temperature.value, t3_temperature.to_celsius());
-    ESP_LOGD(tag, "    current: %d", current);
-    ESP_LOGD(tag, "    timer_start: 0x%02X", timer_start);
-    ESP_LOGD(tag, "    timer_stop: 0x%02X", timer_stop);
-    ESP_LOGD(tag, "    mode_flags: 0x%02X", static_cast<uint8_t>(mode_flags));
-    ESP_LOGD(tag, "    operation_flags: 0x%02X", static_cast<uint8_t>(operation_flags));
-    ESP_LOGD(tag, "    error_flags: 0x%04X", error_flags.value());
-    ESP_LOGD(tag, "    protect_flags: 0x%04X", protect_flags.value());
-    ESP_LOGD(tag, "    ccm_communication_error_flags: 0x%02X", static_cast<uint8_t>(ccm_communication_error_flags));
-  }
+  void print_debug(const char *tag) const;
 };
 
 /**
