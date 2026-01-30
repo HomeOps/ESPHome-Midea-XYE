@@ -5,7 +5,7 @@
 
 namespace esphome {
 namespace midea {
-namespace ac {
+namespace xye {
 
 class StaticPressureNumber : public number::Number {
  public:
@@ -24,6 +24,6 @@ class StaticPressureNumber : public number::Number {
   StaticPressureInterface *parent_{nullptr};
 };
 
-}  // namespace ac
+}  // namespace xye
 }  // namespace midea
 }  // namespace esphome

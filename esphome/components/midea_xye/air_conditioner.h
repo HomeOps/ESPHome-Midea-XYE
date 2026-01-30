@@ -12,139 +12,138 @@
 #include "esphome/core/log.h"
 #include "ir_transmitter.h"
 #include "static_pressure_number.h"
-
-// STATES
-#define STATE_WAIT_DATA 0
-#define STATE_SEND_SET 1
-#define STATE_SEND_FOLLOWME 2
-#define STATE_SEND_QUERY 3
-#define STATE_SEND_QUERY_EXTENDED 4
-
-// CLIENT command structure
-#define PREAMBLE 0xAA
-#define PROLOGUE 0x55
-
-#define CLIENT_COMMAND_QUERY 0xC0
-#define CLIENT_COMMAND_QUERY_EXTENDED 0xC4
-#define CLIENT_COMMAND_SET 0xC3
-#define CLIENT_COMMAND_FOLLOWME 0xC6
-#define CLIENT_COMMAND_LOCK 0xCC
-#define CLIENT_COMMAND_UNLOCK 0xCD
-#define CLIENT_COMMAND_CELCIUS 0xC4
-
-#define FROM_CLIENT 0x00
-
-#define OP_MODE_OFF 0x00
-#define OP_MODE_AUTO 0x80
-#define OP_MODE_FAN 0x81
-#define OP_MODE_DRY 0x82
-#define OP_MODE_HEAT 0x84
-#define OP_MODE_COOL 0x88
-
-#define FAN_MODE_AUTO 0x80
-#define FAN_MODE_OFF 0x00
-#define FAN_MODE_HIGH 0x01
-#define FAN_MODE_MEDIUM 0x02
-#define FAN_MODE_LOW 0x04
-
-#define TEMP_SET_FAN_MODE 0xFF
-
-#define MODE_FLAG_AUX_HEAT 0x02
-#define MODE_FLAG_NORM 0x00
-#define MODE_FLAG_ECO 0x01
-#define MODE_FLAG_SWING 0x04
-#define MODE_FLAG_VENT 0x88
-
-#define TIMER_15MIN 0x01
-#define TIMER_30MIN 0x02
-#define TIMER_1HOUR 0x04
-#define TIMER_2HOUR 0x08
-#define TIMER_4HOUR 0x10
-#define TIMER_8HOUR 0x20
-#define TIMER_16HOUR 0x40
-#define TIMER_INVALID 0x80
-
-#define COMMAND_UNKNOWN 0x00
-
-// Follow-Me command subcommand types (TXData[10])
-#define FOLLOWME_SUBCOMMAND_UPDATE 0x02
-#define FOLLOWME_SUBCOMMAND_STATIC_PRESSURE 0x04
-#define FOLLOWME_SUBCOMMAND_INIT 0x06
-
-// SERVER Response
-
-#define SERVER_COMMAND_QUERY 0xC0
-#define SERVER_COMMAND_SET 0xC3
-#define SERVER_COMMAND_LOCK 0xCC
-#define SERVER_COMMAND_UNLOCK 0xCD
-
-#define OP_MODE_AUTO_FLAG 0x10
-
-#define TO_CLIENT 0x00
-
-#define RESPONSE_UNKNOWN 0x30
-
-#define CAPABILITIES_EXT_TEMP 0x80
-#define CAPABILITIES_SWING 0x10
-
-#define RESPONSE_UNKNOWN1 0xFF
-#define RESPONSE_UNKNOWN2 0x01
-
-#define OP_FLAG_WATER_PUMP 0x04
-#define OP_FLAG_WATER_LOCK 0x80
-
-#define RESPONSE_UNKNOWN3 0x00
-
-#define TX_LEN 16
-
-// Common Bytes
-#define RX_BYTE_PREAMBLE 0
-#define RX_BYTE_COMMAND_TYPE 1
-#define RX_BYTE_TO_CLIENT 2
-#define RX_BYTE_DESTINATION1 3
-#define RX_BYTE_SOURCE 4
-#define RX_BYTE_DESTINATION2 5
-#define RX_BYTE_CRC 30
-#define RX_BYTE_PROLOGUE 31
-#define RX_LEN 32
-
-// C0 Specific
-#define RX_C0_BYTE_UNKNOWN1 6
-#define RX_C0_BYTE_CAPABILITIES 7
-#define RX_C0_BYTE_OP_MODE 8
-#define RX_C0_BYTE_FAN_MODE 9
-#define RX_C0_BYTE_SET_TEMP 10
-#define RX_C0_BYTE_T1_TEMP 11
-#define RX_C0_BYTE_T2A_TEMP 12
-#define RX_C0_BYTE_T2B_TEMP 13
-#define RX_C0_BYTE_T3_TEMP 14
-#define RX_C0_BYTE_CURRENT 15
-#define RX_C0_BYTE_UNKNOWN2 16
-#define RX_C0_BYTE_TIMER_START 17
-#define RX_C0_BYTE_TIMER_STOP 18
-#define RX_C0_BYTE_UNKNOWN3 19
-#define RX_C0_BYTE_MODE_FLAGS 20
-#define RX_C0_BYTE_OP_FLAGS 21
-#define RX_C0_BYTE_ERROR_FLAGS1 22
-#define RX_C0_BYTE_ERROR_FLAGS2 23
-#define RX_C0_BYTE_PROTECT_FLAGS1 24
-#define RX_C0_BYTE_PROTECT_FLAGS2 25
-#define RX_C0_BYTE_CCM_COM_ERROR_FLAGS 26
-#define RX_C0_BYTE_UNKNOWN4 27
-#define RX_C0_BYTE_UNKNOWN5 28
-#define RX_C0_BYTE_UNKNOWN6 29
-
-// C4 Specific
-#define RX_C4_BYTE_SET_TEMP 18
-#define RX_C4_BYTE_OUTDOOR_SENSOR 21
-
-// TODO: Don't hardcode this
-#define SERVER_ID 0
-#define CLIENT_ID 0
+#include "xye.h"
+#include "xye_send.h"
+#include "xye_recv.h"
 
 namespace esphome {
 namespace midea {
-namespace ac {
+namespace xye {
+
+// Bring XYE protocol types into this namespace
+using xye::Command;
+using xye::OperationMode;
+using xye::FanMode;
+using xye::FollowMeSubcommand;
+using xye::ControlState;
+using xye::ResponseCode;
+using xye::TransmitData;
+using xye::ReceiveData;
+
+// Legacy compatibility for state machine
+constexpr uint8_t STATE_WAIT_DATA = static_cast<uint8_t>(ControlState::WAIT_DATA);
+constexpr uint8_t STATE_SEND_SET = static_cast<uint8_t>(ControlState::SEND_SET);
+constexpr uint8_t STATE_SEND_FOLLOWME = static_cast<uint8_t>(ControlState::SEND_FOLLOWME);
+constexpr uint8_t STATE_SEND_QUERY = static_cast<uint8_t>(ControlState::SEND_QUERY);
+constexpr uint8_t STATE_SEND_QUERY_EXTENDED = static_cast<uint8_t>(ControlState::SEND_QUERY_EXTENDED);
+
+// Legacy compatibility - map old defines to new protocol definitions
+// These provide backward compatibility for existing code using old names
+constexpr uint8_t PREAMBLE = xye::PROTOCOL_PREAMBLE;
+constexpr uint8_t PROLOGUE = xye::PROTOCOL_PROLOGUE;
+
+constexpr uint8_t CLIENT_COMMAND_QUERY = static_cast<uint8_t>(Command::QUERY);
+constexpr uint8_t CLIENT_COMMAND_QUERY_EXTENDED = static_cast<uint8_t>(Command::QUERY_EXTENDED);
+constexpr uint8_t CLIENT_COMMAND_SET = static_cast<uint8_t>(Command::SET);
+constexpr uint8_t CLIENT_COMMAND_FOLLOWME = static_cast<uint8_t>(Command::FOLLOW_ME);
+constexpr uint8_t CLIENT_COMMAND_LOCK = static_cast<uint8_t>(Command::LOCK);
+constexpr uint8_t CLIENT_COMMAND_UNLOCK = static_cast<uint8_t>(Command::UNLOCK);
+constexpr uint8_t CLIENT_COMMAND_CELSIUS = static_cast<uint8_t>(Command::QUERY_EXTENDED);  // Legacy typo preserved for backward compatibility
+
+constexpr uint8_t OP_MODE_OFF = static_cast<uint8_t>(OperationMode::OFF);
+constexpr uint8_t OP_MODE_AUTO = static_cast<uint8_t>(OperationMode::AUTO);
+constexpr uint8_t OP_MODE_FAN = static_cast<uint8_t>(OperationMode::FAN);
+constexpr uint8_t OP_MODE_DRY = static_cast<uint8_t>(OperationMode::DRY);
+constexpr uint8_t OP_MODE_HEAT = static_cast<uint8_t>(OperationMode::HEAT);
+constexpr uint8_t OP_MODE_COOL = static_cast<uint8_t>(OperationMode::COOL);
+
+constexpr uint8_t FAN_MODE_AUTO = static_cast<uint8_t>(FanMode::FAN_AUTO);
+constexpr uint8_t FAN_MODE_OFF = static_cast<uint8_t>(FanMode::FAN_OFF);
+constexpr uint8_t FAN_MODE_HIGH = static_cast<uint8_t>(FanMode::FAN_HIGH);
+constexpr uint8_t FAN_MODE_MEDIUM = static_cast<uint8_t>(FanMode::FAN_MEDIUM);
+constexpr uint8_t FAN_MODE_LOW = static_cast<uint8_t>(FanMode::FAN_LOW);
+
+constexpr uint8_t TEMP_SET_FAN_MODE = xye::TEMP_FAN_MODE;
+
+constexpr uint8_t MODE_FLAG_AUX_HEAT = static_cast<uint8_t>(xye::ModeFlags::AUX_HEAT);
+constexpr uint8_t MODE_FLAG_NORM = static_cast<uint8_t>(xye::ModeFlags::NORMAL);
+constexpr uint8_t MODE_FLAG_ECO = static_cast<uint8_t>(xye::ModeFlags::ECO);
+constexpr uint8_t MODE_FLAG_SWING = static_cast<uint8_t>(xye::ModeFlags::SWING);
+constexpr uint8_t MODE_FLAG_VENT = static_cast<uint8_t>(xye::ModeFlags::VENTILATION);
+
+constexpr uint8_t TIMER_15MIN = static_cast<uint8_t>(xye::TimerFlags::TIMER_15MIN);
+constexpr uint8_t TIMER_30MIN = static_cast<uint8_t>(xye::TimerFlags::TIMER_30MIN);
+constexpr uint8_t TIMER_1HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_1HOUR);
+constexpr uint8_t TIMER_2HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_2HOUR);
+constexpr uint8_t TIMER_4HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_4HOUR);
+constexpr uint8_t TIMER_8HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_8HOUR);
+constexpr uint8_t TIMER_16HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_16HOUR);
+constexpr uint8_t TIMER_INVALID = static_cast<uint8_t>(xye::TimerFlags::INVALID);
+
+constexpr uint8_t FOLLOWME_SUBCOMMAND_UPDATE = static_cast<uint8_t>(FollowMeSubcommand::UPDATE);
+constexpr uint8_t FOLLOWME_SUBCOMMAND_STATIC_PRESSURE = static_cast<uint8_t>(FollowMeSubcommand::STATIC_PRESSURE);
+constexpr uint8_t FOLLOWME_SUBCOMMAND_INIT = static_cast<uint8_t>(FollowMeSubcommand::INIT);
+
+// SERVER Response compatibility (same as client commands)
+constexpr uint8_t SERVER_COMMAND_QUERY = static_cast<uint8_t>(Command::QUERY);
+constexpr uint8_t SERVER_COMMAND_SET = static_cast<uint8_t>(Command::SET);
+constexpr uint8_t SERVER_COMMAND_LOCK = static_cast<uint8_t>(Command::LOCK);
+constexpr uint8_t SERVER_COMMAND_UNLOCK = static_cast<uint8_t>(Command::UNLOCK);
+
+constexpr uint8_t CAPABILITIES_EXT_TEMP = static_cast<uint8_t>(xye::Capabilities::EXTERNAL_TEMP);
+constexpr uint8_t CAPABILITIES_SWING = static_cast<uint8_t>(xye::Capabilities::SWING);
+
+constexpr uint8_t OP_FLAG_WATER_PUMP = static_cast<uint8_t>(xye::OperationFlags::WATER_PUMP);
+constexpr uint8_t OP_FLAG_WATER_LOCK = static_cast<uint8_t>(xye::OperationFlags::WATER_LOCK);
+
+constexpr uint8_t COMMAND_UNKNOWN = static_cast<uint8_t>(ResponseCode::UNKNOWN);
+constexpr uint8_t RESPONSE_UNKNOWN = static_cast<uint8_t>(ResponseCode::OK);
+constexpr uint8_t RESPONSE_UNKNOWN1 = static_cast<uint8_t>(ResponseCode::UNKNOWN1);
+constexpr uint8_t RESPONSE_UNKNOWN2 = static_cast<uint8_t>(ResponseCode::UNKNOWN2);
+constexpr uint8_t RESPONSE_UNKNOWN3 = static_cast<uint8_t>(ResponseCode::UNKNOWN3);
+
+constexpr uint8_t TX_LEN = xye::TX_MESSAGE_LENGTH;
+
+// Common Bytes - using offsets for compatibility with array access
+constexpr uint8_t RX_BYTE_PREAMBLE = 0;
+constexpr uint8_t RX_BYTE_COMMAND_TYPE = 1;
+constexpr uint8_t RX_BYTE_TO_CLIENT = 2;
+constexpr uint8_t RX_BYTE_DESTINATION1 = 3;
+constexpr uint8_t RX_BYTE_SOURCE = 4;
+constexpr uint8_t RX_BYTE_DESTINATION2 = 5;
+constexpr uint8_t RX_BYTE_CRC = 30;
+constexpr uint8_t RX_BYTE_PROLOGUE = 31;
+constexpr uint8_t RX_LEN = xye::RX_MESSAGE_LENGTH;
+
+// Query Response (0xC0) Specific byte offsets
+constexpr uint8_t RX_C0_BYTE_UNKNOWN1 = 6;
+constexpr uint8_t RX_C0_BYTE_CAPABILITIES = 7;
+constexpr uint8_t RX_C0_BYTE_OP_MODE = 8;
+constexpr uint8_t RX_C0_BYTE_FAN_MODE = 9;
+constexpr uint8_t RX_C0_BYTE_SET_TEMP = 10;
+constexpr uint8_t RX_C0_BYTE_T1_TEMP = 11;
+constexpr uint8_t RX_C0_BYTE_T2A_TEMP = 12;
+constexpr uint8_t RX_C0_BYTE_T2B_TEMP = 13;
+constexpr uint8_t RX_C0_BYTE_T3_TEMP = 14;
+constexpr uint8_t RX_C0_BYTE_CURRENT = 15;
+constexpr uint8_t RX_C0_BYTE_UNKNOWN2 = 16;
+constexpr uint8_t RX_C0_BYTE_TIMER_START = 17;
+constexpr uint8_t RX_C0_BYTE_TIMER_STOP = 18;
+constexpr uint8_t RX_C0_BYTE_UNKNOWN3 = 19;
+constexpr uint8_t RX_C0_BYTE_MODE_FLAGS = 20;
+constexpr uint8_t RX_C0_BYTE_OP_FLAGS = 21;
+constexpr uint8_t RX_C0_BYTE_ERROR_FLAGS1 = 22;
+constexpr uint8_t RX_C0_BYTE_ERROR_FLAGS2 = 23;
+constexpr uint8_t RX_C0_BYTE_PROTECT_FLAGS1 = 24;
+constexpr uint8_t RX_C0_BYTE_PROTECT_FLAGS2 = 25;
+constexpr uint8_t RX_C0_BYTE_CCM_COM_ERROR_FLAGS = 26;
+constexpr uint8_t RX_C0_BYTE_UNKNOWN4 = 27;
+constexpr uint8_t RX_C0_BYTE_UNKNOWN5 = 28;
+constexpr uint8_t RX_C0_BYTE_UNKNOWN6 = 29;
+
+// Extended Query Response (0xC4) Specific byte offsets
+constexpr uint8_t RX_C4_BYTE_SET_TEMP = 18;
+constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
@@ -225,8 +224,14 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   void set_custom_presets(std::vector<const char *> presets) { this->supported_custom_presets_ = presets; }
   void set_custom_fan_modes(std::vector<const char *> modes) { this->supported_custom_fan_modes_ = modes; }
 
-  uint8_t TXData[TX_LEN];
-  uint8_t RXData[RX_LEN];
+  // Protocol message buffers - use unions for structured access
+  TransmitData tx_data;
+  ReceiveData rx_data;
+  
+  // Legacy array access for permanent backward compatibility
+  // Note: These must be declared after tx_data and rx_data to ensure proper initialization order
+  uint8_t *const TXData{tx_data.raw};
+  uint8_t *const RXData{rx_data.raw};
 
  private:
   uint8_t controlState;
@@ -278,7 +283,7 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   void on_follow_me_sensor_update_(float state);
 };
 
-}  // namespace ac
+}  // namespace xye
 }  // namespace midea
 }  // namespace esphome
 

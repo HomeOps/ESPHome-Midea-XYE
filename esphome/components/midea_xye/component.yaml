@@ -1,0 +1,17 @@
+name: "midea_xye"
+version: "1.0.0"
+components:
+  - id: midea_xye
+    files:
+      - air_conditioner.h
+      - air_conditioner.cpp
+      - ac_automations.h
+      - ir_transmitter.h
+      - static_pressure_interface.h
+      - static_pressure_number.h
+      - xye.h
+      - xye.cpp
+      - xye_send.h
+      - xye_send.cpp
+      - xye_recv.h
+      - xye_recv.cpp
