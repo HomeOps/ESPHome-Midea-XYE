@@ -16,12 +16,21 @@ using NodeId = uint8_t;  ///< Node ID type for server and client identifiers
 constexpr uint8_t PROTOCOL_PREAMBLE = 0xAA;  ///< Start byte for all messages
 constexpr uint8_t PROTOCOL_PROLOGUE = 0x55;  ///< End byte for all messages
 
-constexpr uint8_t FROM_CLIENT = 0x00;  ///< Direction indicator: message from client (thermostat)
-constexpr uint8_t TO_CLIENT = 0x00;    ///< Direction indicator: message to client (thermostat)
-
 // Message lengths
 constexpr uint8_t TX_MESSAGE_LENGTH = 16;  ///< Length of transmitted messages
 constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
+
+/**
+ * @brief Message direction indicators
+ */
+enum class Direction : uint8_t {
+  FROM_CLIENT = 0x00,  ///< Message from client (thermostat) to server (HVAC)
+  TO_CLIENT = 0x00     ///< Message from server (HVAC) to client (thermostat)
+};
+
+// Legacy compatibility
+constexpr uint8_t FROM_CLIENT = static_cast<uint8_t>(Direction::FROM_CLIENT);
+constexpr uint8_t TO_CLIENT = static_cast<uint8_t>(Direction::TO_CLIENT);
 
 // TODO: Don't hardcode these IDs
 constexpr NodeId SERVER_ID = 0;  ///< ID of the HVAC unit (server)
@@ -35,11 +44,11 @@ constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
  */
 enum class Command : uint8_t {
   QUERY = 0xC0,                      ///< Query current status (basic)
-  QUERY_EXTENDED = 0xC4,             ///< Query extended status (includes outdoor temp, static pressure)
-  SET = QUERY | 0x03,                ///< Set operation parameters (mode, temp, fan, etc.) - derived from QUERY
-  FOLLOW_ME = 0xC6,                  ///< Follow-Me temperature update or static pressure setting
-  LOCK = 0xCC,                       ///< Lock the physical controls
-  UNLOCK = 0xCD,                     ///< Unlock the physical controls
+  QUERY_EXTENDED = QUERY | 0x04,     ///< Query extended status - derived from QUERY
+  SET = QUERY | 0x03,                ///< Set operation parameters - derived from QUERY
+  FOLLOW_ME = QUERY | 0x06,          ///< Follow-Me temperature update - derived from QUERY
+  LOCK = QUERY | 0x0C,               ///< Lock the physical controls - derived from QUERY
+  UNLOCK = QUERY | 0x0D,             ///< Unlock the physical controls - derived from QUERY
 };
 
 /**
@@ -91,6 +100,16 @@ enum class OperationFlags : uint8_t {
 enum class Capabilities : uint8_t {
   EXTERNAL_TEMP = 0x80,  ///< Supports external temperature sensor
   SWING = 0x10           ///< Supports swing function
+};
+
+/**
+ * @brief CCM communication error flags
+ */
+enum class CcmErrorFlags : uint8_t {
+  NO_ERROR = 0x00,        ///< No communication errors
+  TIMEOUT = 0x01,         ///< Communication timeout
+  CRC_ERROR = 0x02,       ///< CRC check failed
+  PROTOCOL_ERROR = 0x04   ///< Protocol violation
 };
 
 /**
@@ -157,8 +176,8 @@ struct __attribute__((packed)) Temperature {
  * @brief Direction and node ID pair (2 bytes)
  */
 struct __attribute__((packed)) DirectionNode {
-  uint8_t direction;  ///< Direction indicator (FROM_CLIENT or TO_CLIENT)
-  NodeId node_id;     ///< Node identifier
+  Direction direction;  ///< Direction indicator
+  NodeId node_id;       ///< Node identifier
 };
 
 /**
@@ -190,10 +209,10 @@ struct __attribute__((packed)) TransmitMessage {
   DirectionNode direction_node;      ///< [4-5] Direction and client ID
   OperationMode operation_mode;      ///< [6] Operation mode for SET command
   FanMode fan_mode;                  ///< [7] Fan speed for SET command
-  uint8_t target_temperature;        ///< [8] Target temperature or special value for SET/FOLLOW_ME
+  Temperature target_temperature;    ///< [8] Target temperature for SET/FOLLOW_ME
   uint8_t timer_start;               ///< [9] Start timer flags for SET command (combinable TimerFlags)
   uint8_t timer_stop;                ///< [10] Stop timer flags for SET (combinable TimerFlags), or FollowMeSubcommand
-  uint8_t mode_flags;                ///< [11] Mode flags (ModeFlags) for SET, or temperature for FOLLOW_ME
+  ModeFlags mode_flags;              ///< [11] Mode flags for SET, or temperature for FOLLOW_ME
   uint8_t reserved1;                 ///< [12] Reserved/unused
   uint8_t complement;                ///< [13] Bitwise complement of command byte (0xFF - command)
   uint8_t crc;                       ///< [14] Checksum (CRC)
@@ -206,10 +225,10 @@ struct __attribute__((packed)) TransmitMessage {
 struct __attribute__((packed)) ReceiveMessageHeader {
   uint8_t preamble;     ///< [0] Must be 0xAA
   Command command;      ///< [1] Response command type
-  uint8_t direction;    ///< [2] Direction: TO_CLIENT (0x00)
-  uint8_t destination1; ///< [3] Destination client ID
-  uint8_t source;       ///< [4] Source server ID
-  uint8_t destination2; ///< [5] Destination client ID (repeated)
+  Direction direction;  ///< [2] Direction: TO_CLIENT
+  NodeId destination1;  ///< [3] Destination client ID
+  NodeId source;        ///< [4] Source server ID
+  NodeId destination2;  ///< [5] Destination client ID (repeated)
 };
 
 /**
@@ -223,7 +242,7 @@ struct __attribute__((packed)) QueryResponseMessage {
   Capabilities capabilities;       ///< [7] Unit capabilities flags
   OperationMode operation_mode;    ///< [8] Current operation mode
   FanMode fan_mode;                ///< [9] Current fan mode
-  uint8_t target_temperature;      ///< [10] Target temperature setpoint
+  Temperature target_temperature;  ///< [10] Target temperature setpoint
   Temperature t1_temperature;      ///< [11] Internal temperature sensor (T1)
   Temperature t2a_temperature;     ///< [12] Temperature sensor 2A
   Temperature t2b_temperature;     ///< [13] Temperature sensor 2B
@@ -237,7 +256,7 @@ struct __attribute__((packed)) QueryResponseMessage {
   OperationFlags operation_flags;  ///< [21] Operation status flags
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit)
   Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
-  uint8_t ccm_communication_error_flags; ///< [26] CCM communication error flags
+  CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
   uint8_t unknown4;                ///< [27] Unknown/reserved
   uint8_t unknown5;                ///< [28] Unknown/reserved
   uint8_t unknown6;                ///< [29] Unknown/reserved
@@ -306,10 +325,10 @@ union TransmitData {
     ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.command));
     ESP_LOGD(tag, "  Operation Mode: 0x%02X", static_cast<uint8_t>(message.operation_mode));
     ESP_LOGD(tag, "  Fan Mode: 0x%02X", static_cast<uint8_t>(message.fan_mode));
-    ESP_LOGD(tag, "  Target Temp: %d", message.target_temperature);
+    ESP_LOGD(tag, "  Target Temp: 0x%02X (%.1f°C)", message.target_temperature.value, message.target_temperature.to_celsius());
     ESP_LOGD(tag, "  Timer Start: 0x%02X", message.timer_start);
     ESP_LOGD(tag, "  Timer Stop/Subcmd: 0x%02X", message.timer_stop);
-    ESP_LOGD(tag, "  Mode Flags/Data: 0x%02X", message.mode_flags);
+    ESP_LOGD(tag, "  Mode Flags: 0x%02X", static_cast<uint8_t>(message.mode_flags));
     ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
              raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
              raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]);
@@ -348,7 +367,7 @@ union ReceiveData {
         ESP_LOGD(tag, "  Query Response:");
         ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.operation_mode));
         ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.fan_mode));
-        ESP_LOGD(tag, "    Target Temp: %d", query_response.target_temperature);
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", query_response.target_temperature.value, query_response.target_temperature.to_celsius());
         ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", query_response.t1_temperature.value, query_response.t1_temperature.to_celsius());
         ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", query_response.t2a_temperature.value, query_response.t2a_temperature.to_celsius());
         ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", query_response.t2b_temperature.value, query_response.t2b_temperature.to_celsius());
