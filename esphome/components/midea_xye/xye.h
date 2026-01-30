@@ -7,7 +7,7 @@
 
 namespace esphome {
 namespace midea {
-namespace ac {
+namespace xye {
 
 // Protocol constants
 constexpr uint8_t PROTOCOL_PREAMBLE = 0xAA;  ///< Start byte for all messages
@@ -26,24 +26,17 @@ constexpr uint8_t CLIENT_ID = 0;  ///< ID of the thermostat (client)
 
 /**
  * @brief Command types sent from client (thermostat) to server (HVAC unit)
+ * 
+ * Note: Server responses use the same command codes, so there's no separate
+ * ServerCommand enum. The response is distinguished by the direction field.
  */
-enum class ClientCommand : uint8_t {
+enum class Command : uint8_t {
   QUERY = 0xC0,           ///< Query current status (basic)
   QUERY_EXTENDED = 0xC4,  ///< Query extended status (includes outdoor temp, static pressure)
   SET = 0xC3,             ///< Set operation parameters (mode, temp, fan, etc.)
   FOLLOW_ME = 0xC6,       ///< Follow-Me temperature update or static pressure setting
   LOCK = 0xCC,            ///< Lock the physical controls
   UNLOCK = 0xCD,          ///< Unlock the physical controls
-};
-
-/**
- * @brief Response command types from server (HVAC unit) to client (thermostat)
- */
-enum class ServerCommand : uint8_t {
-  QUERY_RESPONSE = 0xC0,  ///< Response to query command
-  SET_RESPONSE = 0xC3,    ///< Response to set command
-  LOCK_RESPONSE = 0xCC,   ///< Response to lock command
-  UNLOCK_RESPONSE = 0xCD  ///< Response to unlock command
 };
 
 /**
@@ -105,16 +98,16 @@ constexpr uint8_t OP_MODE_AUTO_FLAG = 0x10;
 /**
  * @brief Timer duration flags (combinable)
  */
-namespace TimerFlags {
-constexpr uint8_t TIMER_15MIN = 0x01;   ///< 15 minute increment
-constexpr uint8_t TIMER_30MIN = 0x02;   ///< 30 minute increment
-constexpr uint8_t TIMER_1HOUR = 0x04;   ///< 1 hour increment
-constexpr uint8_t TIMER_2HOUR = 0x08;   ///< 2 hour increment
-constexpr uint8_t TIMER_4HOUR = 0x10;   ///< 4 hour increment
-constexpr uint8_t TIMER_8HOUR = 0x20;   ///< 8 hour increment
-constexpr uint8_t TIMER_16HOUR = 0x40;  ///< 16 hour increment
-constexpr uint8_t INVALID = 0x80;       ///< Timer not set/invalid
-}  // namespace TimerFlags
+enum class TimerFlags : uint8_t {
+  TIMER_15MIN = 0x01,   ///< 15 minute increment
+  TIMER_30MIN = 0x02,   ///< 30 minute increment
+  TIMER_1HOUR = 0x04,   ///< 1 hour increment
+  TIMER_2HOUR = 0x08,   ///< 2 hour increment
+  TIMER_4HOUR = 0x10,   ///< 4 hour increment
+  TIMER_8HOUR = 0x20,   ///< 8 hour increment
+  TIMER_16HOUR = 0x40,  ///< 16 hour increment
+  INVALID = 0x80        ///< Timer not set/invalid
+};
 
 /**
  * @brief Follow-Me subcommand types (used in TXData[10])
@@ -135,22 +128,22 @@ constexpr uint8_t TEMP_FAN_MODE = 0xFF;
  * Total size: 16 bytes
  */
 struct __attribute__((packed)) TransmitMessage {
-  uint8_t preamble;            ///< [0] Must be 0xAA
-  uint8_t command;             ///< [1] Command type (ClientCommand)
-  uint8_t server_id;           ///< [2] Server (HVAC) ID
-  uint8_t client_id1;          ///< [3] Client (thermostat) ID
-  uint8_t direction;           ///< [4] Direction: FROM_CLIENT (0x00)
-  uint8_t client_id2;          ///< [5] Client ID (repeated)
-  uint8_t operation_mode;      ///< [6] Operation mode (OperationMode) for SET command
-  uint8_t fan_mode;            ///< [7] Fan speed (FanMode) for SET command
-  uint8_t target_temperature;  ///< [8] Target temperature or special value for SET/FOLLOW_ME
-  uint8_t timer_start;         ///< [9] Start timer flags (TimerFlags) for SET command
-  uint8_t timer_stop;          ///< [10] Stop timer flags (TimerFlags) for SET, or FollowMeSubcommand
-  uint8_t mode_flags;          ///< [11] Mode flags (ModeFlags) for SET, or temperature for FOLLOW_ME
-  uint8_t reserved1;           ///< [12] Reserved/unused
-  uint8_t complement;          ///< [13] Bitwise complement of command byte (0xFF - command)
-  uint8_t crc;                 ///< [14] Checksum (CRC)
-  uint8_t prologue;            ///< [15] Must be 0x55
+  uint8_t preamble;                  ///< [0] Must be 0xAA
+  Command command;                   ///< [1] Command type
+  uint8_t server_id;                 ///< [2] Server (HVAC) ID
+  uint8_t client_id1;                ///< [3] Client (thermostat) ID
+  uint8_t direction;                 ///< [4] Direction: FROM_CLIENT (0x00)
+  uint8_t client_id2;                ///< [5] Client ID (repeated)
+  OperationMode operation_mode;      ///< [6] Operation mode for SET command
+  FanMode fan_mode;                  ///< [7] Fan speed for SET command
+  uint8_t target_temperature;        ///< [8] Target temperature or special value for SET/FOLLOW_ME
+  uint8_t timer_start;               ///< [9] Start timer flags for SET command (combinable TimerFlags)
+  uint8_t timer_stop;                ///< [10] Stop timer flags for SET (combinable TimerFlags), or FollowMeSubcommand
+  uint8_t mode_flags;                ///< [11] Mode flags (ModeFlags) for SET, or temperature for FOLLOW_ME
+  uint8_t reserved1;                 ///< [12] Reserved/unused
+  uint8_t complement;                ///< [13] Bitwise complement of command byte (0xFF - command)
+  uint8_t crc;                       ///< [14] Checksum (CRC)
+  uint8_t prologue;                  ///< [15] Must be 0x55
 };
 
 /**
@@ -158,7 +151,7 @@ struct __attribute__((packed)) TransmitMessage {
  */
 struct __attribute__((packed)) ReceiveMessageHeader {
   uint8_t preamble;     ///< [0] Must be 0xAA
-  uint8_t command;      ///< [1] Response command type (ServerCommand)
+  Command command;      ///< [1] Response command type
   uint8_t direction;    ///< [2] Direction: TO_CLIENT (0x00)
   uint8_t destination1; ///< [3] Destination client ID
   uint8_t source;       ///< [4] Source server ID
@@ -174,8 +167,8 @@ struct __attribute__((packed)) QueryResponseMessage {
   ReceiveMessageHeader header;    ///< [0-5] Common header
   uint8_t unknown1;                ///< [6] Unknown/reserved
   uint8_t capabilities;            ///< [7] Unit capabilities flags (Capabilities)
-  uint8_t operation_mode;          ///< [8] Current operation mode (OperationMode)
-  uint8_t fan_mode;                ///< [9] Current fan mode (FanMode)
+  OperationMode operation_mode;    ///< [8] Current operation mode
+  FanMode fan_mode;                ///< [9] Current fan mode
   uint8_t target_temperature;      ///< [10] Target temperature setpoint
   uint8_t t1_temperature;          ///< [11] Internal temperature sensor (T1)
   uint8_t t2a_temperature;         ///< [12] Temperature sensor 2A
@@ -183,11 +176,11 @@ struct __attribute__((packed)) QueryResponseMessage {
   uint8_t t3_temperature;          ///< [14] Temperature sensor 3
   uint8_t current;                 ///< [15] Current draw (units TBD)
   uint8_t unknown2;                ///< [16] Unknown/reserved
-  uint8_t timer_start;             ///< [17] Start timer setting (TimerFlags)
-  uint8_t timer_stop;              ///< [18] Stop timer setting (TimerFlags)
+  uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
+  uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
   uint8_t unknown3;                ///< [19] Unknown/reserved
-  uint8_t mode_flags;              ///< [20] Mode flags (ModeFlags)
-  uint8_t operation_flags;         ///< [21] Operation status flags (OperationFlags)
+  uint8_t mode_flags;              ///< [20] Mode flags (ModeFlags bitfield)
+  uint8_t operation_flags;         ///< [21] Operation status flags (OperationFlags bitfield)
   uint8_t error_flags_low;         ///< [22] Error flags byte 1
   uint8_t error_flags_high;        ///< [23] Error flags byte 2
   uint8_t protect_flags_low;       ///< [24] Protection flags byte 1
@@ -273,36 +266,67 @@ union TransmitData {
 
 /**
  * @brief Union for receive data - allows access as both byte array and structs
+ * Provides type-safe access to different message types based on command
  */
 union ReceiveData {
-  uint8_t raw[RX_MESSAGE_LENGTH];                      ///< Raw byte array from UART
-  ReceiveMessage message;                              ///< Generic structured access
-  QueryResponseMessage query_response;                 ///< Query response (0xC0) access
+  uint8_t raw[RX_MESSAGE_LENGTH];                       ///< Raw byte array from UART
+  ReceiveMessage message;                               ///< Generic structured access
+  QueryResponseMessage query_response;                  ///< Query response (0xC0) access
   ExtendedQueryResponseMessage extended_query_response; ///< Extended query response (0xC4) access
 
   /**
+   * @brief Get the command type from the message
+   * @return The command type
+   */
+  Command get_command() const {
+    return message.header.command;
+  }
+
+  /**
    * @brief Pretty print the receive message for debugging
+   * Takes into account the kind of message based on command type
    * @param tag Log tag to use
    */
   void print_debug(const char *tag) const {
     ESP_LOGD(tag, "RX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", message.header.command);
+    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.header.command));
     
-    if (message.header.command == static_cast<uint8_t>(ServerCommand::QUERY_RESPONSE)) {
-      ESP_LOGD(tag, "  Query Response:");
-      ESP_LOGD(tag, "    Operation Mode: 0x%02X", query_response.operation_mode);
-      ESP_LOGD(tag, "    Fan Mode: 0x%02X", query_response.fan_mode);
-      ESP_LOGD(tag, "    Target Temp: %d", query_response.target_temperature);
-      ESP_LOGD(tag, "    T1 Temp: 0x%02X", query_response.t1_temperature);
-      ESP_LOGD(tag, "    T2A Temp: 0x%02X", query_response.t2a_temperature);
-      ESP_LOGD(tag, "    T2B Temp: 0x%02X", query_response.t2b_temperature);
-      ESP_LOGD(tag, "    T3 Temp: 0x%02X", query_response.t3_temperature);
-      ESP_LOGD(tag, "    Current: %d", query_response.current);
-      ESP_LOGD(tag, "    Mode Flags: 0x%02X", query_response.mode_flags);
-      ESP_LOGD(tag, "    Error Flags: 0x%04X", 
-               (query_response.error_flags_high << 8) | query_response.error_flags_low);
-      ESP_LOGD(tag, "    Protect Flags: 0x%04X", 
-               (query_response.protect_flags_high << 8) | query_response.protect_flags_low);
+    switch (message.header.command) {
+      case Command::QUERY:
+        ESP_LOGD(tag, "  Query Response:");
+        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.operation_mode));
+        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.fan_mode));
+        ESP_LOGD(tag, "    Target Temp: %d", query_response.target_temperature);
+        ESP_LOGD(tag, "    T1 Temp: 0x%02X", query_response.t1_temperature);
+        ESP_LOGD(tag, "    T2A Temp: 0x%02X", query_response.t2a_temperature);
+        ESP_LOGD(tag, "    T2B Temp: 0x%02X", query_response.t2b_temperature);
+        ESP_LOGD(tag, "    T3 Temp: 0x%02X", query_response.t3_temperature);
+        ESP_LOGD(tag, "    Current: %d", query_response.current);
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", query_response.mode_flags);
+        ESP_LOGD(tag, "    Error Flags: 0x%04X", 
+                 (query_response.error_flags_high << 8) | query_response.error_flags_low);
+        ESP_LOGD(tag, "    Protect Flags: 0x%04X", 
+                 (query_response.protect_flags_high << 8) | query_response.protect_flags_low);
+        break;
+      
+      case Command::QUERY_EXTENDED:
+        ESP_LOGD(tag, "  Extended Query Response:");
+        ESP_LOGD(tag, "    Target Temp: %d", extended_query_response.target_temperature);
+        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X", extended_query_response.outdoor_temperature);
+        ESP_LOGD(tag, "    Static Pressure: 0x%02X", extended_query_response.static_pressure);
+        break;
+      
+      case Command::SET:
+        ESP_LOGD(tag, "  Set Response");
+        break;
+      
+      case Command::FOLLOW_ME:
+        ESP_LOGD(tag, "  Follow-Me Response");
+        break;
+      
+      default:
+        ESP_LOGD(tag, "  Unknown command type");
+        break;
     }
     
     ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:"
@@ -322,7 +346,7 @@ static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size 
 static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must be 16 bytes");
 static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must be 32 bytes");
 
-}  // namespace ac
+}  // namespace xye
 }  // namespace midea
 }  // namespace esphome
 

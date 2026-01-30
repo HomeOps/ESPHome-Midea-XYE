@@ -6,7 +6,7 @@
 
 namespace esphome {
 namespace midea {
-namespace ac {
+namespace xye {
 
 const char *const Constants::TAG = "midea_xye";
 const char *const Constants::FREEZE_PROTECTION = "Freeze Protection";
@@ -695,7 +695,7 @@ void AirConditioner::update_current_temperature_from_sensors_(bool &need_publish
   }
 }
 
-}  // namespace ac
+}  // namespace xye
 }  // namespace midea
 }  // namespace esphome
 

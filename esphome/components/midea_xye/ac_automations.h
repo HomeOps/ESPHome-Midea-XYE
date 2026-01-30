@@ -7,7 +7,7 @@
 
 namespace esphome {
 namespace midea {
-namespace ac {
+namespace xye {
 
 template<typename... Ts> class MideaActionBase : public Action<Ts...> {
  public:
@@ -61,7 +61,7 @@ template<typename... Ts> class PowerToggleAction : public MideaActionBase<Ts...>
   void play(const Ts &...x) override { this->parent_->do_power_toggle(); }
 };
 
-}  // namespace ac
+}  // namespace xye
 }  // namespace midea
 }  // namespace esphome
 

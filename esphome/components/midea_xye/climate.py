@@ -63,10 +63,10 @@ CONF_HUMIDITY_SETPOINT = "humidity_setpoint"
 CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
-midea_ac_ns = cg.esphome_ns.namespace("midea").namespace("ac")
-AirConditioner = midea_ac_ns.class_("AirConditioner", climate.Climate, cg.Component)
-StaticPressureNumber = midea_ac_ns.class_("StaticPressureNumber", number.Number, cg.Component)
-Capabilities = midea_ac_ns.namespace("Constants")
+midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
+AirConditioner = midea_xye_ns.class_("AirConditioner", climate.Climate, cg.Component)
+StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
+Capabilities = midea_xye_ns.namespace("Constants")
 
 def templatize(value):
     if isinstance(value, cv.Schema):
@@ -251,14 +251,14 @@ CONFIG_SCHEMA = cv.All(
 )
 
 # Actions
-FollowMeAction = midea_ac_ns.class_("FollowMeAction", automation.Action)
-DisplayToggleAction = midea_ac_ns.class_("DisplayToggleAction", automation.Action)
-SwingStepAction = midea_ac_ns.class_("SwingStepAction", automation.Action)
-BeeperOnAction = midea_ac_ns.class_("BeeperOnAction", automation.Action)
-BeeperOffAction = midea_ac_ns.class_("BeeperOffAction", automation.Action)
-PowerOnAction = midea_ac_ns.class_("PowerOnAction", automation.Action)
-PowerOffAction = midea_ac_ns.class_("PowerOffAction", automation.Action)
-PowerToggleAction = midea_ac_ns.class_("PowerToggleAction", automation.Action)
+FollowMeAction = midea_xye_ns.class_("FollowMeAction", automation.Action)
+DisplayToggleAction = midea_xye_ns.class_("DisplayToggleAction", automation.Action)
+SwingStepAction = midea_xye_ns.class_("SwingStepAction", automation.Action)
+BeeperOnAction = midea_xye_ns.class_("BeeperOnAction", automation.Action)
+BeeperOffAction = midea_xye_ns.class_("BeeperOffAction", automation.Action)
+PowerOnAction = midea_xye_ns.class_("PowerOnAction", automation.Action)
+PowerOffAction = midea_xye_ns.class_("PowerOffAction", automation.Action)
+PowerToggleAction = midea_xye_ns.class_("PowerToggleAction", automation.Action)
 
 MIDEA_ACTION_BASE_SCHEMA = cv.Schema(
     {
