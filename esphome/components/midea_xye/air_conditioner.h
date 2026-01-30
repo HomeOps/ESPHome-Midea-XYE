@@ -217,8 +217,9 @@ class AirConditioner : public PollingComponent, public climate::Climate, public 
   ReceiveData rx_data;
   
   // Legacy array access for backward compatibility during refactoring
-  uint8_t *TXData = tx_data.raw;
-  uint8_t *RXData = rx_data.raw;
+  // These are defined as pointers to the union's raw arrays
+  uint8_t *const TXData{tx_data.raw};
+  uint8_t *const RXData{rx_data.raw};
 
  private:
   uint8_t controlState;
