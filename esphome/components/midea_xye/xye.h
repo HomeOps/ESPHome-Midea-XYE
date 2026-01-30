@@ -33,7 +33,7 @@ constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
  */
 enum class Direction : uint8_t {
   FROM_CLIENT = 0x00,  ///< Message from client (thermostat) to server (HVAC)
-  TO_CLIENT = 0x00     ///< Message from server (HVAC) to client (thermostat)
+  TO_CLIENT = 0x80     ///< Message from server (HVAC) to client (thermostat)
 };
 
 // Legacy compatibility
@@ -51,12 +51,12 @@ constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
  * ServerCommand enum in this protocol variant.
  */
 enum class Command : uint8_t {
-  QUERY = 0xC0,                      ///< Query current status (basic)
-  QUERY_EXTENDED = QUERY | 0x04,     ///< Query extended status - derived from QUERY
-  SET = QUERY | 0x03,                ///< Set operation parameters - derived from QUERY
-  FOLLOW_ME = QUERY | 0x06,          ///< Follow-Me temperature update - derived from QUERY
-  LOCK = QUERY | 0x0C,               ///< Lock the physical controls - derived from QUERY
-  UNLOCK = QUERY | 0x0D,             ///< Unlock the physical controls - derived from QUERY
+  QUERY = 0xC0,                                    ///< Query current status (basic)
+  QUERY_EXTENDED = 0xC4,                           ///< Query extended status - derived from QUERY (0xC0 | 0x04)
+  SET = 0xC3,                                      ///< Set operation parameters - derived from QUERY (0xC0 | 0x03)
+  FOLLOW_ME = 0xC6,                                ///< Follow-Me temperature update - derived from QUERY (0xC0 | 0x06)
+  LOCK = 0xCC,                                     ///< Lock the physical controls - derived from QUERY (0xC0 | 0x0C)
+  UNLOCK = 0xCD,                                   ///< Unlock the physical controls - derived from QUERY (0xC0 | 0x0D)
 };
 
 /**
@@ -65,10 +65,10 @@ enum class Command : uint8_t {
 enum class OperationMode : uint8_t {
   OFF = 0x00,        ///< Unit is off
   AUTO = 0x80,       ///< Automatic mode (heat/cool as needed)
-  FAN = AUTO | 0x01, ///< Fan only mode - derived from AUTO
-  DRY = AUTO | 0x02, ///< Dehumidify mode - derived from AUTO
-  HEAT = AUTO | 0x04,///< Heating mode - derived from AUTO
-  COOL = AUTO | 0x08 ///< Cooling mode - derived from AUTO
+  FAN = 0x81,        ///< Fan only mode - derived from AUTO (0x80 | 0x01)
+  DRY = 0x82,        ///< Dehumidify mode - derived from AUTO (0x80 | 0x02)
+  HEAT = 0x84,       ///< Heating mode - derived from AUTO (0x80 | 0x04)
+  COOL = 0x88        ///< Cooling mode - derived from AUTO (0x80 | 0x08)
 };
 
 /**
@@ -417,14 +417,26 @@ union TransmitData {
 };
 
 /**
- * @brief Union for receive data - allows access as both byte array and structs
+ * @brief Union for receive message data payloads
+ * Provides type-safe access to different data types based on command
+ */
+union ReceiveMessageDataUnion {
+  ReceiveMessageData generic;                       ///< Generic data access
+  QueryResponseData query_response;                 ///< Query response (0xC0) data
+  ExtendedQueryResponseData extended_query_response;///< Extended query response (0xC4) data
+};
+
+/**
+ * @brief Union for receive data - allows access as both byte array and struct
  * Provides type-safe access to different message types based on command
  */
 union ReceiveData {
-  uint8_t raw[RX_MESSAGE_LENGTH];                       ///< Raw byte array from UART
-  ReceiveMessage message;                               ///< Generic structured access
-  QueryResponseMessage query_response;                  ///< Query response (0xC0) access
-  ExtendedQueryResponseMessage extended_query_response; ///< Extended query response (0xC4) access
+  uint8_t raw[RX_MESSAGE_LENGTH];                   ///< Raw byte array from UART
+  struct __attribute__((packed)) {
+    ReceiveMessageFrame frame;                      ///< [0-5] Common frame (preamble + header)
+    ReceiveMessageDataUnion data;                   ///< [6-29] Data union for different message types
+    MessageFrameEnd frame_end;                      ///< [30-31] CRC and prologue
+  } message;
 
   /**
    * @brief Get the command type from the message
@@ -446,24 +458,24 @@ union ReceiveData {
     switch (message.frame.header.command) {
       case Command::QUERY:
         ESP_LOGD(tag, "  Query Response:");
-        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.data.operation_mode));
-        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.data.fan_mode));
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", query_response.data.target_temperature.value, query_response.data.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", query_response.data.t1_temperature.value, query_response.data.t1_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", query_response.data.t2a_temperature.value, query_response.data.t2a_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", query_response.data.t2b_temperature.value, query_response.data.t2b_temperature.to_celsius());
-        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", query_response.data.t3_temperature.value, query_response.data.t3_temperature.to_celsius());
-        ESP_LOGD(tag, "    Current: %d", query_response.data.current);
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(query_response.data.mode_flags));
-        ESP_LOGD(tag, "    Error Flags: 0x%04X", query_response.data.error_flags.value());
-        ESP_LOGD(tag, "    Protect Flags: 0x%04X", query_response.data.protect_flags.value());
+        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.query_response.operation_mode));
+        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.query_response.fan_mode));
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.query_response.target_temperature.value, message.data.query_response.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", message.data.query_response.t1_temperature.value, message.data.query_response.t1_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", message.data.query_response.t2a_temperature.value, message.data.query_response.t2a_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", message.data.query_response.t2b_temperature.value, message.data.query_response.t2b_temperature.to_celsius());
+        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", message.data.query_response.t3_temperature.value, message.data.query_response.t3_temperature.to_celsius());
+        ESP_LOGD(tag, "    Current: %d", message.data.query_response.current);
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.query_response.mode_flags));
+        ESP_LOGD(tag, "    Error Flags: 0x%04X", message.data.query_response.error_flags.value());
+        ESP_LOGD(tag, "    Protect Flags: 0x%04X", message.data.query_response.protect_flags.value());
         break;
       
       case Command::QUERY_EXTENDED:
         ESP_LOGD(tag, "  Extended Query Response:");
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", extended_query_response.data.target_temperature.value, extended_query_response.data.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", extended_query_response.data.outdoor_temperature.value, extended_query_response.data.outdoor_temperature.to_celsius());
-        ESP_LOGD(tag, "    Static Pressure: 0x%02X", extended_query_response.data.static_pressure);
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.extended_query_response.target_temperature.value, message.data.extended_query_response.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", message.data.extended_query_response.outdoor_temperature.value, message.data.extended_query_response.outdoor_temperature.to_celsius());
+        ESP_LOGD(tag, "    Static Pressure: 0x%02X", message.data.extended_query_response.static_pressure);
         break;
       
       case Command::SET:
