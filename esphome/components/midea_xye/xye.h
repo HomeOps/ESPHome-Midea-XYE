@@ -217,6 +217,15 @@ struct __attribute__((packed)) Flags16 {
 };
 
 /**
+ * @brief Common message termination (CRC + prologue)
+ * Size: 2 bytes
+ */
+struct __attribute__((packed)) MessageFrameEnd {
+  uint8_t crc;                 ///< Checksum (CRC)
+  ProtocolMarker prologue;     ///< Must be 0x55
+};
+
+/**
  * @brief Transmit message header (without preamble)
  * Size: 5 bytes (bytes 1-5)
  */
@@ -237,8 +246,8 @@ struct __attribute__((packed)) TransmitMessageFrame {
 };
 
 /**
- * @brief Transmit message data (without frame and prologue)
- * Size: 9 bytes (bytes 6-14)
+ * @brief Transmit message data (without frame, CRC, and prologue)
+ * Size: 8 bytes (bytes 6-13)
  */
 struct __attribute__((packed)) TransmitMessageData {
   OperationMode operation_mode;      ///< [0] Operation mode for SET command
@@ -249,7 +258,6 @@ struct __attribute__((packed)) TransmitMessageData {
   ModeFlags mode_flags;              ///< [5] Mode flags for SET, or temperature for FOLLOW_ME
   uint8_t reserved1;                 ///< [6] Reserved/unused
   uint8_t complement;                ///< [7] Bitwise complement of command byte (0xFF - command)
-  uint8_t crc;                       ///< [8] Checksum (CRC)
 };
 
 /**
@@ -258,8 +266,8 @@ struct __attribute__((packed)) TransmitMessageData {
  */
 struct __attribute__((packed)) TransmitMessage {
   TransmitMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  TransmitMessageData data;          ///< [6-14] Message data
-  ProtocolMarker prologue;           ///< [15] Must be 0x55
+  TransmitMessageData data;          ///< [6-13] Message data
+  MessageFrameEnd frame_end;         ///< [14-15] CRC and prologue
 };
 
 /**
@@ -285,7 +293,7 @@ struct __attribute__((packed)) ReceiveMessageFrame {
 /**
  * @brief Query response data (Server to Client, command 0xC0)
  * Contains current unit status and sensor readings
- * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  */
 struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown1;                ///< [0] Unknown/reserved
@@ -310,7 +318,6 @@ struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown4;                ///< [21] Unknown/reserved
   uint8_t unknown5;                ///< [22] Unknown/reserved
   uint8_t unknown6;                ///< [23] Unknown/reserved
-  uint8_t crc;                     ///< [24] Checksum (CRC)
 };
 
 /**
@@ -319,14 +326,14 @@ struct __attribute__((packed)) QueryResponseData {
  */
 struct __attribute__((packed)) QueryResponseMessage {
   ReceiveMessageFrame frame;       ///< [0-5] Common frame (preamble + header)
-  QueryResponseData data;          ///< [6-30] Query response specific data
-  ProtocolMarker prologue;         ///< [31] Must be 0x55
+  QueryResponseData data;          ///< [6-29] Query response specific data
+  MessageFrameEnd frame_end;       ///< [30-31] CRC and prologue
 };
 
 /**
  * @brief Extended query response data (Server to Client, command 0xC4)
  * Contains outdoor temperature and static pressure information
- * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  */
 struct __attribute__((packed)) ExtendedQueryResponseData {
   uint8_t unknown1;             ///< [0] Unknown/reserved
@@ -345,15 +352,14 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
   uint8_t unknown13;            ///< [13] Unknown/reserved
   uint8_t unknown14;            ///< [14] Unknown/reserved
   Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
-  uint8_t unknown15;            ///< [16] Unknown/reserved
-  uint8_t unknown16;            ///< [17] Unknown/reserved
+  uint8_t unknown16;            ///< [16] Unknown/reserved
+  uint8_t unknown17;            ///< [17] Unknown/reserved
   uint8_t static_pressure;      ///< [18] Static pressure setting (lower 4 bits)
-  uint8_t unknown17;            ///< [19] Unknown/reserved
-  uint8_t unknown18;            ///< [20] Unknown/reserved
-  uint8_t unknown19;            ///< [21] Unknown/reserved
-  uint8_t unknown20;            ///< [22] Unknown/reserved
-  uint8_t unknown21;            ///< [23] Unknown/reserved
-  uint8_t crc;                  ///< [24] Checksum (CRC)
+  uint8_t unknown18;            ///< [19] Unknown/reserved
+  uint8_t unknown19;            ///< [20] Unknown/reserved
+  uint8_t unknown20;            ///< [21] Unknown/reserved
+  uint8_t unknown21;            ///< [22] Unknown/reserved
+  uint8_t unknown22;            ///< [23] Unknown/reserved
 };
 
 /**
@@ -362,17 +368,16 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
  */
 struct __attribute__((packed)) ExtendedQueryResponseMessage {
   ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  ExtendedQueryResponseData data;   ///< [6-30] Extended query response specific data
-  ProtocolMarker prologue;          ///< [31] Must be 0x55
+  ExtendedQueryResponseData data;   ///< [6-29] Extended query response specific data
+  MessageFrameEnd frame_end;        ///< [30-31] CRC and prologue
 };
 
 /**
  * @brief Generic receive message data
- * Size: 25 bytes (bytes 6-30, excluding frame and prologue)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  */
 struct __attribute__((packed)) ReceiveMessageData {
   uint8_t data[24];             ///< [0-23] Variable data depending on command type
-  uint8_t crc;                  ///< [24] Checksum (CRC)
 };
 
 /**
@@ -381,8 +386,8 @@ struct __attribute__((packed)) ReceiveMessageData {
  */
 struct __attribute__((packed)) ReceiveMessage {
   ReceiveMessageFrame frame;        ///< [0-5] Common frame (preamble + header)
-  ReceiveMessageData data;          ///< [6-30] Variable data
-  ProtocolMarker prologue;          ///< [31] Must be 0x55
+  ReceiveMessageData data;          ///< [6-29] Variable data
+  MessageFrameEnd frame_end;        ///< [30-31] CRC and prologue
 };
 
 /**
@@ -485,17 +490,18 @@ union ReceiveData {
 
 // Static assertions to ensure struct sizes are correct
 static_assert(sizeof(ProtocolMarker) == 1, "ProtocolMarker must be 1 byte");
+static_assert(sizeof(MessageFrameEnd) == 2, "MessageFrameEnd must be 2 bytes (CRC + prologue)");
 static_assert(sizeof(TransmitMessageHeader) == 5, "TransmitMessageHeader must be 5 bytes");
 static_assert(sizeof(TransmitMessageFrame) == sizeof(ProtocolMarker) + sizeof(TransmitMessageHeader), "TransmitMessageFrame must be preamble + header");
-static_assert(sizeof(TransmitMessageData) == TX_MESSAGE_LENGTH - sizeof(TransmitMessageFrame) - sizeof(ProtocolMarker), "TransmitMessageData size must exclude frame and prologue");
+static_assert(sizeof(TransmitMessageData) == TX_MESSAGE_LENGTH - sizeof(TransmitMessageFrame) - sizeof(MessageFrameEnd), "TransmitMessageData size must exclude frame and frame_end");
 static_assert(sizeof(TransmitMessage) == TX_MESSAGE_LENGTH, "TransmitMessage size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveMessageHeader) == 5, "ReceiveMessageHeader must be 5 bytes");
 static_assert(sizeof(ReceiveMessageFrame) == sizeof(ProtocolMarker) + sizeof(ReceiveMessageHeader), "ReceiveMessageFrame must be preamble + header");
-static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "QueryResponseData size must exclude frame and prologue");
+static_assert(sizeof(QueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "QueryResponseData size must exclude frame and frame_end");
 static_assert(sizeof(QueryResponseMessage) == RX_MESSAGE_LENGTH, "QueryResponseMessage size must match RX_MESSAGE_LENGTH");
-static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "ExtendedQueryResponseData size must exclude frame and prologue");
+static_assert(sizeof(ExtendedQueryResponseData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ExtendedQueryResponseData size must exclude frame and frame_end");
 static_assert(sizeof(ExtendedQueryResponseMessage) == RX_MESSAGE_LENGTH, "ExtendedQueryResponseMessage size must match RX_MESSAGE_LENGTH");
-static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(ProtocolMarker), "ReceiveMessageData size must exclude frame and prologue");
+static_assert(sizeof(ReceiveMessageData) == RX_MESSAGE_LENGTH - sizeof(ReceiveMessageFrame) - sizeof(MessageFrameEnd), "ReceiveMessageData size must exclude frame and frame_end");
 static_assert(sizeof(ReceiveMessage) == RX_MESSAGE_LENGTH, "ReceiveMessage size must match RX_MESSAGE_LENGTH");
 static_assert(sizeof(TransmitData) == TX_MESSAGE_LENGTH, "TransmitData size must match TX_MESSAGE_LENGTH");
 static_assert(sizeof(ReceiveData) == RX_MESSAGE_LENGTH, "ReceiveData size must match RX_MESSAGE_LENGTH");
