@@ -221,11 +221,40 @@ struct __attribute__((packed)) MessageFrameEnd {
   ProtocolMarker prologue;     ///< Must be 0x55
 };
 
+// Forward declarations for enum maps
+extern const std::map<Command, const char*> COMMAND_MAP;
+extern const std::map<OperationMode, const char*> OPERATION_MODE_MAP;
+extern const std::map<FanMode, const char*> FAN_MODE_MAP;
+extern const std::map<ModeFlags, const char*> MODE_FLAGS_MAP;
+extern const std::map<OperationFlags, const char*> OPERATION_FLAGS_MAP;
+extern const std::map<Capabilities, const char*> CAPABILITIES_MAP;
+extern const std::map<Direction, const char*> DIRECTION_MAP;
+extern const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP;
+extern const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP;
+
 /**
- * @brief Template function for enum-to-string conversion
+ * @brief Trait struct to map enum types to their string mappings
  */
 template<typename EnumType>
-const char* enum_to_string(EnumType value, const std::map<EnumType, const char*>& mapping) {
+struct EnumTraits;
+
+template<> struct EnumTraits<Command> { static const std::map<Command, const char*>& get_map() { return COMMAND_MAP; } };
+template<> struct EnumTraits<OperationMode> { static const std::map<OperationMode, const char*>& get_map() { return OPERATION_MODE_MAP; } };
+template<> struct EnumTraits<FanMode> { static const std::map<FanMode, const char*>& get_map() { return FAN_MODE_MAP; } };
+template<> struct EnumTraits<ModeFlags> { static const std::map<ModeFlags, const char*>& get_map() { return MODE_FLAGS_MAP; } };
+template<> struct EnumTraits<OperationFlags> { static const std::map<OperationFlags, const char*>& get_map() { return OPERATION_FLAGS_MAP; } };
+template<> struct EnumTraits<Capabilities> { static const std::map<Capabilities, const char*>& get_map() { return CAPABILITIES_MAP; } };
+template<> struct EnumTraits<Direction> { static const std::map<Direction, const char*>& get_map() { return DIRECTION_MAP; } };
+template<> struct EnumTraits<CcmErrorFlags> { static const std::map<CcmErrorFlags, const char*>& get_map() { return CCM_ERROR_FLAGS_MAP; } };
+template<> struct EnumTraits<FollowMeSubcommand> { static const std::map<FollowMeSubcommand, const char*>& get_map() { return FOLLOW_ME_SUBCOMMAND_MAP; } };
+
+/**
+ * @brief Template function for enum-to-string conversion
+ * Uses EnumTraits to automatically select the correct mapping for each enum type
+ */
+template<typename EnumType>
+const char* enum_to_string(EnumType value) {
+  const auto& mapping = EnumTraits<EnumType>::get_map();
   auto it = mapping.find(value);
   if (it != mapping.end()) {
     return it->second;
