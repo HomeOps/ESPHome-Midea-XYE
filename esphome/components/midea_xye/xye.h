@@ -183,12 +183,10 @@ struct __attribute__((packed)) Temperature {
   uint8_t value;  ///< Encoded temperature value
   
   /// Convert to degrees Celsius
-  float to_celsius() const { return (value - 0x28) / 2.0f; }
+  float to_celsius() const;
   
   /// Create from degrees Celsius
-  static Temperature from_celsius(float celsius) {
-    return Temperature{static_cast<uint8_t>(celsius * 2.0f + 0x28)};
-  }
+  static Temperature from_celsius(float celsius);
 };
 
 /**
@@ -207,13 +205,10 @@ struct __attribute__((packed)) Flags16 {
   uint8_t high;  ///< High byte (bits 8-15)
   
   /// Get combined 16-bit value
-  uint16_t value() const { return static_cast<uint16_t>(low) | (static_cast<uint8_t>(high) << 8); }
+  uint16_t value() const;
   
   /// Set from 16-bit value
-  void set(uint16_t val) {
-    low = val & 0xFF;
-    high = (val >> 8) & 0xFF;
-  }
+  void set(uint16_t val);
 };
 
 /**
@@ -407,12 +402,7 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
    * @brief Print debug information for extended query response data
    * @param tag Log tag to use
    */
-  void print_debug(const char *tag) const {
-    ESP_LOGD(tag, "  ExtendedQueryResponseData:");
-    ESP_LOGD(tag, "    target_temperature: 0x%02X (%.1f°C)", target_temperature.value, target_temperature.to_celsius());
-    ESP_LOGD(tag, "    outdoor_temperature: 0x%02X (%.1f°C)", outdoor_temperature.value, outdoor_temperature.to_celsius());
-    ESP_LOGD(tag, "    static_pressure: 0x%02X", static_pressure);
-  }
+  void print_debug(const char *tag) const;
 };
 
 /**
@@ -426,13 +416,7 @@ struct __attribute__((packed)) ReceiveMessageData {
    * @brief Print debug information for generic receive data
    * @param tag Log tag to use
    */
-  void print_debug(const char *tag) const {
-    ESP_LOGD(tag, "  ReceiveMessageData (generic):");
-    ESP_LOGD(tag, "    Raw data (24 bytes): %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
-             data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-             data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15],
-             data[16], data[17], data[18], data[19], data[20], data[21], data[22], data[23]);
-  }
+  void print_debug(const char *tag) const;
 };
 
 /**
@@ -462,53 +446,7 @@ union TransmitData {
    * Takes into account the kind of message based on command type
    * @param tag Log tag to use
    */
-  void print_debug(const char *tag) const {
-    ESP_LOGD(tag, "TX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.frame.header.command));
-    
-    switch (message.frame.header.command) {
-      case Command::SET:
-        ESP_LOGD(tag, "  Set Command:");
-        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.standard.operation_mode));
-        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.standard.fan_mode));
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.standard.target_temperature.value, message.data.standard.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    Timer Start: 0x%02X", message.data.standard.timer_start);
-        ESP_LOGD(tag, "    Timer Stop: 0x%02X", message.data.standard.timer_stop);
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.standard.mode_flags));
-        break;
-      
-      case Command::QUERY:
-        ESP_LOGD(tag, "  Query Command");
-        break;
-      
-      case Command::QUERY_EXTENDED:
-        ESP_LOGD(tag, "  Extended Query Command");
-        break;
-      
-      case Command::FOLLOW_ME:
-        ESP_LOGD(tag, "  Follow-Me Command:");
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.standard.target_temperature.value, message.data.standard.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    Subcommand: 0x%02X", message.data.standard.timer_stop);  // timer_stop field is used as subcommand for FOLLOW_ME
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.standard.mode_flags));  // mode_flags field is used for temperature in FOLLOW_ME
-        break;
-      
-      case Command::LOCK:
-        ESP_LOGD(tag, "  Lock Command");
-        break;
-      
-      case Command::UNLOCK:
-        ESP_LOGD(tag, "  Unlock Command");
-        break;
-      
-      default:
-        ESP_LOGD(tag, "  Unknown command type");
-        break;
-    }
-    
-    ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-             raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
-             raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]);
-  }
+  void print_debug(const char *tag) const;
 };
 
 /**
@@ -537,62 +475,14 @@ union ReceiveData {
    * @brief Get the command type from the message
    * @return The command type
    */
-  Command get_command() const {
-    return message.frame.header.command;
-  }
+  Command get_command() const;
 
   /**
    * @brief Pretty print the receive message for debugging
    * Takes into account the kind of message based on command type
    * @param tag Log tag to use
    */
-  void print_debug(const char *tag) const {
-    ESP_LOGD(tag, "RX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.frame.header.command));
-    
-    switch (message.frame.header.command) {
-      case Command::QUERY:
-        ESP_LOGD(tag, "  Query Response:");
-        ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(message.data.query_response.operation_mode));
-        ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(message.data.query_response.fan_mode));
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.query_response.target_temperature.value, message.data.query_response.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", message.data.query_response.t1_temperature.value, message.data.query_response.t1_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", message.data.query_response.t2a_temperature.value, message.data.query_response.t2a_temperature.to_celsius());
-        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", message.data.query_response.t2b_temperature.value, message.data.query_response.t2b_temperature.to_celsius());
-        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", message.data.query_response.t3_temperature.value, message.data.query_response.t3_temperature.to_celsius());
-        ESP_LOGD(tag, "    Current: %d", message.data.query_response.current);
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(message.data.query_response.mode_flags));
-        ESP_LOGD(tag, "    Error Flags: 0x%04X", message.data.query_response.error_flags.value());
-        ESP_LOGD(tag, "    Protect Flags: 0x%04X", message.data.query_response.protect_flags.value());
-        break;
-      
-      case Command::QUERY_EXTENDED:
-        ESP_LOGD(tag, "  Extended Query Response:");
-        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", message.data.extended_query_response.target_temperature.value, message.data.extended_query_response.target_temperature.to_celsius());
-        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", message.data.extended_query_response.outdoor_temperature.value, message.data.extended_query_response.outdoor_temperature.to_celsius());
-        ESP_LOGD(tag, "    Static Pressure: 0x%02X", message.data.extended_query_response.static_pressure);
-        break;
-      
-      case Command::SET:
-        ESP_LOGD(tag, "  Set Response");
-        break;
-      
-      case Command::FOLLOW_ME:
-        ESP_LOGD(tag, "  Follow-Me Response");
-        break;
-      
-      default:
-        ESP_LOGD(tag, "  Unknown command type");
-        break;
-    }
-    
-    ESP_LOGD(tag, "  Raw: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:"
-                  "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-             raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7],
-             raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15],
-             raw[16], raw[17], raw[18], raw[19], raw[20], raw[21], raw[22], raw[23],
-             raw[24], raw[25], raw[26], raw[27], raw[28], raw[29], raw[30], raw[31]);
-  }
+  void print_debug(const char *tag) const;
 };
 
 // Static assertions to ensure struct sizes are correct
