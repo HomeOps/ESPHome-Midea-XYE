@@ -9,6 +9,9 @@ namespace esphome {
 namespace midea {
 namespace xye {
 
+// Type aliases for node identifiers
+using NodeId = uint8_t;  ///< Node ID type for server and client identifiers
+
 // Protocol constants
 constexpr uint8_t PROTOCOL_PREAMBLE = 0xAA;  ///< Start byte for all messages
 constexpr uint8_t PROTOCOL_PROLOGUE = 0x55;  ///< End byte for all messages
@@ -21,8 +24,8 @@ constexpr uint8_t TX_MESSAGE_LENGTH = 16;  ///< Length of transmitted messages
 constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
 
 // TODO: Don't hardcode these IDs
-constexpr uint8_t SERVER_ID = 0;  ///< ID of the HVAC unit (server)
-constexpr uint8_t CLIENT_ID = 0;  ///< ID of the thermostat (client)
+constexpr NodeId SERVER_ID = 0;  ///< ID of the HVAC unit (server)
+constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
 
 /**
  * @brief Command types sent from client (thermostat) to server (HVAC unit)
@@ -31,24 +34,24 @@ constexpr uint8_t CLIENT_ID = 0;  ///< ID of the thermostat (client)
  * ServerCommand enum. The response is distinguished by the direction field.
  */
 enum class Command : uint8_t {
-  QUERY = 0xC0,           ///< Query current status (basic)
-  QUERY_EXTENDED = 0xC4,  ///< Query extended status (includes outdoor temp, static pressure)
-  SET = 0xC3,             ///< Set operation parameters (mode, temp, fan, etc.)
-  FOLLOW_ME = 0xC6,       ///< Follow-Me temperature update or static pressure setting
-  LOCK = 0xCC,            ///< Lock the physical controls
-  UNLOCK = 0xCD,          ///< Unlock the physical controls
+  QUERY = 0xC0,                      ///< Query current status (basic)
+  QUERY_EXTENDED = 0xC4,             ///< Query extended status (includes outdoor temp, static pressure)
+  SET = QUERY | 0x03,                ///< Set operation parameters (mode, temp, fan, etc.) - derived from QUERY
+  FOLLOW_ME = 0xC6,                  ///< Follow-Me temperature update or static pressure setting
+  LOCK = 0xCC,                       ///< Lock the physical controls
+  UNLOCK = 0xCD,                     ///< Unlock the physical controls
 };
 
 /**
  * @brief Operation modes for the HVAC unit
  */
 enum class OperationMode : uint8_t {
-  OFF = 0x00,   ///< Unit is off
-  AUTO = 0x80,  ///< Automatic mode (heat/cool as needed)
-  FAN = 0x81,   ///< Fan only mode
-  DRY = 0x82,   ///< Dehumidify mode
-  HEAT = 0x84,  ///< Heating mode
-  COOL = 0x88   ///< Cooling mode
+  OFF = 0x00,        ///< Unit is off
+  AUTO = 0x80,       ///< Automatic mode (heat/cool as needed)
+  FAN = AUTO | 0x01, ///< Fan only mode - derived from AUTO
+  DRY = AUTO | 0x02, ///< Dehumidify mode - derived from AUTO
+  HEAT = AUTO | 0x04,///< Heating mode - derived from AUTO
+  COOL = AUTO | 0x08 ///< Cooling mode - derived from AUTO
 };
 
 /**
@@ -66,29 +69,29 @@ enum class FanMode : uint8_t {
 /**
  * @brief Flags for special operation modes
  */
-namespace ModeFlags {
-constexpr uint8_t NORMAL = 0x00;      ///< Normal operation
-constexpr uint8_t ECO = 0x01;         ///< Energy saving mode
-constexpr uint8_t AUX_HEAT = 0x02;    ///< Auxiliary heat / Turbo mode
-constexpr uint8_t SWING = 0x04;       ///< Swing mode enabled
-constexpr uint8_t VENTILATION = 0x88; ///< Ventilation mode
-}  // namespace ModeFlags
+enum class ModeFlags : uint8_t {
+  NORMAL = 0x00,      ///< Normal operation
+  ECO = 0x01,         ///< Energy saving mode
+  AUX_HEAT = 0x02,    ///< Auxiliary heat / Turbo mode
+  SWING = 0x04,       ///< Swing mode enabled
+  VENTILATION = 0x88  ///< Ventilation mode
+};
 
 /**
  * @brief Operation flags from unit status
  */
-namespace OperationFlags {
-constexpr uint8_t WATER_PUMP = 0x04;  ///< Water pump active
-constexpr uint8_t WATER_LOCK = 0x80;  ///< Water lock protection active
-}  // namespace OperationFlags
+enum class OperationFlags : uint8_t {
+  WATER_PUMP = 0x04,  ///< Water pump active
+  WATER_LOCK = 0x80   ///< Water lock protection active
+};
 
 /**
  * @brief Unit capabilities flags
  */
-namespace Capabilities {
-constexpr uint8_t EXTERNAL_TEMP = 0x80;  ///< Supports external temperature sensor
-constexpr uint8_t SWING = 0x10;          ///< Supports swing function
-}  // namespace Capabilities
+enum class Capabilities : uint8_t {
+  EXTERNAL_TEMP = 0x80,  ///< Supports external temperature sensor
+  SWING = 0x10           ///< Supports swing function
+};
 
 /**
  * @brief Auto mode flag in operation mode byte
@@ -119,9 +122,61 @@ enum class FollowMeSubcommand : uint8_t {
 };
 
 /**
+ * @brief Control state machine states
+ */
+enum class ControlState : uint8_t {
+  WAIT_DATA = 0,            ///< Waiting for response from command
+  SEND_SET = 1,             ///< Sending Set (0xC3) command
+  SEND_FOLLOWME = 2,        ///< Sending Follow-Me (0xC6) command
+  SEND_QUERY = 3,           ///< Sending Query (0xC0) command
+  SEND_QUERY_EXTENDED = 4   ///< Sending Extended Query (0xC4) command
+};
+
+/**
  * @brief Special temperature value for fan mode
  */
 constexpr uint8_t TEMP_FAN_MODE = 0xFF;
+
+/**
+ * @brief Temperature value (encoded)
+ * Formula: actual_temp = (value - 0x28) / 2.0
+ */
+struct __attribute__((packed)) Temperature {
+  uint8_t value;  ///< Encoded temperature value
+  
+  /// Convert to degrees Celsius
+  float to_celsius() const { return (value - 0x28) / 2.0f; }
+  
+  /// Create from degrees Celsius
+  static Temperature from_celsius(float celsius) {
+    return Temperature{static_cast<uint8_t>(celsius * 2.0f + 0x28)};
+  }
+};
+
+/**
+ * @brief Direction and node ID pair (2 bytes)
+ */
+struct __attribute__((packed)) DirectionNode {
+  uint8_t direction;  ///< Direction indicator (FROM_CLIENT or TO_CLIENT)
+  NodeId node_id;     ///< Node identifier
+};
+
+/**
+ * @brief 16-bit flag field split into low and high bytes
+ */
+struct __attribute__((packed)) Flags16 {
+  uint8_t low;   ///< Low byte (bits 0-7)
+  uint8_t high;  ///< High byte (bits 8-15)
+  
+  /// Get combined 16-bit value
+  uint16_t value() const { return static_cast<uint16_t>(low) | (static_cast<uint16_t>(high) << 8); }
+  
+  /// Set from 16-bit value
+  void set(uint16_t val) {
+    low = val & 0xFF;
+    high = (val >> 8) & 0xFF;
+  }
+};
 
 /**
  * @brief Transmit message structure (Client to Server)
@@ -130,10 +185,9 @@ constexpr uint8_t TEMP_FAN_MODE = 0xFF;
 struct __attribute__((packed)) TransmitMessage {
   uint8_t preamble;                  ///< [0] Must be 0xAA
   Command command;                   ///< [1] Command type
-  uint8_t server_id;                 ///< [2] Server (HVAC) ID
-  uint8_t client_id1;                ///< [3] Client (thermostat) ID
-  uint8_t direction;                 ///< [4] Direction: FROM_CLIENT (0x00)
-  uint8_t client_id2;                ///< [5] Client ID (repeated)
+  NodeId server_id;                  ///< [2] Server (HVAC) ID
+  NodeId client_id1;                 ///< [3] Client (thermostat) ID
+  DirectionNode direction_node;      ///< [4-5] Direction and client ID
   OperationMode operation_mode;      ///< [6] Operation mode for SET command
   FanMode fan_mode;                  ///< [7] Fan speed for SET command
   uint8_t target_temperature;        ///< [8] Target temperature or special value for SET/FOLLOW_ME
@@ -166,25 +220,23 @@ struct __attribute__((packed)) ReceiveMessageHeader {
 struct __attribute__((packed)) QueryResponseMessage {
   ReceiveMessageHeader header;    ///< [0-5] Common header
   uint8_t unknown1;                ///< [6] Unknown/reserved
-  uint8_t capabilities;            ///< [7] Unit capabilities flags (Capabilities)
+  Capabilities capabilities;       ///< [7] Unit capabilities flags
   OperationMode operation_mode;    ///< [8] Current operation mode
   FanMode fan_mode;                ///< [9] Current fan mode
   uint8_t target_temperature;      ///< [10] Target temperature setpoint
-  uint8_t t1_temperature;          ///< [11] Internal temperature sensor (T1)
-  uint8_t t2a_temperature;         ///< [12] Temperature sensor 2A
-  uint8_t t2b_temperature;         ///< [13] Temperature sensor 2B
-  uint8_t t3_temperature;          ///< [14] Temperature sensor 3
+  Temperature t1_temperature;      ///< [11] Internal temperature sensor (T1)
+  Temperature t2a_temperature;     ///< [12] Temperature sensor 2A
+  Temperature t2b_temperature;     ///< [13] Temperature sensor 2B
+  Temperature t3_temperature;      ///< [14] Temperature sensor 3
   uint8_t current;                 ///< [15] Current draw (units TBD)
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
   uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
   uint8_t unknown3;                ///< [19] Unknown/reserved
-  uint8_t mode_flags;              ///< [20] Mode flags (ModeFlags bitfield)
-  uint8_t operation_flags;         ///< [21] Operation status flags (OperationFlags bitfield)
-  uint8_t error_flags_low;         ///< [22] Error flags byte 1
-  uint8_t error_flags_high;        ///< [23] Error flags byte 2
-  uint8_t protect_flags_low;       ///< [24] Protection flags byte 1
-  uint8_t protect_flags_high;      ///< [25] Protection flags byte 2
+  ModeFlags mode_flags;            ///< [20] Mode flags
+  OperationFlags operation_flags;  ///< [21] Operation status flags
+  Flags16 error_flags;             ///< [22-23] Error flags (16-bit)
+  Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
   uint8_t ccm_communication_error_flags; ///< [26] CCM communication error flags
   uint8_t unknown4;                ///< [27] Unknown/reserved
   uint8_t unknown5;                ///< [28] Unknown/reserved
@@ -212,10 +264,10 @@ struct __attribute__((packed)) ExtendedQueryResponseMessage {
   uint8_t unknown10;            ///< [15] Unknown/reserved
   uint8_t unknown11;            ///< [16] Unknown/reserved
   uint8_t unknown12;            ///< [17] Unknown/reserved
-  uint8_t target_temperature;   ///< [18] Target temperature (may be in Fahrenheit with offset)
+  Temperature target_temperature;   ///< [18] Target temperature (may be in Fahrenheit with offset)
   uint8_t unknown13;            ///< [19] Unknown/reserved
   uint8_t unknown14;            ///< [20] Unknown/reserved
-  uint8_t outdoor_temperature;  ///< [21] Outdoor temperature sensor reading
+  Temperature outdoor_temperature;  ///< [21] Outdoor temperature sensor reading
   uint8_t unknown15;            ///< [22] Unknown/reserved
   uint8_t unknown16;            ///< [23] Unknown/reserved
   uint8_t static_pressure;      ///< [24] Static pressure setting (lower 4 bits)
@@ -251,9 +303,9 @@ union TransmitData {
    */
   void print_debug(const char *tag) const {
     ESP_LOGD(tag, "TX Message:");
-    ESP_LOGD(tag, "  Command: 0x%02X", message.command);
-    ESP_LOGD(tag, "  Operation Mode: 0x%02X", message.operation_mode);
-    ESP_LOGD(tag, "  Fan Mode: 0x%02X", message.fan_mode);
+    ESP_LOGD(tag, "  Command: 0x%02X", static_cast<uint8_t>(message.command));
+    ESP_LOGD(tag, "  Operation Mode: 0x%02X", static_cast<uint8_t>(message.operation_mode));
+    ESP_LOGD(tag, "  Fan Mode: 0x%02X", static_cast<uint8_t>(message.fan_mode));
     ESP_LOGD(tag, "  Target Temp: %d", message.target_temperature);
     ESP_LOGD(tag, "  Timer Start: 0x%02X", message.timer_start);
     ESP_LOGD(tag, "  Timer Stop/Subcmd: 0x%02X", message.timer_stop);
@@ -297,22 +349,20 @@ union ReceiveData {
         ESP_LOGD(tag, "    Operation Mode: 0x%02X", static_cast<uint8_t>(query_response.operation_mode));
         ESP_LOGD(tag, "    Fan Mode: 0x%02X", static_cast<uint8_t>(query_response.fan_mode));
         ESP_LOGD(tag, "    Target Temp: %d", query_response.target_temperature);
-        ESP_LOGD(tag, "    T1 Temp: 0x%02X", query_response.t1_temperature);
-        ESP_LOGD(tag, "    T2A Temp: 0x%02X", query_response.t2a_temperature);
-        ESP_LOGD(tag, "    T2B Temp: 0x%02X", query_response.t2b_temperature);
-        ESP_LOGD(tag, "    T3 Temp: 0x%02X", query_response.t3_temperature);
+        ESP_LOGD(tag, "    T1 Temp: 0x%02X (%.1f°C)", query_response.t1_temperature.value, query_response.t1_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2A Temp: 0x%02X (%.1f°C)", query_response.t2a_temperature.value, query_response.t2a_temperature.to_celsius());
+        ESP_LOGD(tag, "    T2B Temp: 0x%02X (%.1f°C)", query_response.t2b_temperature.value, query_response.t2b_temperature.to_celsius());
+        ESP_LOGD(tag, "    T3 Temp: 0x%02X (%.1f°C)", query_response.t3_temperature.value, query_response.t3_temperature.to_celsius());
         ESP_LOGD(tag, "    Current: %d", query_response.current);
-        ESP_LOGD(tag, "    Mode Flags: 0x%02X", query_response.mode_flags);
-        ESP_LOGD(tag, "    Error Flags: 0x%04X", 
-                 (query_response.error_flags_high << 8) | query_response.error_flags_low);
-        ESP_LOGD(tag, "    Protect Flags: 0x%04X", 
-                 (query_response.protect_flags_high << 8) | query_response.protect_flags_low);
+        ESP_LOGD(tag, "    Mode Flags: 0x%02X", static_cast<uint8_t>(query_response.mode_flags));
+        ESP_LOGD(tag, "    Error Flags: 0x%04X", query_response.error_flags.value());
+        ESP_LOGD(tag, "    Protect Flags: 0x%04X", query_response.protect_flags.value());
         break;
       
       case Command::QUERY_EXTENDED:
         ESP_LOGD(tag, "  Extended Query Response:");
-        ESP_LOGD(tag, "    Target Temp: %d", extended_query_response.target_temperature);
-        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X", extended_query_response.outdoor_temperature);
+        ESP_LOGD(tag, "    Target Temp: 0x%02X (%.1f°C)", extended_query_response.target_temperature.value, extended_query_response.target_temperature.to_celsius());
+        ESP_LOGD(tag, "    Outdoor Temp: 0x%02X (%.1f°C)", extended_query_response.outdoor_temperature.value, extended_query_response.outdoor_temperature.to_celsius());
         ESP_LOGD(tag, "    Static Pressure: 0x%02X", extended_query_response.static_pressure);
         break;
       

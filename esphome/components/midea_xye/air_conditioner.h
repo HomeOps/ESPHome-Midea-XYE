@@ -14,12 +14,21 @@
 #include "static_pressure_number.h"
 #include "xye.h"
 
-// STATES
-constexpr uint8_t STATE_WAIT_DATA = 0;
-constexpr uint8_t STATE_SEND_SET = 1;
-constexpr uint8_t STATE_SEND_FOLLOWME = 2;
-constexpr uint8_t STATE_SEND_QUERY = 3;
-constexpr uint8_t STATE_SEND_QUERY_EXTENDED = 4;
+// Control state machine states
+enum class ControlState : uint8_t {
+  WAIT_DATA = 0,            ///< Waiting for response from command
+  SEND_SET = 1,             ///< Sending Set (0xC3) command
+  SEND_FOLLOWME = 2,        ///< Sending Follow-Me (0xC6) command
+  SEND_QUERY = 3,           ///< Sending Query (0xC0) command
+  SEND_QUERY_EXTENDED = 4   ///< Sending Extended Query (0xC4) command
+};
+
+// Legacy compatibility
+constexpr uint8_t STATE_WAIT_DATA = static_cast<uint8_t>(ControlState::WAIT_DATA);
+constexpr uint8_t STATE_SEND_SET = static_cast<uint8_t>(ControlState::SEND_SET);
+constexpr uint8_t STATE_SEND_FOLLOWME = static_cast<uint8_t>(ControlState::SEND_FOLLOWME);
+constexpr uint8_t STATE_SEND_QUERY = static_cast<uint8_t>(ControlState::SEND_QUERY);
+constexpr uint8_t STATE_SEND_QUERY_EXTENDED = static_cast<uint8_t>(ControlState::SEND_QUERY_EXTENDED);
 
 namespace esphome {
 namespace midea {
@@ -30,8 +39,20 @@ using xye::Command;
 using xye::OperationMode;
 using xye::FanMode;
 using xye::FollowMeSubcommand;
+using xye::ControlState;
 using xye::TransmitData;
 using xye::ReceiveData;
+
+/**
+ * @brief Response/status codes
+ */
+enum class ResponseCode : uint8_t {
+  UNKNOWN = 0x00,
+  OK = 0x30,
+  UNKNOWN1 = 0xFF,
+  UNKNOWN2 = 0x01,
+  UNKNOWN3 = 0x00
+};
 
 // Legacy compatibility - map old defines to new protocol definitions
 // These provide backward compatibility for existing code using old names
@@ -61,11 +82,11 @@ constexpr uint8_t FAN_MODE_LOW = static_cast<uint8_t>(FanMode::FAN_LOW);
 
 constexpr uint8_t TEMP_SET_FAN_MODE = xye::TEMP_FAN_MODE;
 
-constexpr uint8_t MODE_FLAG_AUX_HEAT = xye::ModeFlags::AUX_HEAT;
-constexpr uint8_t MODE_FLAG_NORM = xye::ModeFlags::NORMAL;
-constexpr uint8_t MODE_FLAG_ECO = xye::ModeFlags::ECO;
-constexpr uint8_t MODE_FLAG_SWING = xye::ModeFlags::SWING;
-constexpr uint8_t MODE_FLAG_VENT = xye::ModeFlags::VENTILATION;
+constexpr uint8_t MODE_FLAG_AUX_HEAT = static_cast<uint8_t>(xye::ModeFlags::AUX_HEAT);
+constexpr uint8_t MODE_FLAG_NORM = static_cast<uint8_t>(xye::ModeFlags::NORMAL);
+constexpr uint8_t MODE_FLAG_ECO = static_cast<uint8_t>(xye::ModeFlags::ECO);
+constexpr uint8_t MODE_FLAG_SWING = static_cast<uint8_t>(xye::ModeFlags::SWING);
+constexpr uint8_t MODE_FLAG_VENT = static_cast<uint8_t>(xye::ModeFlags::VENTILATION);
 
 constexpr uint8_t TIMER_15MIN = static_cast<uint8_t>(xye::TimerFlags::TIMER_15MIN);
 constexpr uint8_t TIMER_30MIN = static_cast<uint8_t>(xye::TimerFlags::TIMER_30MIN);
@@ -86,17 +107,17 @@ constexpr uint8_t SERVER_COMMAND_SET = static_cast<uint8_t>(Command::SET);
 constexpr uint8_t SERVER_COMMAND_LOCK = static_cast<uint8_t>(Command::LOCK);
 constexpr uint8_t SERVER_COMMAND_UNLOCK = static_cast<uint8_t>(Command::UNLOCK);
 
-constexpr uint8_t CAPABILITIES_EXT_TEMP = xye::Capabilities::EXTERNAL_TEMP;
-constexpr uint8_t CAPABILITIES_SWING = xye::Capabilities::SWING;
+constexpr uint8_t CAPABILITIES_EXT_TEMP = static_cast<uint8_t>(xye::Capabilities::EXTERNAL_TEMP);
+constexpr uint8_t CAPABILITIES_SWING = static_cast<uint8_t>(xye::Capabilities::SWING);
 
-constexpr uint8_t OP_FLAG_WATER_PUMP = xye::OperationFlags::WATER_PUMP;
-constexpr uint8_t OP_FLAG_WATER_LOCK = xye::OperationFlags::WATER_LOCK;
+constexpr uint8_t OP_FLAG_WATER_PUMP = static_cast<uint8_t>(xye::OperationFlags::WATER_PUMP);
+constexpr uint8_t OP_FLAG_WATER_LOCK = static_cast<uint8_t>(xye::OperationFlags::WATER_LOCK);
 
-constexpr uint8_t COMMAND_UNKNOWN = 0x00;
-constexpr uint8_t RESPONSE_UNKNOWN = 0x30;
-constexpr uint8_t RESPONSE_UNKNOWN1 = 0xFF;
-constexpr uint8_t RESPONSE_UNKNOWN2 = 0x01;
-constexpr uint8_t RESPONSE_UNKNOWN3 = 0x00;
+constexpr uint8_t COMMAND_UNKNOWN = static_cast<uint8_t>(ResponseCode::UNKNOWN);
+constexpr uint8_t RESPONSE_UNKNOWN = static_cast<uint8_t>(ResponseCode::OK);
+constexpr uint8_t RESPONSE_UNKNOWN1 = static_cast<uint8_t>(ResponseCode::UNKNOWN1);
+constexpr uint8_t RESPONSE_UNKNOWN2 = static_cast<uint8_t>(ResponseCode::UNKNOWN2);
+constexpr uint8_t RESPONSE_UNKNOWN3 = static_cast<uint8_t>(ResponseCode::UNKNOWN3);
 
 constexpr uint8_t TX_LEN = xye::TX_MESSAGE_LENGTH;
 
