@@ -28,4 +28,13 @@ jobs:
 
       - name: Compile test configuration
         run: |
-          esphome compile tests/midea_xye.yaml
+          # Compile and capture output
+          esphome compile tests/midea_xye.yaml 2>&1 | tee build.log
+          
+          # Check for warnings in the output
+          if grep -i "warning" build.log; then
+            echo "❌ Build failed: Warnings detected in compilation output"
+            exit 1
+          fi
+          
+          echo "✅ Build successful: No warnings detected"
