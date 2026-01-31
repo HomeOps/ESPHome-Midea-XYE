@@ -11,7 +11,7 @@ namespace midea {
 namespace xye {
 
 // Type aliases for node identifiers
-using NodeId = uint8_t;  ///< Node ID type for server and client identifiers
+using NodeId = uint8_t;  ///< Node ID type for server and client identifiers (0x00..0x3F, 0xFF for broadcast)
 
 /**
  * @brief Protocol framing markers
@@ -41,9 +41,11 @@ enum class Direction : uint8_t {
 constexpr uint8_t FROM_CLIENT = static_cast<uint8_t>(Direction::FROM_CLIENT);
 constexpr uint8_t TO_CLIENT = static_cast<uint8_t>(Direction::TO_CLIENT);
 
-// TODO: Don't hardcode these IDs
-constexpr NodeId SERVER_ID = 0;  ///< ID of the HVAC unit (server)
-constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
+// Node ID constants
+constexpr NodeId SERVER_ID = 0x00;        ///< ID of the HVAC unit (server) - typical default
+constexpr NodeId CLIENT_ID = 0x00;        ///< ID of the thermostat (client/master) - typical default
+constexpr NodeId BROADCAST_ID = 0xFF;     ///< Broadcast ID - messages sent to all units
+constexpr NodeId MAX_DEVICE_ID = 0x3F;    ///< Maximum valid device ID (0x00..0x3F)
 
 /**
  * @brief Command types sent from client (thermostat) to server (HVAC unit)
@@ -62,6 +64,10 @@ enum class Command : uint8_t {
 
 /**
  * @brief Operation modes for the HVAC unit
+ * 
+ * Note: Some implementations have observed AUTO mode as 0x91 (0x80 | 0x10 | 0x01).
+ * The exact value may vary by unit model. This implementation uses 0x80.
+ * See PROTOCOL.md for details on protocol variations.
  */
 enum class OperationMode : uint8_t {
   OFF = 0x00,        ///< Unit is off
@@ -69,17 +75,23 @@ enum class OperationMode : uint8_t {
   FAN = 0x81,        ///< Fan only mode - derived from AUTO (0x80 | 0x01)
   DRY = 0x82,        ///< Dehumidify mode - derived from AUTO (0x80 | 0x02)
   HEAT = 0x84,       ///< Heating mode - derived from AUTO (0x80 | 0x04)
-  COOL = 0x88        ///< Cooling mode - derived from AUTO (0x80 | 0x08)
+  COOL = 0x88,       ///< Cooling mode - derived from AUTO (0x80 | 0x08)
+  AUTO_ALT = 0x91    ///< Alternate AUTO mode (0x80 | 0x10 | 0x01) - observed in some implementations
 };
 
 /**
  * @brief Fan speed modes
- * Note: Names avoid conflicts with Arduino HIGH/LOW macros
+ * 
+ * Note: Names avoid conflicts with Arduino HIGH/LOW macros.
+ * Some implementations have observed LOW fan as 0x03 instead of 0x04.
+ * The exact value may vary by unit model. This implementation uses 0x04.
+ * See PROTOCOL.md for details on protocol variations.
  */
 enum class FanMode : uint8_t {
   FAN_OFF = 0x00,     ///< Fan off
   FAN_HIGH = 0x01,    ///< High speed
   FAN_MEDIUM = 0x02,  ///< Medium speed
+  FAN_LOW_ALT = 0x03, ///< Low speed (alternate) - observed in some implementations
   FAN_LOW = 0x04,     ///< Low speed
   FAN_AUTO = 0x80     ///< Automatic fan speed
 };
@@ -178,7 +190,16 @@ constexpr uint8_t TEMP_FAN_MODE = 0xFF;
 
 /**
  * @brief Temperature value (encoded)
- * Formula: actual_temp = (value - 0x28) / 2.0
+ * 
+ * Temperature Encoding Formula (Celsius):
+ *   encoded_value = (celsius * 2.0) + 0x28
+ *   celsius = (value - 0x28) / 2.0
+ * 
+ * Example: 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
+ * 
+ * Note: Some implementations use raw Fahrenheit values without encoding.
+ * The behavior may depend on unit configuration or regional settings.
+ * See PROTOCOL.md for details on temperature encoding variations.
  */
 struct __attribute__((packed)) Temperature {
   uint8_t value;  ///< Encoded temperature value

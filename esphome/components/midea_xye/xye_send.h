@@ -14,9 +14,9 @@ namespace xye {
  */
 struct __attribute__((packed)) TransmitMessageHeader {
   Command command;                   ///< [0] Command type
-  NodeId server_id;                  ///< [1] Server (HVAC) ID
-  NodeId client_id1;                 ///< [2] Client (thermostat) ID
-  DirectionNode direction_node;      ///< [3-4] Direction and client ID
+  NodeId server_id;                  ///< [1] Destination/Server ID (0x00..0x3F for specific unit, 0xFF for broadcast)
+  NodeId client_id1;                 ///< [2] Source/Master ID (0x00..0x3F)
+  DirectionNode direction_node;      ///< [3-4] Direction (0x80 from master) and source ID
 };
 
 /**

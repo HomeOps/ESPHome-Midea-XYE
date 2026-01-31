@@ -43,12 +43,14 @@ const std::map<OperationMode, const char*> OPERATION_MODE_MAP = {
   {OperationMode::DRY, "DRY"},
   {OperationMode::HEAT, "HEAT"},
   {OperationMode::COOL, "COOL"},
+  {OperationMode::AUTO_ALT, "AUTO_ALT"},
 };
 
 const std::map<FanMode, const char*> FAN_MODE_MAP = {
   {FanMode::FAN_OFF, "FAN_OFF"},
   {FanMode::FAN_HIGH, "FAN_HIGH"},
   {FanMode::FAN_MEDIUM, "FAN_MEDIUM"},
+  {FanMode::FAN_LOW_ALT, "FAN_LOW_ALT"},
   {FanMode::FAN_LOW, "FAN_LOW"},
   {FanMode::FAN_AUTO, "FAN_AUTO"},
 };
