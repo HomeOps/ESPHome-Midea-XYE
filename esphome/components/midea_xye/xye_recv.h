@@ -32,30 +32,34 @@ struct __attribute__((packed)) ReceiveMessageFrame {
  * @brief Query response data (Server to Client, command 0xC0)
  * Contains current unit status and sensor readings
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Field mappings verified against wtahler's implementation:
+ * - Byte indices in comments are absolute positions in 32-byte message
+ * - Struct offsets are relative to data section (subtract 6 for frame header)
  */
 struct __attribute__((packed)) QueryResponseData {
-  uint8_t unknown1;                ///< [0] Unknown/reserved
-  Capabilities capabilities;       ///< [1] Unit capabilities flags
-  OperationMode operation_mode;    ///< [2] Current operation mode
-  FanMode fan_mode;                ///< [3] Current fan mode
-  Temperature target_temperature;  ///< [4] Target temperature setpoint
-  Temperature t1_temperature;      ///< [5] Internal temperature sensor (T1)
-  Temperature t2a_temperature;     ///< [6] Temperature sensor 2A
-  Temperature t2b_temperature;     ///< [7] Temperature sensor 2B
-  Temperature t3_temperature;      ///< [8] Temperature sensor 3
-  uint8_t current;                 ///< [9] Current draw (units TBD)
-  uint8_t unknown2;                ///< [10] Unknown/reserved
-  uint8_t timer_start;             ///< [11] Start timer setting (combinable TimerFlags)
-  uint8_t timer_stop;              ///< [12] Stop timer setting (combinable TimerFlags)
-  uint8_t unknown3;                ///< [13] Unknown/reserved
-  ModeFlags mode_flags;            ///< [14] Mode flags
-  OperationFlags operation_flags;  ///< [15] Operation status flags
-  Flags16 error_flags;             ///< [16-17] Error flags (16-bit)
-  Flags16 protect_flags;           ///< [18-19] Protection flags (16-bit)
-  CcmErrorFlags ccm_communication_error_flags; ///< [20] CCM communication error flags
-  uint8_t unknown4;                ///< [21] Unknown/reserved
-  uint8_t unknown5;                ///< [22] Unknown/reserved
-  uint8_t unknown6;                ///< [23] Unknown/reserved
+  uint8_t unknown1;                ///< [6] Unknown/reserved
+  Capabilities capabilities;       ///< [7] Unit capabilities flags
+  OperationMode operation_mode;    ///< [8] Current operation mode
+  FanMode fan_mode;                ///< [9] Current fan mode
+  Temperature target_temperature;  ///< [10] Target temperature setpoint
+  Temperature t1_temperature;      ///< [11] Internal/inlet air temperature sensor (T1) - room temperature
+  Temperature t2a_temperature;     ///< [12] Indoor coil inlet temperature (T2A) - refrigerant entering
+  Temperature t2b_temperature;     ///< [13] Indoor coil outlet temperature (T2B) - refrigerant leaving
+  Temperature t3_temperature;      ///< [14] Outdoor coil/ambient temperature (T3)
+  uint8_t current;                 ///< [15] Current draw (units TBD, often reads 0xFF)
+  uint8_t unknown2;                ///< [16] Unknown/reserved
+  uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
+  uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
+  uint8_t unknown3;                ///< [19] Unknown/reserved
+  ModeFlags mode_flags;            ///< [20] Mode flags (ECO, AUX_HEAT, SWING, etc.)
+  OperationFlags operation_flags;  ///< [21] Operation status flags (water pump, water lock)
+  Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes
+  Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
+  CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
+  uint8_t unknown4;                ///< [27] Unknown/reserved
+  uint8_t unknown5;                ///< [28] Unknown/reserved
+  uint8_t unknown6;                ///< [29] Unknown/reserved
 
   /**
    * @brief Print debug information for query response data

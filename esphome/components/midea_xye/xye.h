@@ -62,6 +62,10 @@ enum class Command : uint8_t {
 
 /**
  * @brief Operation modes for the HVAC unit
+ * 
+ * Note: Some implementations have observed AUTO mode as 0x91 (0x80 | 0x10 | 0x01).
+ * The exact value may vary by unit model. This implementation uses 0x80.
+ * See PROTOCOL.md for details on protocol variations.
  */
 enum class OperationMode : uint8_t {
   OFF = 0x00,        ///< Unit is off
@@ -74,13 +78,17 @@ enum class OperationMode : uint8_t {
 
 /**
  * @brief Fan speed modes
- * Note: Names avoid conflicts with Arduino HIGH/LOW macros
+ * 
+ * Note: Names avoid conflicts with Arduino HIGH/LOW macros.
+ * Some implementations have observed LOW fan as 0x03 instead of 0x04.
+ * The exact value may vary by unit model. This implementation uses 0x04.
+ * See PROTOCOL.md for details on protocol variations.
  */
 enum class FanMode : uint8_t {
   FAN_OFF = 0x00,     ///< Fan off
   FAN_HIGH = 0x01,    ///< High speed
   FAN_MEDIUM = 0x02,  ///< Medium speed
-  FAN_LOW = 0x04,     ///< Low speed
+  FAN_LOW = 0x04,     ///< Low speed (some units may use 0x03)
   FAN_AUTO = 0x80     ///< Automatic fan speed
 };
 
@@ -178,7 +186,16 @@ constexpr uint8_t TEMP_FAN_MODE = 0xFF;
 
 /**
  * @brief Temperature value (encoded)
- * Formula: actual_temp = (value - 0x28) / 2.0
+ * 
+ * Temperature Encoding Formula (Celsius):
+ *   encoded_value = (celsius * 2.0) + 0x28
+ *   celsius = (value - 0x28) / 2.0
+ * 
+ * Example: 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
+ * 
+ * Note: Some implementations use raw Fahrenheit values without encoding.
+ * The behavior may depend on unit configuration or regional settings.
+ * See PROTOCOL.md for details on temperature encoding variations.
  */
 struct __attribute__((packed)) Temperature {
   uint8_t value;  ///< Encoded temperature value

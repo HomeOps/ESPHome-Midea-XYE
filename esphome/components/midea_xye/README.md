@@ -1,9 +1,13 @@
 # Overview
 
 This component communicates with Midea-like air conditioners (heat pumps) via the XYE protocol over RS-485.
+
+For detailed protocol documentation, see [PROTOCOL.md](PROTOCOL.md).
+
 Kudos to these projects:
 - Reverse engineering of the protocol: https://codeberg.org/xye/xye
 - Working implementation using ESP32: https://github.com/Bunicutz/ESP32_Midea_RS485
+- Working implementation by wtahler: https://github.com/wtahler/esphome-mideaXYE-rs485
 - Fully integrated Midea Climate component: https://github.com/esphome/esphome/tree/dev/esphome/components/midea
 
 To get this to work you need an esphome configuration like this:
