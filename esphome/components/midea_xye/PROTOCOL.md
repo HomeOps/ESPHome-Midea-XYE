@@ -65,7 +65,7 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Response command type (echoes request command)
-2       Direction           Direction flag (0x80 to master)
+2       Direction           Direction flag (documented as 0x80, but some units send 0x00)
 3       Destination ID      Master/thermostat ID (0x00..0x3F)
 4       Source ID           Unit/device ID (0x00..0x3F)
 5       Destination ID      Master/thermostat ID (repeated)
@@ -342,6 +342,12 @@ The master (CCM/thermostat) uses a polling model:
 - Monitor bus for responses to identify which units are present on the system
 
 ## Known Issues and Variations
+
+### Direction Flag (Byte 2)
+- Protocol documentation specifies 0x80 for responses from AC to thermostat
+- In practice, many AC units send 0x00 in byte 2 for all responses
+- The validation should not rely on this byte being 0x80
+- CRC validation is the primary integrity check
 
 ### Temperature Encoding
 - Some units use raw Fahrenheit values without encoding
