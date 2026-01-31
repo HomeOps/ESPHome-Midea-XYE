@@ -1,27 +1,11 @@
 #ifdef USE_ARDUINO
 
 #include "xye_recv.h"
-#include "esphome/core/log.h"
+#include "xye_log.h"
 
 namespace esphome {
 namespace midea {
 namespace xye {
-
-// Helper macro to log at the specified level
-#define ESP_LOG_LEVEL(level, tag, format, ...) \
-  do { \
-    if (level >= ESPHOME_LOG_LEVEL_ERROR) { \
-      ESP_LOGE(tag, format, ##__VA_ARGS__); \
-    } else if (level >= ESPHOME_LOG_LEVEL_WARN) { \
-      ESP_LOGW(tag, format, ##__VA_ARGS__); \
-    } else if (level >= ESPHOME_LOG_LEVEL_INFO) { \
-      ESP_LOGI(tag, format, ##__VA_ARGS__); \
-    } else if (level >= ESPHOME_LOG_LEVEL_DEBUG) { \
-      ESP_LOGD(tag, format, ##__VA_ARGS__); \
-    } else { \
-      ESP_LOGV(tag, format, ##__VA_ARGS__); \
-    } \
-  } while (0)
 
 // QueryResponseData methods
 void QueryResponseData::print_debug(const char *tag, int level) const {
