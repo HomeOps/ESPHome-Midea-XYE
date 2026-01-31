@@ -65,7 +65,8 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Response command type (echoes request command)
-2       Direction           Direction flag (0x80 to master)
+2       Direction           Direction flag (0x00 in practice, though some docs specify 0x80).
+                            Messages are distinguished by context and command type, not this byte.
 3       Destination ID      Master/thermostat ID (0x00..0x3F)
 4       Source ID           Unit/device ID (0x00..0x3F)
 5       Destination ID      Master/thermostat ID (repeated)
@@ -342,6 +343,12 @@ The master (CCM/thermostat) uses a polling model:
 - Monitor bus for responses to identify which units are present on the system
 
 ## Known Issues and Variations
+
+### Direction Flag (Byte 2)
+- Some legacy/third-party protocol documentation (and some early tables) describe a direction flag bit, with 0x80 used for frames sent from the master and 0x00 for frames from the AC
+- Actual on-wire traffic for XYE/CCM units shows byte 2 as 0x00 for both requests (master → AC) and responses (AC → master)
+- This implementation always transmits 0x00 in byte 2 and expects 0x00 in responses, matching observed AC behavior
+- Any references to 0x80 in direction-flag fields elsewhere in this document should be interpreted as legacy/spec behavior, not what this component actually sends on the wire
 
 ### Temperature Encoding
 - Some units use raw Fahrenheit values without encoding
