@@ -14,14 +14,22 @@ This documentation is based on:
 
 ## Physical Layer
 
-- **Interface**: RS-485 differential signaling
+- **Interface**: RS-485 differential signaling (X is A, Y is B, E is GND)
 - **Baud Rate**: 4800 bps
 - **Data Format**: 8 bits, no parity, 1 stop bit (8N1)
 - **Bus**: Half-duplex
+- **Architecture**: Master/slave - CCM (master) polls all possible 64 unit IDs
+- **Timing**: 130ms time slice per unit (30ms query + 100ms timeout for response)
 
 ## Message Structure
 
 All messages start with a preamble byte (0xAA) and end with a CRC byte followed by a prologue byte (0x55).
+
+### Node Addressing
+
+- **Device IDs**: 0x00 to 0x3F (64 possible unit addresses)
+- **Broadcast ID**: 0xFF (messages sent to all units)
+- **Master ID**: Typically 0x00 (CCM/thermostat)
 
 ### Transmit Messages (Client → Server)
 
@@ -32,10 +40,10 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Command type (see Commands section)
-2       Server ID           HVAC unit ID (typically 0x00)
-3       Client ID           Thermostat ID (typically 0x00)
-4       Direction           Direction flag (0x00 for client→server, 0x80 for server→client)
-5       Client ID (repeat)  Thermostat ID (typically 0x00)
+2       Destination ID      HVAC unit ID (0x00..0x3F for specific unit, 0xFF for broadcast)
+3       Source ID           Thermostat/master ID (0x00..0x3F)
+4       Direction           Direction flag (0x80 when from master)
+5       Source ID (repeat)  Thermostat/master ID (0x00..0x3F)
 6       Operation Mode      Mode byte (see Operation Modes)
 7       Fan Mode            Fan speed byte (see Fan Modes)
 8       Temperature         Target temperature (see Temperature Encoding)
@@ -57,11 +65,11 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Response command type (echoes request command)
-2       Direction           Direction flag (0x80 for server→client)
-3       Destination ID      Client (thermostat) ID
-4       Source ID           Server (HVAC) ID
-5       Destination ID      Client ID (repeated)
-6       Unknown1            Unknown/reserved
+2       Direction           Direction flag (0x80 to master)
+3       Destination ID      Master/thermostat ID (0x00..0x3F)
+4       Source ID           Unit/device ID (0x00..0x3F)
+5       Destination ID      Master/thermostat ID (repeated)
+6       Unknown1            Unknown/reserved (possibly 0x30 - capabilities related)
 7       Capabilities        Unit capability flags
 8       Operation Mode      Current operation mode
 9       Fan Mode            Current fan speed
@@ -144,6 +152,12 @@ FAN_AUTO    0x80    Automatic fan speed
 encoded_value = (celsius * 2.0) + 0x28
 celsius = (encoded_value - 0x28) / 2.0
 ```
+
+**Alternative formulation** (from codeberg.org/xye/xye):
+```
+encoded_value = (celsius / 0.5) + 0x30
+```
+Both formulations are equivalent (0x28 = 40 decimal, 0x30 = 48 decimal in different contexts).
 
 **Example**: 
 - 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
@@ -271,17 +285,32 @@ INIT                0x06    Initialization after mode change
 
 ## Communication Flow
 
+### Polling Architecture
+The master (CCM/thermostat) uses a polling model:
+1. Master polls all 64 possible unit IDs (0x00 to 0x3F) sequentially
+2. Each unit gets a 130ms time slice:
+   - 30ms for sending query/command
+   - 100ms timeout waiting for response
+3. Units only respond when addressed by their specific ID
+4. Broadcast messages (0xFF) are received by all units but typically don't generate responses
+
 ### Basic Query Cycle
-1. Client sends QUERY (0xC0) command
-2. Server responds with current status
+1. Client sends QUERY (0xC0) command to specific unit ID
+2. Server responds with current status (if ID matches)
 3. Client processes response
-4. Repeat every 10-15 seconds
+4. Continue polling next unit ID or repeat after delay
 
 ### Setting Parameters
 1. Client sends SET (0xC3) command with new parameters
 2. Server acknowledges and applies settings
 3. Server responds with updated status
 4. Client may send QUERY to confirm changes
+
+### Broadcast Commands
+1. Client sends command with destination ID = 0xFF
+2. All units receive and process the command
+3. No response expected from units
+4. Useful for simultaneous updates to all units
 
 ### Follow-Me Operation
 1. Client sends FOLLOW_ME (0xC6) with room temperature
@@ -292,6 +321,7 @@ INIT                0x06    Initialization after mode change
 ## Implementation Notes
 
 ### Timing Considerations
+- Master polls with 130ms time slice per unit (30ms send + 100ms timeout)
 - Allow 100-200ms for HVAC unit to respond to commands
 - Wait for response before sending next command to avoid bus collisions
 - Query status periodically (10-15 seconds) to maintain communication
@@ -304,9 +334,12 @@ INIT                0x06    Initialization after mode change
 - Retry failed commands with exponential backoff
 
 ### Multi-Unit Systems
-- Each unit has a unique node ID (typically 0x00, 0x01, 0x02, etc.)
-- Address specific units by setting the appropriate Server ID in transmit messages
-- Monitor bus for messages from multiple units
+- The bus supports up to 64 units with IDs 0x00 to 0x3F
+- Each unit must have a unique node ID
+- Master polls all possible IDs sequentially (even if no unit is present)
+- Address specific units by setting the destination ID (byte 2) in transmit messages
+- Use broadcast ID (0xFF) to send commands to all units simultaneously
+- Monitor bus for responses to identify which units are present on the system
 
 ## Known Issues and Variations
 

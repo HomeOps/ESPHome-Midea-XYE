@@ -11,7 +11,7 @@ namespace midea {
 namespace xye {
 
 // Type aliases for node identifiers
-using NodeId = uint8_t;  ///< Node ID type for server and client identifiers
+using NodeId = uint8_t;  ///< Node ID type for server and client identifiers (0x00..0x3F, 0xFF for broadcast)
 
 /**
  * @brief Protocol framing markers
@@ -41,9 +41,11 @@ enum class Direction : uint8_t {
 constexpr uint8_t FROM_CLIENT = static_cast<uint8_t>(Direction::FROM_CLIENT);
 constexpr uint8_t TO_CLIENT = static_cast<uint8_t>(Direction::TO_CLIENT);
 
-// TODO: Don't hardcode these IDs
-constexpr NodeId SERVER_ID = 0;  ///< ID of the HVAC unit (server)
-constexpr NodeId CLIENT_ID = 0;  ///< ID of the thermostat (client)
+// Node ID constants
+constexpr NodeId SERVER_ID = 0x00;        ///< ID of the HVAC unit (server) - typical default
+constexpr NodeId CLIENT_ID = 0x00;        ///< ID of the thermostat (client/master) - typical default
+constexpr NodeId BROADCAST_ID = 0xFF;     ///< Broadcast ID - messages sent to all units
+constexpr NodeId MAX_DEVICE_ID = 0x3F;    ///< Maximum valid device ID (0x00..0x3F)
 
 /**
  * @brief Command types sent from client (thermostat) to server (HVAC unit)
