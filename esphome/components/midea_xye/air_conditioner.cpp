@@ -220,7 +220,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       }
     } else {
       ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
-      tx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+      rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
     }
   });
 }
