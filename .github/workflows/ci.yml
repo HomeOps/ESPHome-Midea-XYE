@@ -28,4 +28,18 @@ jobs:
 
       - name: Compile test configuration
         run: |
-          esphome compile tests/midea_xye.yaml
+          set -o pipefail  # Ensure compilation failures aren't masked by tee
+          
+          # Compile and capture output
+          esphome compile tests/midea_xye.yaml 2>&1 | tee build.log
+          
+          # Check for warnings in the output (case-insensitive)
+          # Look for common warning patterns from ESPHome and compiler output
+          if grep -qiE "(warning:|warning\s|^\s*warning)" build.log; then
+            echo "❌ Build failed: Warnings detected in compilation output"
+            echo "Matched warnings:"
+            grep -iE "(warning:|warning\s|^\s*warning)" build.log
+            exit 1
+          else
+            echo "✅ Build successful: No warnings detected"
+          fi
