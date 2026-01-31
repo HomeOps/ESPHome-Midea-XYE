@@ -438,8 +438,8 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
       }
       case CLIENT_COMMAND_QUERY_EXTENDED:
         bool need_publish = false;
-        set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[21]));
-        set_number(this->static_pressure_number_, 0x0F & RXData[24]);
+        set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[RX_C4_BYTE_OUTDOOR_SENSOR]));
+        set_number(this->static_pressure_number_, 0x0F & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
         if (mode != ClimateMode::CLIMATE_MODE_OFF ||
             ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
@@ -464,9 +464,13 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 #endif
 
         // Validate known fixed protocol markers in C4 response
-        // Bytes 19-20 (unknown13-14) and 26-29 (unknown19-22) should be consistent across all units
-        if (RXData[19] != 0xBC || RXData[20] != 0xD6 ||
-            RXData[26] != 0x80 || RXData[27] != 0x80 || RXData[28] != 0x80 || RXData[29] != 0x80) {
+        // Bytes unknown13-14 and unknown19-22 should be consistent across all units
+        if (RXData[RX_C4_BYTE_UNKNOWN13] != RX_C4_MARKER_UNKNOWN13 || 
+            RXData[RX_C4_BYTE_UNKNOWN14] != RX_C4_MARKER_UNKNOWN14 ||
+            RXData[RX_C4_BYTE_UNKNOWN19] != RX_C4_MARKER_UNKNOWN19_22 || 
+            RXData[RX_C4_BYTE_UNKNOWN20] != RX_C4_MARKER_UNKNOWN19_22 || 
+            RXData[RX_C4_BYTE_UNKNOWN21] != RX_C4_MARKER_UNKNOWN19_22 || 
+            RXData[RX_C4_BYTE_UNKNOWN22] != RX_C4_MARKER_UNKNOWN19_22) {
           ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
           rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
         }

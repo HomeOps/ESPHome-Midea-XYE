@@ -143,7 +143,19 @@ constexpr uint8_t RX_C0_BYTE_UNKNOWN6 = 29;
 
 // Extended Query Response (0xC4) Specific byte offsets
 constexpr uint8_t RX_C4_BYTE_SET_TEMP = 18;
+constexpr uint8_t RX_C4_BYTE_UNKNOWN13 = 19;  // Protocol marker byte 1
+constexpr uint8_t RX_C4_BYTE_UNKNOWN14 = 20;  // Protocol marker byte 2
 constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
+constexpr uint8_t RX_C4_BYTE_STATIC_PRESSURE = 24;
+constexpr uint8_t RX_C4_BYTE_UNKNOWN19 = 26;  // Default/idle state marker 1
+constexpr uint8_t RX_C4_BYTE_UNKNOWN20 = 27;  // Default/idle state marker 2
+constexpr uint8_t RX_C4_BYTE_UNKNOWN21 = 28;  // Default/idle state marker 3
+constexpr uint8_t RX_C4_BYTE_UNKNOWN22 = 29;  // Default/idle state marker 4
+
+// Extended Query Response (0xC4) Expected marker values
+constexpr uint8_t RX_C4_MARKER_UNKNOWN13 = 0xBC;
+constexpr uint8_t RX_C4_MARKER_UNKNOWN14 = 0xD6;
+constexpr uint8_t RX_C4_MARKER_UNKNOWN19_22 = 0x80;  // All four bytes 19-22 expected to be 0x80
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
