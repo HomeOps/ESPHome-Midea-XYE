@@ -464,7 +464,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 #endif
 
         // Validate known fixed protocol markers in C4 response
-        // Bytes unknown13-14 and unknown19-22 should be consistent across all units
+        // Bytes 19-20 (unknown13-14) and 26-29 (unknown19-22) should be consistent across all units
         if (RXData[RX_C4_BYTE_UNKNOWN13] != RX_C4_MARKER_UNKNOWN13 ||
             RXData[RX_C4_BYTE_UNKNOWN14] != RX_C4_MARKER_UNKNOWN14 ||
             RXData[RX_C4_BYTE_UNKNOWN19] != RX_C4_MARKER_UNKNOWN19_22 ||

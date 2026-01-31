@@ -155,7 +155,7 @@ constexpr uint8_t RX_C4_BYTE_UNKNOWN22 = 29;  // Default/idle state marker 4
 // Extended Query Response (0xC4) Expected marker values
 constexpr uint8_t RX_C4_MARKER_UNKNOWN13 = 0xBC;
 constexpr uint8_t RX_C4_MARKER_UNKNOWN14 = 0xD6;
-constexpr uint8_t RX_C4_MARKER_UNKNOWN19_22 = 0x80;  // All four bytes 19-22 expected to be 0x80
+constexpr uint8_t RX_C4_MARKER_UNKNOWN19_22 = 0x80;  // Expected marker value for bytes 26-29
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
