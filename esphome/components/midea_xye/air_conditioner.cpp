@@ -463,6 +463,13 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
         }
 #endif
 
+        // Validate known fixed protocol markers in C4 response
+        // Bytes 19-20 (unknown13-14) and 26-29 (unknown19-22) should be consistent across all units
+        if (RXData[19] != 0xBC || RXData[20] != 0xD6 ||
+            RXData[26] != 0x80 || RXData[27] != 0x80 || RXData[28] != 0x80 || RXData[29] != 0x80) {
+          ESP_LOGE(Constants::TAG, "DEBUG C4: Unexpected extended query response data");
+          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+        }
         ForceReadNextCycle = 0;
         break;
     }
