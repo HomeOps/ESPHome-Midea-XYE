@@ -36,7 +36,7 @@ namespace xye {
 // This version uses a simple if-else ladder and relies on the compiler to:
 // 1. Eliminate dead branches when the level is a compile-time constant
 // 2. Take advantage of comparisons ordered from most severe to least, matching typical usage patterns
-#define ESP_LOG_LEVEL(level, tag, format, ...)           \
+#define XYE_LOG_LEVEL(level, tag, format, ...)           \
   do {                                                   \
     if ((level) <= ESPHOME_LOG_LEVEL_ERROR) {            \
       ESP_LOGE(tag, format, ##__VA_ARGS__);              \
