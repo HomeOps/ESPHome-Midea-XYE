@@ -71,34 +71,40 @@ struct __attribute__((packed)) QueryResponseData {
 
 /**
  * @brief Extended query response data (Server to Client, command 0xC4)
- * Contains outdoor temperature and static pressure information
+ * Contains outdoor temperature, static pressure, and engineering/diagnostic information
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * This frame provides engineering and diagnostic data that complements the basic C0 query:
+ * - Outdoor temperature and static pressure
+ * - Compressor and fan status flags
+ * - System configuration and protection states
+ * - Indoor unit addressing and ESP profile settings
  */
 struct __attribute__((packed)) ExtendedQueryResponseData {
-  uint8_t unknown1;             ///< [0] Unknown/reserved
-  uint8_t unknown2;             ///< [1] Unknown/reserved
-  uint8_t unknown3;             ///< [2] Unknown/reserved
-  uint8_t unknown4;             ///< [3] Unknown/reserved
-  uint8_t unknown5;             ///< [4] Unknown/reserved
-  uint8_t unknown6;             ///< [5] Unknown/reserved
-  uint8_t unknown7;             ///< [6] Unknown/reserved
-  uint8_t unknown8;             ///< [7] Unknown/reserved
-  uint8_t unknown9;             ///< [8] Unknown/reserved
-  uint8_t unknown10;            ///< [9] Unknown/reserved
-  uint8_t unknown11;            ///< [10] Unknown/reserved
-  uint8_t unknown12;            ///< [11] Unknown/reserved
+  uint8_t indoor_fan_pwm;       ///< [0] Indoor fan PWM control (0x00 = not exposed on some models)
+  uint8_t indoor_fan_tach;      ///< [1] Indoor fan tachometer feedback (0x00 = not exposed on some models)
+  uint8_t compressor_flags;     ///< [2] Compressor status flags (bit 7: compressor active/running)
+  uint8_t esp_profile;          ///< [3] Airflow/ESP (External Static Pressure) profile (0x30 = medium ESP)
+  uint8_t protection_flags;     ///< [4] Protection and outdoor fan state flags (bits: defrost, anti-freeze, outdoor fan)
+  uint8_t coil_inlet_temp;      ///< [5] Coil inlet temperature (0x00 = unused on some models)
+  uint8_t coil_outlet_temp;     ///< [6] Coil outlet temperature (0x00 = unused on some models)
+  uint8_t discharge_temp;       ///< [7] Discharge temperature (0x00 = unused on some models)
+  uint8_t expansion_valve_pos;  ///< [8] Expansion valve position (0x00 = unused on some models)
+  uint8_t reserved1;            ///< [9] Reserved/unused
+  uint8_t system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
+  uint8_t indoor_unit_address;  ///< [11] Indoor unit address/zone index (0x01 = address 1)
   Temperature target_temperature;   ///< [12] Target temperature (may be in Fahrenheit with offset)
-  uint8_t unknown13;            ///< [13] Unknown/reserved
-  uint8_t unknown14;            ///< [14] Unknown/reserved
+  uint8_t compressor_freq_high; ///< [13] High byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
+  uint8_t compressor_freq_low;  ///< [14] Low byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
   Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
-  uint8_t unknown16;            ///< [16] Unknown/reserved
-  uint8_t unknown17;            ///< [17] Unknown/reserved
+  uint8_t reserved2;            ///< [16] Reserved/unused
+  uint8_t reserved3;            ///< [17] Reserved/unused
   uint8_t static_pressure;      ///< [18] Static pressure setting (lower 4 bits)
-  uint8_t unknown18;            ///< [19] Unknown/reserved
-  uint8_t unknown19;            ///< [20] Unknown/reserved
-  uint8_t unknown20;            ///< [21] Unknown/reserved
-  uint8_t unknown21;            ///< [22] Unknown/reserved
-  uint8_t unknown22;            ///< [23] Unknown/reserved
+  uint8_t reserved4;            ///< [19] Reserved/unused
+  uint8_t subsystem_ok_compressor;    ///< [20] Compressor subsystem OK flag (0x80 = OK, other bits = protections)
+  uint8_t subsystem_ok_outdoor_fan;   ///< [21] Outdoor fan subsystem OK flag (0x80 = OK, other bits = protections)
+  uint8_t subsystem_ok_4way_valve;    ///< [22] 4-way valve subsystem OK flag (0x80 = OK, other bits = protections)
+  uint8_t subsystem_ok_inverter;      ///< [23] Inverter module subsystem OK flag (0x80 = OK, other bits = protections)
 
   /**
    * @brief Print debug information for extended query response data
