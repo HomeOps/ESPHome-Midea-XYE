@@ -73,7 +73,8 @@ enum class OperationMode : uint8_t {
   FAN = 0x81,        ///< Fan only mode - derived from AUTO (0x80 | 0x01)
   DRY = 0x82,        ///< Dehumidify mode - derived from AUTO (0x80 | 0x02)
   HEAT = 0x84,       ///< Heating mode - derived from AUTO (0x80 | 0x04)
-  COOL = 0x88        ///< Cooling mode - derived from AUTO (0x80 | 0x08)
+  COOL = 0x88,       ///< Cooling mode - derived from AUTO (0x80 | 0x08)
+  AUTO_ALT = 0x91    ///< Alternate AUTO mode (0x80 | 0x10 | 0x01) - observed in some implementations
 };
 
 /**
@@ -88,7 +89,8 @@ enum class FanMode : uint8_t {
   FAN_OFF = 0x00,     ///< Fan off
   FAN_HIGH = 0x01,    ///< High speed
   FAN_MEDIUM = 0x02,  ///< Medium speed
-  FAN_LOW = 0x04,     ///< Low speed (some units may use 0x03)
+  FAN_LOW_ALT = 0x03, ///< Low speed (alternate) - observed in some implementations
+  FAN_LOW = 0x04,     ///< Low speed
   FAN_AUTO = 0x80     ///< Automatic fan speed
 };
 

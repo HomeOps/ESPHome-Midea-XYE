@@ -112,14 +112,15 @@ The server responds with the same command code.
 Mode        Value   Description                 Notes
 ----        -----   -----------                 -----
 OFF         0x00    Unit is off                 
-AUTO        0x80    Automatic mode              May use 0x91 in some implementations (0x80 | 0x10 | 0x01)
+AUTO        0x80    Automatic mode              
+AUTO_ALT    0x91    Automatic mode (alternate)  Observed in some implementations (0x80 | 0x10 | 0x01)
 FAN         0x81    Fan only mode               Derived from AUTO (0x80 | 0x01)
 DRY         0x82    Dehumidify mode             Derived from AUTO (0x80 | 0x02)
 HEAT        0x84    Heating mode                Derived from AUTO (0x80 | 0x04)
 COOL        0x88    Cooling mode                Derived from AUTO (0x80 | 0x08)
 ```
 
-**Note**: Some implementations have observed AUTO mode as 0x91 (0x80 | 0x10 | 0x01), which includes the OP_MODE_AUTO_FLAG (0x10). The exact encoding may vary by unit model.
+**Note**: Some implementations use AUTO_ALT (0x91 = 0x80 | 0x10 | 0x01), which includes the OP_MODE_AUTO_FLAG (0x10). The exact encoding may vary by unit model.
 
 ## Fan Modes
 
@@ -129,11 +130,12 @@ Mode        Value   Description                 Notes
 FAN_OFF     0x00    Fan off                     
 FAN_HIGH    0x01    High speed                  
 FAN_MEDIUM  0x02    Medium speed                
-FAN_LOW     0x04    Low speed                   Some implementations use 0x03
+FAN_LOW_ALT 0x03    Low speed (alternate)       Observed in some implementations
+FAN_LOW     0x04    Low speed                   
 FAN_AUTO    0x80    Automatic fan speed         
 ```
 
-**Note**: Low fan speed has been observed as both 0x03 and 0x04 in different implementations. Use the value that works with your specific unit.
+**Note**: Low fan speed has been observed as both FAN_LOW_ALT (0x03) and FAN_LOW (0x04) in different implementations. Use the value that works with your specific unit.
 
 ## Temperature Encoding
 
