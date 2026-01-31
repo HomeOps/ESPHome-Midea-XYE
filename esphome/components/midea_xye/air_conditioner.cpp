@@ -438,8 +438,8 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
       }
       case CLIENT_COMMAND_QUERY_EXTENDED:
         bool need_publish = false;
-        set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[21]));
-        set_number(this->static_pressure_number_, 0x0F & RXData[24]);
+        set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[RX_C4_BYTE_OUTDOOR_SENSOR]));
+        set_number(this->static_pressure_number_, 0x0F & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
         if (mode != ClimateMode::CLIMATE_MODE_OFF ||
             ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
@@ -463,12 +463,16 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
         }
 #endif
 
-        if (RXData[9] != 0x30 || RXData[10] != 0x98 || RXData[11] != 0x00 || RXData[12] != 0x00 || RXData[13] != 0x00 ||
-            RXData[14] != 0x01 || RXData[15] != 0x20 || RXData[19] != 0xBC || RXData[20] != 0xD6 ||
-            RXData[22] != 0x00 || RXData[23] != 0x00 || RXData[24] != 0xFF || RXData[25] != 0x00 ||
-            RXData[26] != 0x80 || RXData[27] != 0x80 || RXData[28] != 0x80 || RXData[29] != 0x80) {
-          ESP_LOGI(Constants::TAG, "DEBUG C4: Unexpected extended query response data");
-          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_INFO);
+        // Validate fixed protocol marker bytes that identify valid C4 responses
+        // Bytes 19-20 and 26-29 are protocol constants that should match across all units
+        if (RXData[RX_C4_BYTE_PROTOCOL_MARKER1] != RX_C4_PROTOCOL_MARKER1_VALUE ||
+            RXData[RX_C4_BYTE_PROTOCOL_MARKER2] != RX_C4_PROTOCOL_MARKER2_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER1] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER2] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER3] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER4] != RX_C4_FIXED_MARKER_VALUE) {
+          ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
+          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
         }
         ForceReadNextCycle = 0;
         break;

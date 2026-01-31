@@ -143,7 +143,19 @@ constexpr uint8_t RX_C0_BYTE_UNKNOWN6 = 29;
 
 // Extended Query Response (0xC4) Specific byte offsets
 constexpr uint8_t RX_C4_BYTE_SET_TEMP = 18;
+constexpr uint8_t RX_C4_BYTE_PROTOCOL_MARKER1 = 19;  // Protocol marker byte 1 (unknown13 in struct)
+constexpr uint8_t RX_C4_BYTE_PROTOCOL_MARKER2 = 20;  // Protocol marker byte 2 (unknown14 in struct)
 constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
+constexpr uint8_t RX_C4_BYTE_STATIC_PRESSURE = 24;  // Data field: static pressure setting (not validated)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER1 = 26;  // Fixed protocol constant 1 (unknown19 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER2 = 27;  // Fixed protocol constant 2 (unknown20 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER3 = 28;  // Fixed protocol constant 3 (unknown21 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER4 = 29;  // Fixed protocol constant 4 (unknown22 in struct)
+
+// Extended Query Response (0xC4) Expected marker values
+constexpr uint8_t RX_C4_PROTOCOL_MARKER1_VALUE = 0xBC;
+constexpr uint8_t RX_C4_PROTOCOL_MARKER2_VALUE = 0xD6;
+constexpr uint8_t RX_C4_FIXED_MARKER_VALUE = 0x80;  // Expected constant value for bytes 26-29
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
