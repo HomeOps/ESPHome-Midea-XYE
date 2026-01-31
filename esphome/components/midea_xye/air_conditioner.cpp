@@ -465,11 +465,11 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 
         // Validate known fixed protocol markers in C4 response
         // Bytes unknown13-14 and unknown19-22 should be consistent across all units
-        if (RXData[RX_C4_BYTE_UNKNOWN13] != RX_C4_MARKER_UNKNOWN13 || 
+        if (RXData[RX_C4_BYTE_UNKNOWN13] != RX_C4_MARKER_UNKNOWN13 ||
             RXData[RX_C4_BYTE_UNKNOWN14] != RX_C4_MARKER_UNKNOWN14 ||
-            RXData[RX_C4_BYTE_UNKNOWN19] != RX_C4_MARKER_UNKNOWN19_22 || 
-            RXData[RX_C4_BYTE_UNKNOWN20] != RX_C4_MARKER_UNKNOWN19_22 || 
-            RXData[RX_C4_BYTE_UNKNOWN21] != RX_C4_MARKER_UNKNOWN19_22 || 
+            RXData[RX_C4_BYTE_UNKNOWN19] != RX_C4_MARKER_UNKNOWN19_22 ||
+            RXData[RX_C4_BYTE_UNKNOWN20] != RX_C4_MARKER_UNKNOWN19_22 ||
+            RXData[RX_C4_BYTE_UNKNOWN21] != RX_C4_MARKER_UNKNOWN19_22 ||
             RXData[RX_C4_BYTE_UNKNOWN22] != RX_C4_MARKER_UNKNOWN19_22) {
           ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
           rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
