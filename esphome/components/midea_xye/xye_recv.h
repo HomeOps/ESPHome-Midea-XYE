@@ -64,8 +64,9 @@ struct __attribute__((packed)) QueryResponseData {
   /**
    * @brief Print debug information for query response data
    * @param tag Log tag to use
+   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    */
-  void print_debug(const char *tag) const;
+  void print_debug(const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -102,8 +103,9 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
   /**
    * @brief Print debug information for extended query response data
    * @param tag Log tag to use
+   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    */
-  void print_debug(const char *tag) const;
+  void print_debug(const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -116,8 +118,9 @@ struct __attribute__((packed)) ReceiveMessageData {
   /**
    * @brief Print debug information for generic receive data
    * @param tag Log tag to use
+   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    */
-  void print_debug(const char *tag) const;
+  void print_debug(const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -152,8 +155,9 @@ union ReceiveData {
    * @brief Pretty print the receive message for debugging
    * Takes into account the kind of message based on command type
    * @param tag Log tag to use
+   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    */
-  void print_debug(const char *tag) const;
+  void print_debug(const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 // Static assertions to ensure struct sizes are correct

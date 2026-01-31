@@ -220,7 +220,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       }
     } else {
       ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
-      tx_data.print_debug(Constants::TAG);
+      tx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
     }
   });
 }
@@ -468,14 +468,14 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
             RXData[22] != 0x00 || RXData[23] != 0x00 || RXData[24] != 0xFF || RXData[25] != 0x00 ||
             RXData[26] != 0x80 || RXData[27] != 0x80 || RXData[28] != 0x80 || RXData[29] != 0x80) {
           ESP_LOGI(Constants::TAG, "DEBUG C4: Unexpected extended query response data");
-          rx_data.print_debug(Constants::TAG);
+          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_INFO);
         }
         ForceReadNextCycle = 0;
         break;
     }
   } else {
     ESP_LOGE(Constants::TAG, "Received invalid response from AC");
-    rx_data.print_debug(Constants::TAG);
+    rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
   }
 }
 
