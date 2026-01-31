@@ -220,6 +220,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       }
     } else {
       ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
+      rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
     }
   });
 }
@@ -466,21 +467,15 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
             RXData[14] != 0x01 || RXData[15] != 0x20 || RXData[19] != 0xBC || RXData[20] != 0xD6 ||
             RXData[22] != 0x00 || RXData[23] != 0x00 || RXData[24] != 0xFF || RXData[25] != 0x00 ||
             RXData[26] != 0x80 || RXData[27] != 0x80 || RXData[28] != 0x80 || RXData[29] != 0x80) {
-          ESP_LOGI(Constants::TAG,
-                   "DEBUG C4: "
-                   "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%"
-                   "02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:"
-                   "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-                   RXData[0], RXData[1], RXData[2], RXData[3], RXData[4], RXData[5], RXData[6], RXData[7], RXData[8],
-                   RXData[9], RXData[10], RXData[11], RXData[12], RXData[13], RXData[14], RXData[15], RXData[16],
-                   RXData[17], RXData[18], RXData[19], RXData[20], RXData[21], RXData[22], RXData[23], RXData[24],
-                   RXData[25], RXData[26], RXData[27], RXData[28], RXData[29], RXData[30], RXData[31]);
+          ESP_LOGI(Constants::TAG, "DEBUG C4: Unexpected extended query response data");
+          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_INFO);
         }
         ForceReadNextCycle = 0;
         break;
     }
   } else {
     ESP_LOGE(Constants::TAG, "Received invalid response from AC");
+    rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
   }
 }
 
