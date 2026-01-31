@@ -464,13 +464,13 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 #endif
 
         // Validate known fixed protocol markers in C4 response
-        // Bytes 19-20 (protocol markers) and 26-29 (idle state markers) should be consistent across all units
+        // Bytes 19-20 and 26-29 are fixed protocol constants across all units
         if (RXData[RX_C4_BYTE_PROTOCOL_MARKER1] != RX_C4_PROTOCOL_MARKER1_VALUE ||
             RXData[RX_C4_BYTE_PROTOCOL_MARKER2] != RX_C4_PROTOCOL_MARKER2_VALUE ||
-            RXData[RX_C4_BYTE_IDLE_MARKER1] != RX_C4_IDLE_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_IDLE_MARKER2] != RX_C4_IDLE_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_IDLE_MARKER3] != RX_C4_IDLE_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_IDLE_MARKER4] != RX_C4_IDLE_MARKER_VALUE) {
+            RXData[RX_C4_BYTE_FIXED_MARKER1] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER2] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER3] != RX_C4_FIXED_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_FIXED_MARKER4] != RX_C4_FIXED_MARKER_VALUE) {
           ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
           rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
         }

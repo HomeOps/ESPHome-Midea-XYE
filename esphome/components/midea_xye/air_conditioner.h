@@ -147,15 +147,15 @@ constexpr uint8_t RX_C4_BYTE_PROTOCOL_MARKER1 = 19;  // Protocol marker byte 1 (
 constexpr uint8_t RX_C4_BYTE_PROTOCOL_MARKER2 = 20;  // Protocol marker byte 2 (unknown14 in struct)
 constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
 constexpr uint8_t RX_C4_BYTE_STATIC_PRESSURE = 24;
-constexpr uint8_t RX_C4_BYTE_IDLE_MARKER1 = 26;  // Default/idle state marker 1 (unknown19 in struct)
-constexpr uint8_t RX_C4_BYTE_IDLE_MARKER2 = 27;  // Default/idle state marker 2 (unknown20 in struct)
-constexpr uint8_t RX_C4_BYTE_IDLE_MARKER3 = 28;  // Default/idle state marker 3 (unknown21 in struct)
-constexpr uint8_t RX_C4_BYTE_IDLE_MARKER4 = 29;  // Default/idle state marker 4 (unknown22 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER1 = 26;  // Fixed protocol constant 1 (unknown19 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER2 = 27;  // Fixed protocol constant 2 (unknown20 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER3 = 28;  // Fixed protocol constant 3 (unknown21 in struct)
+constexpr uint8_t RX_C4_BYTE_FIXED_MARKER4 = 29;  // Fixed protocol constant 4 (unknown22 in struct)
 
 // Extended Query Response (0xC4) Expected marker values
 constexpr uint8_t RX_C4_PROTOCOL_MARKER1_VALUE = 0xBC;
 constexpr uint8_t RX_C4_PROTOCOL_MARKER2_VALUE = 0xD6;
-constexpr uint8_t RX_C4_IDLE_MARKER_VALUE = 0x80;  // Expected marker value for bytes 26-29
+constexpr uint8_t RX_C4_FIXED_MARKER_VALUE = 0x80;  // Expected constant value for bytes 26-29
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
