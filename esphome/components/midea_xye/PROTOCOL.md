@@ -65,7 +65,8 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Response command type (echoes request command)
-2       Direction           Direction flag (0x00 in practice, though some docs specify 0x80)
+2       Direction           Direction flag (0x00 in practice, though some docs specify 0x80).
+                            Messages are distinguished by context and command type, not this byte.
 3       Destination ID      Master/thermostat ID (0x00..0x3F)
 4       Source ID           Unit/device ID (0x00..0x3F)
 5       Destination ID      Master/thermostat ID (repeated)

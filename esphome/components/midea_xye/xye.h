@@ -31,6 +31,10 @@ constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
 
 /**
  * @brief Message direction indicators
+ * 
+ * Note: In actual AC implementations, both directions use 0x00 in the direction byte.
+ * Messages are distinguished by context (who initiated the communication) and command type,
+ * not by the direction byte value. This matches v0.0.10 behavior and actual AC units.
  */
 enum class Direction : uint8_t {
   FROM_CLIENT = 0x00,  ///< Message from client (thermostat) to server (HVAC)
