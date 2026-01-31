@@ -464,13 +464,13 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
 #endif
 
         // Validate known fixed protocol markers in C4 response
-        // Bytes 19-20 (unknown13-14) and 26-29 (unknown19-22) should be consistent across all units
-        if (RXData[RX_C4_BYTE_UNKNOWN13] != RX_C4_MARKER_UNKNOWN13 ||
-            RXData[RX_C4_BYTE_UNKNOWN14] != RX_C4_MARKER_UNKNOWN14 ||
-            RXData[RX_C4_BYTE_UNKNOWN19] != RX_C4_MARKER_UNKNOWN19_22 ||
-            RXData[RX_C4_BYTE_UNKNOWN20] != RX_C4_MARKER_UNKNOWN19_22 ||
-            RXData[RX_C4_BYTE_UNKNOWN21] != RX_C4_MARKER_UNKNOWN19_22 ||
-            RXData[RX_C4_BYTE_UNKNOWN22] != RX_C4_MARKER_UNKNOWN19_22) {
+        // Bytes 19-20 (protocol markers) and 26-29 (idle state markers) should be consistent across all units
+        if (RXData[RX_C4_BYTE_PROTOCOL_MARKER1] != RX_C4_PROTOCOL_MARKER1_VALUE ||
+            RXData[RX_C4_BYTE_PROTOCOL_MARKER2] != RX_C4_PROTOCOL_MARKER2_VALUE ||
+            RXData[RX_C4_BYTE_IDLE_MARKER1] != RX_C4_IDLE_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_IDLE_MARKER2] != RX_C4_IDLE_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_IDLE_MARKER3] != RX_C4_IDLE_MARKER_VALUE ||
+            RXData[RX_C4_BYTE_IDLE_MARKER4] != RX_C4_IDLE_MARKER_VALUE) {
           ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
           rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
         }
