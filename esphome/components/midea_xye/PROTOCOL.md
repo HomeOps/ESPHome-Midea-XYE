@@ -345,10 +345,10 @@ The master (CCM/thermostat) uses a polling model:
 ## Known Issues and Variations
 
 ### Direction Flag (Byte 2)
-- Some protocol documentation specifies 0x80 for responses from AC to thermostat
-- In practice, AC units send 0x00 in byte 2 for all responses
-- The implementation uses 0x00 to match actual AC behavior
-- Both request and response messages use 0x00 in the direction byte
+- Some legacy/third-party protocol documentation (and some early tables) describe a direction flag bit, with 0x80 used for frames sent from the master and 0x00 for frames from the AC
+- Actual on-wire traffic for XYE/CCM units shows byte 2 as 0x00 for both requests (master → AC) and responses (AC → master)
+- This implementation always transmits 0x00 in byte 2 and expects 0x00 in responses, matching observed AC behavior
+- Any references to 0x80 in direction-flag fields elsewhere in this document should be interpreted as legacy/spec behavior, not what this component actually sends on the wire
 
 ### Temperature Encoding
 - Some units use raw Fahrenheit values without encoding
