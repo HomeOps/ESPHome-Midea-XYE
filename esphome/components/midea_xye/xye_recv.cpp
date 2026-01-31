@@ -61,28 +61,32 @@ void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_pwm: 0x%02X"), indoor_fan_pwm);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_tach: 0x%02X"), indoor_fan_tach);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (bit 7: %s)"), 
-           compressor_flags,
-           (compressor_flags & 0x80) ? "active" : "inactive");
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(compressor_flags),
+           enum_to_string(compressor_flags));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X"), esp_profile);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X"), protection_flags);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_inlet_temp: 0x%02X"), coil_inlet_temp);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_outlet_temp: 0x%02X"), coil_outlet_temp);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    discharge_temp: 0x%02X"), discharge_temp);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_inlet_temp: 0x%02X (%.1f°C)"), 
+           coil_inlet_temp.value, 
+           coil_inlet_temp.to_celsius());
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_outlet_temp: 0x%02X (%.1f°C)"), 
+           coil_outlet_temp.value, 
+           coil_outlet_temp.to_celsius());
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    discharge_temp: 0x%02X (%.1f°C)"), 
+           discharge_temp.value, 
+           discharge_temp.to_celsius());
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (enabled: %s, wired_ctrl: %s)"), 
-           system_status_flags,
-           (system_status_flags & 0x80) ? "yes" : "no",
-           (system_status_flags & 0x04) ? "yes" : "no");
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(system_status_flags),
+           enum_to_string(system_status_flags));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
            target_temperature.value, 
            target_temperature.to_celsius());
-  // Combine the two bytes into a 16-bit value for engineering data
-  uint16_t engineering_value = (compressor_freq_high << 8) | compressor_freq_low;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_freq/outdoor_fan_rpm: 0x%02X%02X (%u)"), 
-           compressor_freq_high, compressor_freq_low, engineering_value);
+  // Display the 16-bit engineering value
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_freq/outdoor_fan_rpm: 0x%04X (%u)"), 
+           compressor_freq_or_fan_rpm.value(), compressor_freq_or_fan_rpm.value());
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    outdoor_temperature: 0x%02X (%.1f°C)"), 
            outdoor_temperature.value, 
            outdoor_temperature.to_celsius());
@@ -91,17 +95,17 @@ void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    static_pressure: 0x%02X"), static_pressure);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved4: 0x%02X"), reserved4);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_compressor: 0x%02X (%s)"), 
-           subsystem_ok_compressor,
-           (subsystem_ok_compressor == 0x80) ? "OK" : "protection active");
+           static_cast<uint8_t>(subsystem_ok_compressor),
+           enum_to_string(subsystem_ok_compressor));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_outdoor_fan: 0x%02X (%s)"), 
-           subsystem_ok_outdoor_fan,
-           (subsystem_ok_outdoor_fan == 0x80) ? "OK" : "protection active");
+           static_cast<uint8_t>(subsystem_ok_outdoor_fan),
+           enum_to_string(subsystem_ok_outdoor_fan));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_4way_valve: 0x%02X (%s)"), 
-           subsystem_ok_4way_valve,
-           (subsystem_ok_4way_valve == 0x80) ? "OK" : "protection active");
+           static_cast<uint8_t>(subsystem_ok_4way_valve),
+           enum_to_string(subsystem_ok_4way_valve));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_inverter: 0x%02X (%s)"), 
-           subsystem_ok_inverter,
-           (subsystem_ok_inverter == 0x80) ? "OK" : "protection active");
+           static_cast<uint8_t>(subsystem_ok_inverter),
+           enum_to_string(subsystem_ok_inverter));
 }
 
 // ReceiveMessageData methods

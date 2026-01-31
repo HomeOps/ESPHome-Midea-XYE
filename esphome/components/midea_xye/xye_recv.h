@@ -83,28 +83,27 @@ struct __attribute__((packed)) QueryResponseData {
 struct __attribute__((packed)) ExtendedQueryResponseData {
   uint8_t indoor_fan_pwm;       ///< [0] Indoor fan PWM control (0x00 = not exposed on some models)
   uint8_t indoor_fan_tach;      ///< [1] Indoor fan tachometer feedback (0x00 = not exposed on some models)
-  uint8_t compressor_flags;     ///< [2] Compressor status flags (bit 7: compressor active/running)
+  CompressorFlags compressor_flags;     ///< [2] Compressor status flags (bit 7: compressor active/running)
   uint8_t esp_profile;          ///< [3] Airflow/ESP (External Static Pressure) profile (0x30 = medium ESP)
   uint8_t protection_flags;     ///< [4] Protection and outdoor fan state flags (bits: defrost, anti-freeze, outdoor fan)
-  uint8_t coil_inlet_temp;      ///< [5] Coil inlet temperature (0x00 = unused on some models)
-  uint8_t coil_outlet_temp;     ///< [6] Coil outlet temperature (0x00 = unused on some models)
-  uint8_t discharge_temp;       ///< [7] Discharge temperature (0x00 = unused on some models)
+  Temperature coil_inlet_temp;      ///< [5] Coil inlet temperature (0x00 = unused on some models)
+  Temperature coil_outlet_temp;     ///< [6] Coil outlet temperature (0x00 = unused on some models)
+  Temperature discharge_temp;       ///< [7] Discharge temperature (0x00 = unused on some models)
   uint8_t expansion_valve_pos;  ///< [8] Expansion valve position (0x00 = unused on some models)
   uint8_t reserved1;            ///< [9] Reserved/unused
-  uint8_t system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
-  uint8_t indoor_unit_address;  ///< [11] Indoor unit address/zone index (0x01 = address 1)
+  SystemStatusFlags system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
+  NodeId indoor_unit_address;  ///< [11] Indoor unit address/zone index (0x01 = address 1)
   Temperature target_temperature;   ///< [12] Target temperature (may be in Fahrenheit with offset)
-  uint8_t compressor_freq_high; ///< [13] High byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
-  uint8_t compressor_freq_low;  ///< [14] Low byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
+  Flags16 compressor_freq_or_fan_rpm; ///< [13-14] 16-bit engineering value (compressor Hz or outdoor fan RPM)
   Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
   uint8_t reserved2;            ///< [16] Reserved/unused
   uint8_t reserved3;            ///< [17] Reserved/unused
   uint8_t static_pressure;      ///< [18] Static pressure setting (lower 4 bits)
   uint8_t reserved4;            ///< [19] Reserved/unused
-  uint8_t subsystem_ok_compressor;    ///< [20] Compressor subsystem OK flag (0x80 = OK, other bits = protections)
-  uint8_t subsystem_ok_outdoor_fan;   ///< [21] Outdoor fan subsystem OK flag (0x80 = OK, other bits = protections)
-  uint8_t subsystem_ok_4way_valve;    ///< [22] 4-way valve subsystem OK flag (0x80 = OK, other bits = protections)
-  uint8_t subsystem_ok_inverter;      ///< [23] Inverter module subsystem OK flag (0x80 = OK, other bits = protections)
+  SubsystemFlags subsystem_ok_compressor;    ///< [20] Compressor subsystem OK flag (0x80 = OK, other bits = protections)
+  SubsystemFlags subsystem_ok_outdoor_fan;   ///< [21] Outdoor fan subsystem OK flag (0x80 = OK, other bits = protections)
+  SubsystemFlags subsystem_ok_4way_valve;    ///< [22] 4-way valve subsystem OK flag (0x80 = OK, other bits = protections)
+  SubsystemFlags subsystem_ok_inverter;      ///< [23] Inverter module subsystem OK flag (0x80 = OK, other bits = protections)
 
   /**
    * @brief Print debug information for extended query response data

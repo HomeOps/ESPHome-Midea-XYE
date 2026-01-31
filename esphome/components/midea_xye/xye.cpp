@@ -91,6 +91,23 @@ const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP = {
   {FollowMeSubcommand::INIT, "INIT"},
 };
 
+const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP = {
+  {CompressorFlags::IDLE, "IDLE"},
+  {CompressorFlags::ACTIVE, "ACTIVE"},
+};
+
+const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP = {
+  {SystemStatusFlags::DISABLED, "DISABLED"},
+  {SystemStatusFlags::WIRED_CONTROLLER, "WIRED_CONTROLLER"},
+  {SystemStatusFlags::ENABLED, "ENABLED"},
+  {SystemStatusFlags::ENABLED_WITH_CONTROLLER, "ENABLED_WITH_CONTROLLER"},
+};
+
+const std::map<SubsystemFlags, const char*> SUBSYSTEM_FLAGS_MAP = {
+  {SubsystemFlags::PROTECTION_ACTIVE, "PROTECTION_ACTIVE"},
+  {SubsystemFlags::OK, "OK"},
+};
+
 }  // namespace xye
 }  // namespace midea
 }  // namespace esphome

@@ -188,6 +188,33 @@ enum class ResponseCode : uint8_t {
 };
 
 /**
+ * @brief Compressor status flags (C4 extended query)
+ */
+enum class CompressorFlags : uint8_t {
+  IDLE = 0x00,           ///< Compressor idle/not running
+  ACTIVE = 0x80          ///< Compressor active/running (bit 7 set)
+};
+
+/**
+ * @brief System status flags (C4 extended query)
+ */
+enum class SystemStatusFlags : uint8_t {
+  DISABLED = 0x00,                    ///< System disabled
+  WIRED_CONTROLLER = 0x04,            ///< Wired controller present (bit 2)
+  ENABLED = 0x80,                     ///< System enabled (bit 7)
+  ENABLED_WITH_CONTROLLER = 0x84      ///< System enabled with wired controller (bits 2 and 7)
+};
+
+/**
+ * @brief Subsystem protection/OK flags (C4 extended query)
+ * Used for compressor, outdoor fan, 4-way valve, and inverter subsystems
+ */
+enum class SubsystemFlags : uint8_t {
+  PROTECTION_ACTIVE = 0x00,  ///< Protection triggered or subsystem not OK
+  OK = 0x80                  ///< Subsystem OK, no protection active (bit 7 set)
+};
+
+/**
  * @brief Special temperature value for fan mode
  */
 constexpr uint8_t TEMP_FAN_MODE = 0xFF;
@@ -256,6 +283,9 @@ extern const std::map<Capabilities, const char*> CAPABILITIES_MAP;
 extern const std::map<Direction, const char*> DIRECTION_MAP;
 extern const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP;
 extern const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP;
+extern const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP;
+extern const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP;
+extern const std::map<SubsystemFlags, const char*> SUBSYSTEM_FLAGS_MAP;
 
 /**
  * @brief Trait struct to map enum types to their string mappings
@@ -272,6 +302,9 @@ template<> struct EnumTraits<Capabilities> { static const std::map<Capabilities,
 template<> struct EnumTraits<Direction> { static const std::map<Direction, const char*>& get_map() { return DIRECTION_MAP; } };
 template<> struct EnumTraits<CcmErrorFlags> { static const std::map<CcmErrorFlags, const char*>& get_map() { return CCM_ERROR_FLAGS_MAP; } };
 template<> struct EnumTraits<FollowMeSubcommand> { static const std::map<FollowMeSubcommand, const char*>& get_map() { return FOLLOW_ME_SUBCOMMAND_MAP; } };
+template<> struct EnumTraits<CompressorFlags> { static const std::map<CompressorFlags, const char*>& get_map() { return COMPRESSOR_FLAGS_MAP; } };
+template<> struct EnumTraits<SystemStatusFlags> { static const std::map<SystemStatusFlags, const char*>& get_map() { return SYSTEM_STATUS_FLAGS_MAP; } };
+template<> struct EnumTraits<SubsystemFlags> { static const std::map<SubsystemFlags, const char*>& get_map() { return SUBSYSTEM_FLAGS_MAP; } };
 
 /**
  * @brief Template function for enum-to-string conversion
