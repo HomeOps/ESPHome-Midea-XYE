@@ -34,7 +34,7 @@ constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
  */
 enum class Direction : uint8_t {
   FROM_CLIENT = 0x00,  ///< Message from client (thermostat) to server (HVAC)
-  TO_CLIENT = 0x80     ///< Message from server (HVAC) to client (thermostat)
+  TO_CLIENT = 0x00     ///< Message from server (HVAC) to client (thermostat). Set to 0x00 to match actual AC behavior.
 };
 
 // Legacy compatibility

@@ -284,9 +284,8 @@ uint8_t AirConditioner::CalculateCRC(uint8_t *data, uint8_t len) {
 
 void AirConditioner::ParseResponse(uint8_t cmdSent) {
   // validate the response
-  // Note: Removed TO_CLIENT check as some AC units send 0x00 instead of 0x80 in byte 2
   if ((RXData[RX_BYTE_PREAMBLE] == PREAMBLE) && (RXData[RX_BYTE_PROLOGUE] == PROLOGUE) &&
-      (RXData[RX_BYTE_CRC] == CalculateCRC(RXData, RX_LEN))) {
+      (RXData[RX_BYTE_TO_CLIENT] == TO_CLIENT) && (RXData[RX_BYTE_CRC] == CalculateCRC(RXData, RX_LEN))) {
     switch (RXData[RX_BYTE_COMMAND_TYPE]) {
       case CLIENT_COMMAND_QUERY: {
         ClimateMode mode = ClimateMode::CLIMATE_MODE_OFF;
