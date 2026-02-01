@@ -11,6 +11,7 @@ namespace xye {
 size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
   size_t consumed = 0;
   size_t left = bytes_remaining;
+  size_t n;
   
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  QueryResponseData:"));
   
@@ -36,16 +37,16 @@ size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, i
            enum_to_string(fan_mode));
   left -= 1; consumed += 1;
   
-  left -= target_temperature.print_debug(tag, "target_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= t1_temperature.print_debug(tag, "t1_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= t3_temperature.print_debug(tag, "t3_temperature", left, level);
-  consumed += sizeof(Temperature);
+  n = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left -= n; consumed += n;
+  n = t1_temperature.print_debug(tag, "t1_temperature", left, level);
+  left -= n; consumed += n;
+  n = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
+  left -= n; consumed += n;
+  n = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
+  left -= n; consumed += n;
+  n = t3_temperature.print_debug(tag, "t3_temperature", left, level);
+  left -= n; consumed += n;
   
   if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    current: 0x%02X"), current);
@@ -79,10 +80,10 @@ size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, i
            enum_to_string(operation_flags));
   left -= 1; consumed += 1;
   
-  left -= error_flags.print_debug(tag, "error_flags", left, level);
-  consumed += sizeof(Flags16);
-  left -= protect_flags.print_debug(tag, "protect_flags", left, level);
-  consumed += sizeof(Flags16);
+  n = error_flags.print_debug(tag, "error_flags", left, level);
+  left -= n; consumed += n;
+  n = protect_flags.print_debug(tag, "protect_flags", left, level);
+  left -= n; consumed += n;
   
   if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    ccm_communication_error_flags: 0x%02X (%s)"), 
@@ -109,6 +110,7 @@ size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, i
 size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
   size_t consumed = 0;
   size_t left = bytes_remaining;
+  size_t n;
   
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
   
@@ -138,12 +140,12 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t bytes_rema
            enum_to_string(protection_flags));
   left -= 1; consumed += 1;
   
-  left -= coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
-  consumed += sizeof(Temperature);
-  left -= coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
-  consumed += sizeof(Temperature);
-  left -= discharge_temp.print_debug(tag, "discharge_temp", left, level);
-  consumed += sizeof(Temperature);
+  n = coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
+  left -= n; consumed += n;
+  n = coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
+  left -= n; consumed += n;
+  n = discharge_temp.print_debug(tag, "discharge_temp", left, level);
+  left -= n; consumed += n;
   
   if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
@@ -163,12 +165,12 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t bytes_rema
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
   left -= 1; consumed += 1;
   
-  left -= target_temperature.print_debug(tag, "target_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
-  consumed += sizeof(Flags16BigEndian);
-  left -= outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
-  consumed += sizeof(Temperature);
+  n = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left -= n; consumed += n;
+  n = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
+  left -= n; consumed += n;
+  n = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
+  left -= n; consumed += n;
   
   if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved2: 0x%02X"), reserved2);
@@ -270,13 +272,11 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
   // Delegate to the appropriate data struct's print_debug method based on command type
   switch (message.frame.header.command) {
     case Command::QUERY:
-      message.data.query_response.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      left -= message.data.query_response.print_debug(tag, left, level);
       break;
     
     case Command::QUERY_EXTENDED:
-      message.data.extended_query_response.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      left -= message.data.extended_query_response.print_debug(tag, left, level);
       break;
     
     case Command::SET:
@@ -284,8 +284,7 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
     case Command::LOCK:
     case Command::UNLOCK:
     default:
-      message.data.generic.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      left -= message.data.generic.print_debug(tag, left, level);
       break;
   }
   

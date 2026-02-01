@@ -12,6 +12,7 @@ size_t TransmitMessageData::print_debug(const char *tag, Command command, size_t
   (void)command;  // Unused parameter, kept for API consistency
   size_t consumed = 0;
   size_t left = bytes_remaining;
+  size_t n;
   
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  TransmitMessageData:"));
   
@@ -27,8 +28,8 @@ size_t TransmitMessageData::print_debug(const char *tag, Command command, size_t
            enum_to_string(fan_mode));
   left -= 1; consumed += 1;
   
-  left -= target_temperature.print_debug(tag, "target_temperature", left, level);
-  consumed += sizeof(Temperature);
+  n = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left -= n; consumed += n;
   
   if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_start: 0x%02X"), timer_start);
