@@ -320,7 +320,6 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
         // The unit seems to show 0x10 when off after running auto.
         // Check to see if we haven't already matched to OFF state.
         // If not, and we match otherwise, we are in auto mode.
-        // This handles AC units that report AUTO with the 0x10 flag set.
         if (mode != ClimateMode::CLIMATE_MODE_OFF &&
             ((RXData[RX_C0_BYTE_OP_MODE] & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG)) {
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
