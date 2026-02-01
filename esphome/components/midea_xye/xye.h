@@ -290,6 +290,9 @@ struct __attribute__((packed)) Temperature {
   
   /// Create from degrees Celsius
   static Temperature from_celsius(float celsius);
+  
+  /// Print debug information
+  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -298,6 +301,9 @@ struct __attribute__((packed)) Temperature {
 struct __attribute__((packed)) DirectionNode {
   Direction direction;  ///< Direction indicator
   NodeId node_id;       ///< Node identifier
+  
+  /// Print debug information
+  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -312,6 +318,9 @@ struct __attribute__((packed)) Flags16 {
   
   /// Set from 16-bit value
   void set(uint16_t val);
+  
+  /// Print debug information
+  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -327,6 +336,9 @@ struct __attribute__((packed)) Flags16BigEndian {
   
   /// Set from 16-bit value
   void set(uint16_t val);
+  
+  /// Print debug information
+  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**

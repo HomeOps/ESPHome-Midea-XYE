@@ -20,21 +20,11 @@ void QueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    fan_mode: 0x%02X (%s)"), 
            static_cast<uint8_t>(fan_mode),
            enum_to_string(fan_mode));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
-           target_temperature.value, 
-           target_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    t1_temperature: 0x%02X (%.1f°C)"), 
-           t1_temperature.value, 
-           t1_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    t2a_temperature: 0x%02X (%.1f°C)"), 
-           t2a_temperature.value, 
-           t2a_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    t2b_temperature: 0x%02X (%.1f°C)"), 
-           t2b_temperature.value, 
-           t2b_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    t3_temperature: 0x%02X (%.1f°C)"), 
-           t3_temperature.value, 
-           t3_temperature.to_celsius());
+  target_temperature.print_debug(tag, "target_temperature", level);
+  t1_temperature.print_debug(tag, "t1_temperature", level);
+  t2a_temperature.print_debug(tag, "t2a_temperature", level);
+  t2b_temperature.print_debug(tag, "t2b_temperature", level);
+  t3_temperature.print_debug(tag, "t3_temperature", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    current: 0x%02X"), current);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown2: 0x%02X"), unknown2);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_start: 0x%02X"), timer_start);
@@ -46,8 +36,8 @@ void QueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    operation_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(operation_flags),
            enum_to_string(operation_flags));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    error_flags: 0x%04X"), error_flags.value());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protect_flags: 0x%04X"), protect_flags.value());
+  error_flags.print_debug(tag, "error_flags", level);
+  protect_flags.print_debug(tag, "protect_flags", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    ccm_communication_error_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(ccm_communication_error_flags),
            enum_to_string(ccm_communication_error_flags));
@@ -70,31 +60,18 @@ void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(protection_flags),
            enum_to_string(protection_flags));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_inlet_temp: 0x%02X (%.1f°C)"), 
-           coil_inlet_temp.value, 
-           coil_inlet_temp.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_outlet_temp: 0x%02X (%.1f°C)"), 
-           coil_outlet_temp.value, 
-           coil_outlet_temp.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    discharge_temp: 0x%02X (%.1f°C)"), 
-           discharge_temp.value, 
-           discharge_temp.to_celsius());
+  coil_inlet_temp.print_debug(tag, "coil_inlet_temp", level);
+  coil_outlet_temp.print_debug(tag, "coil_outlet_temp", level);
+  discharge_temp.print_debug(tag, "discharge_temp", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(system_status_flags),
            enum_to_string(system_status_flags));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
-           target_temperature.value, 
-           target_temperature.to_celsius());
-  // Display the 16-bit engineering value
-  uint16_t engineering_value = compressor_freq_or_fan_rpm.value();
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_freq/outdoor_fan_rpm: 0x%04X (%u)"), 
-           engineering_value, engineering_value);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    outdoor_temperature: 0x%02X (%.1f°C)"), 
-           outdoor_temperature.value, 
-           outdoor_temperature.to_celsius());
+  target_temperature.print_debug(tag, "target_temperature", level);
+  compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", level);
+  outdoor_temperature.print_debug(tag, "outdoor_temperature", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved2: 0x%02X"), reserved2);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved3: 0x%02X"), reserved3);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    static_pressure: 0x%02X"), static_pressure);

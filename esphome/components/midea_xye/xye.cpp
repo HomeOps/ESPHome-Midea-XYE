@@ -16,6 +16,11 @@ Temperature Temperature::from_celsius(float celsius) {
   return Temperature{static_cast<uint8_t>(celsius * 2.0f + 0x28)};
 }
 
+void Temperature::print_debug(const char *tag, const char *name, int level) const {
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.1f°C)"), 
+           name, value, to_celsius());
+}
+
 // Flags16 methods
 uint16_t Flags16::value() const {
   return static_cast<uint16_t>(low) | (static_cast<uint16_t>(high) << 8);
@@ -26,6 +31,11 @@ void Flags16::set(uint16_t val) {
   high = (val >> 8) & 0xFF;
 }
 
+void Flags16::print_debug(const char *tag, const char *name, int level) const {
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%04X"), 
+           name, value());
+}
+
 // Flags16BigEndian methods
 uint16_t Flags16BigEndian::value() const {
   return static_cast<uint16_t>(low) | (static_cast<uint16_t>(high) << 8);
@@ -34,6 +44,18 @@ uint16_t Flags16BigEndian::value() const {
 void Flags16BigEndian::set(uint16_t val) {
   low = val & 0xFF;
   high = (val >> 8) & 0xFF;
+}
+
+void Flags16BigEndian::print_debug(const char *tag, const char *name, int level) const {
+  uint16_t val = value();
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%04X (%u)"), 
+           name, val, val);
+}
+
+// DirectionNode methods
+void DirectionNode::print_debug(const char *tag, const char *name, int level) const {
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: direction=0x%02X (%s), node_id=0x%02X"), 
+           name, static_cast<uint8_t>(direction), enum_to_string(direction), node_id);
 }
 
 // Static maps for enum-to-string conversion

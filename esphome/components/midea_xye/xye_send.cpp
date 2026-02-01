@@ -17,9 +17,7 @@ void TransmitMessageData::print_debug(const char *tag, Command command, int leve
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    fan_mode: 0x%02X (%s)"), 
            static_cast<uint8_t>(fan_mode),
            enum_to_string(fan_mode));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
-           target_temperature.value, 
-           target_temperature.to_celsius());
+  target_temperature.print_debug(tag, "target_temperature", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_start: 0x%02X"), timer_start);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_stop: 0x%02X"), timer_stop);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    mode_flags: 0x%02X (%s)"), 
@@ -39,10 +37,7 @@ void TransmitData::print_debug(const char *tag, int level) const {
            enum_to_string(message.frame.header.command));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    server_id: 0x%02X"), message.frame.header.server_id);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    client_id1: 0x%02X"), message.frame.header.client_id1);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    direction: 0x%02X (%s)"), 
-           static_cast<uint8_t>(message.frame.header.direction_node.direction),
-           enum_to_string(message.frame.header.direction_node.direction));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    node_id: 0x%02X"), message.frame.header.direction_node.node_id);
+  message.frame.header.direction_node.print_debug(tag, "direction_node", level);
   
   // Delegate to the data struct's print_debug method
   message.data.standard.print_debug(tag, message.frame.header.command, level);
