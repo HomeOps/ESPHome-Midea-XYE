@@ -71,12 +71,30 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
 // ReceiveMessageData methods
 size_t ReceiveMessageData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ReceiveMessageData (generic):"));
-  const uint8_t *ptr = reinterpret_cast<const uint8_t *>(this);
-  for (size_t i = 0; i < sizeof(ReceiveMessageData) && left > 0; i++) {
-    if (left < 1) return left;
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[%u]: 0x%02X"), i, ptr[i]);
-    left -= 1;
-  }
+  left = print_debug_uint8(tag, "unknown0", unknown0, left, level);
+  left = print_debug_uint8(tag, "unknown1", unknown1, left, level);
+  left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
+  left = print_debug_uint8(tag, "unknown3", unknown3, left, level);
+  left = print_debug_uint8(tag, "unknown4", unknown4, left, level);
+  left = print_debug_uint8(tag, "unknown5", unknown5, left, level);
+  left = print_debug_uint8(tag, "unknown6", unknown6, left, level);
+  left = print_debug_uint8(tag, "unknown7", unknown7, left, level);
+  left = print_debug_uint8(tag, "unknown8", unknown8, left, level);
+  left = print_debug_uint8(tag, "unknown9", unknown9, left, level);
+  left = print_debug_uint8(tag, "unknown10", unknown10, left, level);
+  left = print_debug_uint8(tag, "unknown11", unknown11, left, level);
+  left = print_debug_uint8(tag, "unknown12", unknown12, left, level);
+  left = print_debug_uint8(tag, "unknown13", unknown13, left, level);
+  left = print_debug_uint8(tag, "unknown14", unknown14, left, level);
+  left = print_debug_uint8(tag, "unknown15", unknown15, left, level);
+  left = print_debug_uint8(tag, "unknown16", unknown16, left, level);
+  left = print_debug_uint8(tag, "unknown17", unknown17, left, level);
+  left = print_debug_uint8(tag, "unknown18", unknown18, left, level);
+  left = print_debug_uint8(tag, "unknown19", unknown19, left, level);
+  left = print_debug_uint8(tag, "unknown20", unknown20, left, level);
+  left = print_debug_uint8(tag, "unknown21", unknown21, left, level);
+  left = print_debug_uint8(tag, "unknown22", unknown22, left, level);
+  left = print_debug_uint8(tag, "unknown23", unknown23, left, level);
   return left;
 }
 
