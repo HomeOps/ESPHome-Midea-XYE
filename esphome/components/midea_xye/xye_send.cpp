@@ -26,7 +26,7 @@ size_t TransmitMessageData::print_debug(const char *tag, Command command, size_t
 }
 
 // TransmitData methods
-size_t TransmitData::print_debug(size_t left, const char *tag, int level) const {
+size_t TransmitData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("TX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
