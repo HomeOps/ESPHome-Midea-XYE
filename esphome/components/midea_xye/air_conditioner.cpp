@@ -127,7 +127,6 @@ void AirConditioner::setACParams() {
     case ClimateMode::CLIMATE_MODE_HEAT_COOL:
       // Use AUTO_ALT (0x91) instead of AUTO (0x80) for better compatibility
       // with AC units that expect the 0x10 flag to be set in AUTO mode.
-      // See: https://github.com/HomeOps/ESPHome-Midea-XYE/issues/XXX
       TXData[6] = OP_MODE_AUTO_ALT;
       break;
     case ClimateMode::CLIMATE_MODE_FAN_ONLY:
