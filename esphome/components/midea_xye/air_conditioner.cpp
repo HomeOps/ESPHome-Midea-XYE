@@ -183,7 +183,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
   // TODO: Reimplement flow control for manual RS485 flow control chips
   // digitalWrite(ComControlPin, RS485_TX_PIN_VALUE);
   // Log outgoing message at debug level
-  tx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
+  tx_data.print_debug(TX_MESSAGE_LENGTH, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
   this->uart_->write_array(TXData, TX_LEN);
   this->uart_->flush();
   controlState = STATE_WAIT_DATA;

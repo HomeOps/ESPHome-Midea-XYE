@@ -64,11 +64,11 @@ struct __attribute__((packed)) QueryResponseData {
   /**
    * @brief Print debug information for query response data
    * @param tag Log tag to use
-   * @param bytes_remaining Bytes remaining to read
+   * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @return Number of bytes consumed
+   * @return Updated bytes remaining
    */
-  size_t print_debug(const char *tag, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -110,11 +110,11 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
   /**
    * @brief Print debug information for extended query response data
    * @param tag Log tag to use
-   * @param bytes_remaining Bytes remaining to read
+   * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @return Number of bytes consumed
+   * @return Updated bytes remaining
    */
-  size_t print_debug(const char *tag, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -127,11 +127,11 @@ struct __attribute__((packed)) ReceiveMessageData {
   /**
    * @brief Print debug information for generic receive data
    * @param tag Log tag to use
-   * @param bytes_remaining Bytes remaining to read
+   * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @return Number of bytes consumed
+   * @return Updated bytes remaining
    */
-  size_t print_debug(const char *tag, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**

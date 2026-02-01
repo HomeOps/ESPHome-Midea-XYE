@@ -16,13 +16,11 @@ Temperature Temperature::from_celsius(float celsius) {
   return Temperature{static_cast<uint8_t>(celsius * 2.0f + 0x28)};
 }
 
-size_t Temperature::print_debug(const char *tag, const char *name, size_t bytes_remaining, int level) const {
-  if (bytes_remaining < sizeof(Temperature)) {
-    return 0;  // Not enough data
-  }
+size_t Temperature::print_debug(const char *tag, const char *name, size_t left, int level) const {
+  if (left < sizeof(Temperature)) return left;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.1f°C)"), 
            name, value, to_celsius());
-  return sizeof(Temperature);
+  return left - sizeof(Temperature);
 }
 
 // Flags16 methods
@@ -35,13 +33,11 @@ void Flags16::set(uint16_t val) {
   high = (val >> 8) & 0xFF;
 }
 
-size_t Flags16::print_debug(const char *tag, const char *name, size_t bytes_remaining, int level) const {
-  if (bytes_remaining < sizeof(Flags16)) {
-    return 0;  // Not enough data
-  }
+size_t Flags16::print_debug(const char *tag, const char *name, size_t left, int level) const {
+  if (left < sizeof(Flags16)) return left;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%04X"), 
            name, value());
-  return sizeof(Flags16);
+  return left - sizeof(Flags16);
 }
 
 // Flags16BigEndian methods
@@ -54,24 +50,20 @@ void Flags16BigEndian::set(uint16_t val) {
   high = (val >> 8) & 0xFF;
 }
 
-size_t Flags16BigEndian::print_debug(const char *tag, const char *name, size_t bytes_remaining, int level) const {
-  if (bytes_remaining < sizeof(Flags16BigEndian)) {
-    return 0;  // Not enough data
-  }
+size_t Flags16BigEndian::print_debug(const char *tag, const char *name, size_t left, int level) const {
+  if (left < sizeof(Flags16BigEndian)) return left;
   uint16_t val = value();
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%04X (%u)"), 
            name, val, val);
-  return sizeof(Flags16BigEndian);
+  return left - sizeof(Flags16BigEndian);
 }
 
 // DirectionNode methods
-size_t DirectionNode::print_debug(const char *tag, const char *name, size_t bytes_remaining, int level) const {
-  if (bytes_remaining < sizeof(DirectionNode)) {
-    return 0;  // Not enough data
-  }
+size_t DirectionNode::print_debug(const char *tag, const char *name, size_t left, int level) const {
+  if (left < sizeof(DirectionNode)) return left;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: direction=0x%02X (%s), node_id=0x%02X"), 
            name, static_cast<uint8_t>(direction), enum_to_string(direction), node_id);
-  return sizeof(DirectionNode);
+  return left - sizeof(DirectionNode);
 }
 
 // Static maps for enum-to-string conversion

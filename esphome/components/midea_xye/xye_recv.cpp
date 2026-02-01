@@ -8,224 +8,73 @@ namespace midea {
 namespace xye {
 
 // QueryResponseData methods
-size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
-  size_t consumed = 0;
-  size_t left = bytes_remaining;
-  size_t n;
-  
+size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  QueryResponseData:"));
   
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown1: 0x%02X"), unknown1);
-  left -= 1; consumed += 1;
+  left = print_debug_uint8(tag, "unknown1", unknown1, left, level);
+  left = print_debug_enum(tag, "capabilities", capabilities, left, level);
+  left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
+  left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
+  left = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left = t1_temperature.print_debug(tag, "t1_temperature", left, level);
+  left = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
+  left = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
+  left = t3_temperature.print_debug(tag, "t3_temperature", left, level);
+  left = print_debug_uint8(tag, "current", current, left, level);
+  left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
+  left = print_debug_uint8(tag, "timer_start", timer_start, left, level);
+  left = print_debug_uint8(tag, "timer_stop", timer_stop, left, level);
+  left = print_debug_uint8(tag, "unknown3", unknown3, left, level);
+  left = print_debug_enum(tag, "mode_flags", mode_flags, left, level);
+  left = print_debug_enum(tag, "operation_flags", operation_flags, left, level);
+  left = error_flags.print_debug(tag, "error_flags", left, level);
+  left = protect_flags.print_debug(tag, "protect_flags", left, level);
+  left = print_debug_enum(tag, "ccm_communication_error_flags", ccm_communication_error_flags, left, level);
+  left = print_debug_uint8(tag, "unknown4", unknown4, left, level);
+  left = print_debug_uint8(tag, "unknown5", unknown5, left, level);
+  left = print_debug_uint8(tag, "unknown6", unknown6, left, level);
   
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    capabilities: 0x%02X (%s)"), 
-           static_cast<uint8_t>(capabilities),
-           enum_to_string(capabilities));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    operation_mode: 0x%02X (%s)"), 
-           static_cast<uint8_t>(operation_mode),
-           enum_to_string(operation_mode));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    fan_mode: 0x%02X (%s)"), 
-           static_cast<uint8_t>(fan_mode),
-           enum_to_string(fan_mode));
-  left -= 1; consumed += 1;
-  
-  n = target_temperature.print_debug(tag, "target_temperature", left, level);
-  left -= n; consumed += n;
-  n = t1_temperature.print_debug(tag, "t1_temperature", left, level);
-  left -= n; consumed += n;
-  n = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
-  left -= n; consumed += n;
-  n = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
-  left -= n; consumed += n;
-  n = t3_temperature.print_debug(tag, "t3_temperature", left, level);
-  left -= n; consumed += n;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    current: 0x%02X"), current);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown2: 0x%02X"), unknown2);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_start: 0x%02X"), timer_start);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_stop: 0x%02X"), timer_stop);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown3: 0x%02X"), unknown3);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    mode_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(mode_flags),
-           enum_to_string(mode_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    operation_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(operation_flags),
-           enum_to_string(operation_flags));
-  left -= 1; consumed += 1;
-  
-  n = error_flags.print_debug(tag, "error_flags", left, level);
-  left -= n; consumed += n;
-  n = protect_flags.print_debug(tag, "protect_flags", left, level);
-  left -= n; consumed += n;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    ccm_communication_error_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(ccm_communication_error_flags),
-           enum_to_string(ccm_communication_error_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown4: 0x%02X"), unknown4);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown5: 0x%02X"), unknown5);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown6: 0x%02X"), unknown6);
-  left -= 1; consumed += 1;
-  
-  return consumed;
+  return left;
 }
 
 // ExtendedQueryResponseData methods
-size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
-  size_t consumed = 0;
-  size_t left = bytes_remaining;
-  size_t n;
-  
+size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
   
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_pwm: 0x%02X"), indoor_fan_pwm);
-  left -= 1; consumed += 1;
+  left = print_debug_uint8(tag, "indoor_fan_pwm", indoor_fan_pwm, left, level);
+  left = print_debug_uint8(tag, "indoor_fan_tach", indoor_fan_tach, left, level);
+  left = print_debug_enum(tag, "compressor_flags", compressor_flags, left, level);
+  left = print_debug_enum(tag, "esp_profile", esp_profile, left, level);
+  left = print_debug_enum(tag, "protection_flags", protection_flags, left, level);
+  left = coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
+  left = coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
+  left = discharge_temp.print_debug(tag, "discharge_temp", left, level);
+  left = print_debug_uint8(tag, "expansion_valve_pos", expansion_valve_pos, left, level);
+  left = print_debug_uint8(tag, "reserved1", reserved1, left, level);
+  left = print_debug_enum(tag, "system_status_flags", system_status_flags, left, level);
+  left = print_debug_uint8(tag, "indoor_unit_address", indoor_unit_address, left, level);
+  left = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
+  left = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
+  left = print_debug_uint8(tag, "reserved2", reserved2, left, level);
+  left = print_debug_uint8(tag, "reserved3", reserved3, left, level);
+  left = print_debug_uint8(tag, "static_pressure", static_pressure, left, level);
+  left = print_debug_uint8(tag, "reserved4", reserved4, left, level);
+  left = print_debug_enum(tag, "subsystem_ok_compressor", subsystem_ok_compressor, left, level);
+  left = print_debug_enum(tag, "subsystem_ok_outdoor_fan", subsystem_ok_outdoor_fan, left, level);
+  left = print_debug_enum(tag, "subsystem_ok_4way_valve", subsystem_ok_4way_valve, left, level);
+  left = print_debug_enum(tag, "subsystem_ok_inverter", subsystem_ok_inverter, left, level);
   
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_tach: 0x%02X"), indoor_fan_tach);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(compressor_flags),
-           enum_to_string(compressor_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X (%s)"), 
-           static_cast<uint8_t>(esp_profile),
-           enum_to_string(esp_profile));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(protection_flags),
-           enum_to_string(protection_flags));
-  left -= 1; consumed += 1;
-  
-  n = coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
-  left -= n; consumed += n;
-  n = coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
-  left -= n; consumed += n;
-  n = discharge_temp.print_debug(tag, "discharge_temp", left, level);
-  left -= n; consumed += n;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(system_status_flags),
-           enum_to_string(system_status_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
-  left -= 1; consumed += 1;
-  
-  n = target_temperature.print_debug(tag, "target_temperature", left, level);
-  left -= n; consumed += n;
-  n = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
-  left -= n; consumed += n;
-  n = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
-  left -= n; consumed += n;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved2: 0x%02X"), reserved2);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved3: 0x%02X"), reserved3);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    static_pressure: 0x%02X"), static_pressure);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved4: 0x%02X"), reserved4);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_compressor: 0x%02X (%s)"), 
-           static_cast<uint8_t>(subsystem_ok_compressor),
-           enum_to_string(subsystem_ok_compressor));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_outdoor_fan: 0x%02X (%s)"), 
-           static_cast<uint8_t>(subsystem_ok_outdoor_fan),
-           enum_to_string(subsystem_ok_outdoor_fan));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_4way_valve: 0x%02X (%s)"), 
-           static_cast<uint8_t>(subsystem_ok_4way_valve),
-           enum_to_string(subsystem_ok_4way_valve));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_inverter: 0x%02X (%s)"), 
-           static_cast<uint8_t>(subsystem_ok_inverter),
-           enum_to_string(subsystem_ok_inverter));
-  left -= 1; consumed += 1;
-  
-  return consumed;
+  return left;
 }
 
 // ReceiveMessageData methods
-size_t ReceiveMessageData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
-  size_t consumed = 0;
-  size_t left = bytes_remaining;
-  
+size_t ReceiveMessageData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ReceiveMessageData (generic):"));
-  for (size_t i = 0; i < 24 && i < left; i++) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[%u]: 0x%02X"), i, data[i]);
-    consumed++;
+  for (size_t i = 0; i < 24 && left > 0; i++) {
+    left = print_debug_uint8(tag, ("byte[" + std::to_string(i) + "]").c_str(), data[i], left, level);
   }
-  return consumed;
+  return left;
 }
 
 // ReceiveData methods
@@ -234,49 +83,26 @@ Command ReceiveData::get_command() const {
 }
 
 void ReceiveData::print_debug(const char *tag, size_t received_size, int level) const {
-  // Start with bytes_remaining equal to received_size
-  // Subtract the frame header size (6 bytes)
   size_t left = received_size;
   
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    preamble: 0x%02X"), static_cast<uint8_t>(message.frame.preamble));
-  left -= 1;
-  
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    command: 0x%02X (%s)"), 
-           static_cast<uint8_t>(message.frame.header.command),
-           enum_to_string(message.frame.header.command));
-  left -= 1;
-  
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    direction: 0x%02X (%s)"), 
-           static_cast<uint8_t>(message.frame.header.direction),
-           enum_to_string(message.frame.header.direction));
-  left -= 1;
-  
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    destination1: 0x%02X"), message.frame.header.destination1);
-  left -= 1;
-  
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    source: 0x%02X"), message.frame.header.source);
-  left -= 1;
-  
-  if (left < 1) return;
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    destination2: 0x%02X"), message.frame.header.destination2);
-  left -= 1;
+  left = print_debug_uint8(tag, "preamble", static_cast<uint8_t>(message.frame.preamble), left, level);
+  left = print_debug_enum(tag, "command", message.frame.header.command, left, level);
+  left = print_debug_enum(tag, "direction", message.frame.header.direction, left, level);
+  left = print_debug_uint8(tag, "destination1", message.frame.header.destination1, left, level);
+  left = print_debug_uint8(tag, "source", message.frame.header.source, left, level);
+  left = print_debug_uint8(tag, "destination2", message.frame.header.destination2, left, level);
   
   // Delegate to the appropriate data struct's print_debug method based on command type
   switch (message.frame.header.command) {
     case Command::QUERY:
-      left -= message.data.query_response.print_debug(tag, left, level);
+      left = message.data.query_response.print_debug(tag, left, level);
       break;
     
     case Command::QUERY_EXTENDED:
-      left -= message.data.extended_query_response.print_debug(tag, left, level);
+      left = message.data.extended_query_response.print_debug(tag, left, level);
       break;
     
     case Command::SET:
@@ -284,7 +110,7 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
     case Command::LOCK:
     case Command::UNLOCK:
     default:
-      left -= message.data.generic.print_debug(tag, left, level);
+      left = message.data.generic.print_debug(tag, left, level);
       break;
   }
   
@@ -292,10 +118,10 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
   // Frame end is at bytes 30-31 in a 32-byte message (RX_MESSAGE_LENGTH)
   if (received_size >= RX_MESSAGE_LENGTH - 1) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    crc: 0x%02X"), message.frame_end.crc);
+    left = print_debug_uint8(tag, "crc", message.frame_end.crc, left, level);
   }
   if (received_size >= RX_MESSAGE_LENGTH) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    prologue: 0x%02X"), static_cast<uint8_t>(message.frame_end.prologue));
+    left = print_debug_uint8(tag, "prologue", static_cast<uint8_t>(message.frame_end.prologue), left, level);
   }
 }
 
