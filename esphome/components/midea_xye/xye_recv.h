@@ -165,11 +165,12 @@ union ReceiveData {
   /**
    * @brief Pretty print the receive message for debugging
    * Takes into account the kind of message based on command type
+   * @param left Bytes remaining (received size)
    * @param tag Log tag to use
-   * @param received_size Number of bytes actually received
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
+   * @return Updated bytes remaining
    */
-  void print_debug(const char *tag, size_t received_size, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 // Static assertions to ensure struct sizes are correct

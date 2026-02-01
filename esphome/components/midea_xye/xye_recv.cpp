@@ -84,9 +84,7 @@ Command ReceiveData::get_command() const {
   return message.frame.header.command;
 }
 
-void ReceiveData::print_debug(const char *tag, size_t received_size, int level) const {
-  size_t left = received_size;
-  
+size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
@@ -116,15 +114,16 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
       break;
   }
   
-  // Only print frame end if we have enough bytes
+  // Only print frame end if we have enough bytes (using initial value for check)
   // Frame end is at bytes 30-31 in a 32-byte message (RX_MESSAGE_LENGTH)
-  if (received_size >= RX_MESSAGE_LENGTH - 1) {
+  size_t initial_size = left + (RX_MESSAGE_LENGTH - left);  // Reconstruct original size
+  if (left >= 2) {  // Check if we have at least 2 bytes left for frame end
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
     left = print_debug_uint8(tag, "crc", message.frame_end.crc, left, level);
-  }
-  if (received_size >= RX_MESSAGE_LENGTH) {
     left = print_debug_uint8(tag, "prologue", static_cast<uint8_t>(message.frame_end.prologue), left, level);
   }
+  
+  return left;
 }
 
 }  // namespace xye

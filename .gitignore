@@ -419,4 +419,3 @@ FodyWeavers.xsd
 
 # ESPHome build artifacts
 .esphome/
-*.bak
