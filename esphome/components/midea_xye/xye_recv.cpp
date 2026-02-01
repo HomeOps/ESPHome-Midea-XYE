@@ -289,12 +289,12 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
   }
   
   // Only print frame end if we have enough bytes
-  // Frame end is at bytes 30-31 in a 32-byte message
-  if (received_size >= 31) {
+  // Frame end is at bytes 30-31 in a 32-byte message (RX_MESSAGE_LENGTH)
+  if (received_size >= RX_MESSAGE_LENGTH - 1) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    crc: 0x%02X"), message.frame_end.crc);
   }
-  if (received_size >= 32) {
+  if (received_size >= RX_MESSAGE_LENGTH) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    prologue: 0x%02X"), static_cast<uint8_t>(message.frame_end.prologue));
   }
 }
