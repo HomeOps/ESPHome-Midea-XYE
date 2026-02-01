@@ -23,6 +23,9 @@ esp8266:  #also works with esp32
 # Enable logging (but not via UART)
 logger:
   baud_rate: 0
+  # Optional: Enable debug logging for XYE protocol messages
+  # logs:
+  #   midea_xye: DEBUG
 
 external_components:
   - source: 

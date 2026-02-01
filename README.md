@@ -50,6 +50,9 @@ esp8266:  # also works with esp32
 # Enable logging (but not via UART)
 logger:
   baud_rate: 0
+  # Optional: Enable debug logging for XYE protocol messages
+  # logs:
+  #   midea_xye: DEBUG
 
 external_components:
   - source: 
@@ -152,6 +155,37 @@ climate:
       name: Error Flags
     protect_flags:              # Optional
       name: Protect Flags
+```
+
+## Debugging
+
+### Enabling Protocol Debug Logging
+
+To see detailed XYE protocol messages (useful for troubleshooting or protocol reverse engineering), enable debug logging for the component:
+
+```yaml
+logger:
+  baud_rate: 0  # Required: Disable UART logging to avoid conflicts with RS-485
+  logs:
+    midea_xye: DEBUG  # Enable debug-level logging for XYE protocol
+```
+
+With debug logging enabled, you'll see:
+- **TX Messages**: Outgoing messages sent to the HVAC unit (operation mode, fan mode, target temperature, etc.)
+- **RX Messages**: Incoming messages from the HVAC unit (current state, temperatures, flags, etc.)
+- All field values are shown in hex format (e.g., `0x50 (20.0°C)`)
+- Enum values show both name and hex (e.g., `0x88 (COOL)` or `0x99 (UNKNOWN)`)
+- Bounds checking prevents displaying garbage data from truncated messages
+
+Example debug output:
+```
+[D][midea_xye:186] TX Message:
+[D][midea_xye:186]   Frame Header:
+[D][midea_xye:186]     command: 0xC0 (QUERY)
+[D][midea_xye:186]   TransmitMessageData:
+[D][midea_xye:186]     operation_mode: 0x88 (COOL)
+[D][midea_xye:186]     fan_mode: 0x80 (FAN_AUTO)
+[D][midea_xye:186]     target_temperature: 0x50 (20.0°C)
 ```
 
 ## Features
