@@ -322,6 +322,14 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
         }
 
+        // When in HEAT_COOL (AUTO) mode, the AC reports the active mode (COOL or HEAT)
+        // rather than AUTO. If we're currently in HEAT_COOL mode and the AC reports
+        // COOL or HEAT, keep the mode as HEAT_COOL to prevent unintended mode changes.
+        if (this->mode == ClimateMode::CLIMATE_MODE_HEAT_COOL &&
+            (mode == ClimateMode::CLIMATE_MODE_COOL || mode == ClimateMode::CLIMATE_MODE_HEAT)) {
+          mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
+        }
+
         uint8_t current_fan_speed = RXData[RX_C0_BYTE_FAN_MODE] & 0x0F;
         switch (current_fan_speed) {
           case FAN_MODE_HIGH:
