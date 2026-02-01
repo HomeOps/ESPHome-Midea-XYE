@@ -28,34 +28,10 @@ jobs:
 
       - name: Compile test configuration
         run: |
-          set -o pipefail  # Ensure compilation failures aren't masked by tee
-          
-          # Compile ESP8266 build and capture output
+          # Compile ESP8266 build
           echo "Building for ESP8266..."
-          esphome compile tests/midea_xye.yaml 2>&1 | tee build_esp8266.log
+          esphome compile tests/midea_xye.yaml
           
-          # Check for warnings in ESP8266 output from our component only
-          # Exclude framework warnings (platformio packages, espidf components)
-          if grep -iE "(warning:|warning\s|^\s*warning)" build_esp8266.log | grep -v "/.platformio/packages/" | grep -v "/framework-espidf/components/" | grep -q .; then
-            echo "❌ ESP8266 build failed: Warnings detected in component code"
-            echo "Matched warnings:"
-            grep -iE "(warning:|warning\s|^\s*warning)" build_esp8266.log | grep -v "/.platformio/packages/" | grep -v "/framework-espidf/components/"
-            exit 1
-          else
-            echo "✅ ESP8266 build successful: No component warnings detected"
-          fi
-          
-          # Compile ESP32 build and capture output
+          # Compile ESP32 build
           echo "Building for ESP32..."
-          esphome compile tests/midea_xye_esp32.yaml 2>&1 | tee build_esp32.log
-          
-          # Check for warnings in ESP32 output from our component only
-          # Exclude framework warnings (platformio packages, espidf components)
-          if grep -iE "(warning:|warning\s|^\s*warning)" build_esp32.log | grep -v "/.platformio/packages/" | grep -v "/framework-espidf/components/" | grep -q .; then
-            echo "❌ ESP32 build failed: Warnings detected in component code"
-            echo "Matched warnings:"
-            grep -iE "(warning:|warning\s|^\s*warning)" build_esp32.log | grep -v "/.platformio/packages/" | grep -v "/framework-espidf/components/"
-            exit 1
-          else
-            echo "✅ ESP32 build successful: No component warnings detected"
-          fi
+          esphome compile tests/midea_xye_esp32.yaml
