@@ -1,0 +1,131 @@
+esphome:
+  name: test-build-esp32
+  friendly_name: Test Build ESP32
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# WiFi configuration (required for compilation)
+# Note: These are placeholder values for CI testing only
+wifi:
+  ssid: "placeholder_ssid"
+  password: "placeholder_password"
+  min_auth_mode: WPA2
+
+# Enable API
+api:
+
+# Enable logging (but not via UART)
+logger:
+  baud_rate: 0
+
+external_components:
+  - source: 
+      type: local
+      path: ../esphome/components
+    components: [midea_xye, virtual_thermostat]
+  
+# UART settings for RS485 converter dongle (required)
+uart:
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: 4800
+
+# Main settings
+climate:
+  - platform: midea_xye
+    id: main_climate
+    name: Test Heatpump
+    period: 1s
+    timeout: 100ms
+    use_fahrenheit: false
+    follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
+    internal_current_temperature:
+      name: "Internal Current Temperature"
+  
+  # Virtual thermostat for testing
+  - platform: virtual_thermostat
+    name: Virtual Thermostat Test
+    inside_sensor: test_sensor
+    outside_sensor: outside_sensor
+    real_climate: main_climate
+    home_min: home_min_temp
+    home_max: home_max_temp
+    sleep_min: sleep_min_temp
+    sleep_max: sleep_max_temp
+    away_min: away_min_temp
+    away_max: away_max_temp
+    
+# Temperature sensor required for virtual thermostat
+sensor:
+  - platform: homeassistant
+    id: test_sensor
+    entity_id: sensor.test_temperature
+    # Use filters to control Follow-Me update behavior:
+    # - throttle limits maximum update rate to avoid high-frequency traffic
+    # - heartbeat ensures a periodic update even if the value doesn't change
+    filters:
+      - throttle: 30s
+      - heartbeat: 30s
+  
+  - platform: homeassistant
+    id: outside_sensor
+    entity_id: sensor.outside_temperature
+
+# Number entities for virtual thermostat presets
+number:
+  - platform: template
+    id: home_min_temp
+    name: "Home Min Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 20
+    optimistic: true
+  
+  - platform: template
+    id: home_max_temp
+    name: "Home Max Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 24
+    optimistic: true
+  
+  - platform: template
+    id: sleep_min_temp
+    name: "Sleep Min Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 18
+    optimistic: true
+  
+  - platform: template
+    id: sleep_max_temp
+    name: "Sleep Max Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 22
+    optimistic: true
+  
+  - platform: template
+    id: away_min_temp
+    name: "Away Min Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 16
+    optimistic: true
+  
+  - platform: template
+    id: away_max_temp
+    name: "Away Max Temperature"
+    min_value: 16
+    max_value: 30
+    step: 0.5
+    initial_value: 28
+    optimistic: true
