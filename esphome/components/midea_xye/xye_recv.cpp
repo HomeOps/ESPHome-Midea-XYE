@@ -72,7 +72,9 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
 size_t ReceiveMessageData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ReceiveMessageData (generic):"));
   for (size_t i = 0; i < 24 && left > 0; i++) {
-    left = print_debug_uint8(tag, ("byte[" + std::to_string(i) + "]").c_str(), data[i], left, level);
+    if (left < 1) return left;
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[%u]: 0x%02X"), i, data[i]);
+    left -= 1;
   }
   return left;
 }
