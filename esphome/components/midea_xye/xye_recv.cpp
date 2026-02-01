@@ -114,9 +114,8 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
       break;
   }
   
-  // Only print frame end if we have enough bytes (using initial value for check)
+  // Only print frame end if we have enough bytes left
   // Frame end is at bytes 30-31 in a 32-byte message (RX_MESSAGE_LENGTH)
-  size_t initial_size = left + (RX_MESSAGE_LENGTH - left);  // Reconstruct original size
   if (left >= 2) {  // Check if we have at least 2 bytes left for frame end
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
     left = print_debug_uint8(tag, "crc", message.frame_end.crc, left, level);
