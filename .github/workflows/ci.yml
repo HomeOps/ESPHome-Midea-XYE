@@ -30,16 +30,31 @@ jobs:
         run: |
           set -o pipefail  # Ensure compilation failures aren't masked by tee
           
-          # Compile and capture output
-          esphome compile tests/midea_xye.yaml 2>&1 | tee build.log
+          # Compile ESP8266 build and capture output
+          echo "Building for ESP8266..."
+          esphome compile tests/midea_xye.yaml 2>&1 | tee build_esp8266.log
           
-          # Check for warnings in the output (case-insensitive)
+          # Check for warnings in ESP8266 output (case-insensitive)
           # Look for common warning patterns from ESPHome and compiler output
-          if grep -qiE "(warning:|warning\s|^\s*warning)" build.log; then
-            echo "❌ Build failed: Warnings detected in compilation output"
+          if grep -qiE "(warning:|warning\s|^\s*warning)" build_esp8266.log; then
+            echo "❌ ESP8266 build failed: Warnings detected in compilation output"
             echo "Matched warnings:"
-            grep -iE "(warning:|warning\s|^\s*warning)" build.log
+            grep -iE "(warning:|warning\s|^\s*warning)" build_esp8266.log
             exit 1
           else
-            echo "✅ Build successful: No warnings detected"
+            echo "✅ ESP8266 build successful: No warnings detected"
+          fi
+          
+          # Compile ESP32 build and capture output
+          echo "Building for ESP32..."
+          esphome compile tests/midea_xye_esp32.yaml 2>&1 | tee build_esp32.log
+          
+          # Check for warnings in ESP32 output (case-insensitive)
+          if grep -qiE "(warning:|warning\s|^\s*warning)" build_esp32.log; then
+            echo "❌ ESP32 build failed: Warnings detected in compilation output"
+            echo "Matched warnings:"
+            grep -iE "(warning:|warning\s|^\s*warning)" build_esp32.log
+            exit 1
+          else
+            echo "✅ ESP32 build successful: No warnings detected"
           fi

@@ -246,7 +246,7 @@ enum class ProtectionFlags : uint8_t {
  * - (value & 0x04) for wired controller present
  */
 enum class SystemStatusFlags : uint8_t {
-  DISABLED = 0x00,                    ///< System disabled, no controller
+  SYSTEM_DISABLED = 0x00,             ///< System disabled, no controller
   WIRED_CONTROLLER = 0x04,            ///< Wired controller present, system disabled (bit 2)
   ENABLED = 0x80,                     ///< System enabled, no controller (bit 7)
   ENABLED_WITH_CONTROLLER = 0x84      ///< System enabled with wired controller (bits 2 and 7)
