@@ -211,9 +211,9 @@ enum class CompressorFlags : uint8_t {
  * Controls airflow mode and ducted AHU fan table selection
  */
 enum class EspProfile : uint8_t {
-  LOW = 0x10,            ///< Low ESP profile
-  MEDIUM = 0x30,         ///< Medium ESP profile (normal airflow curve)
-  HIGH = 0x50            ///< High ESP profile
+  ESP_LOW = 0x10,            ///< Low ESP profile
+  ESP_MEDIUM = 0x30,         ///< Medium ESP profile (normal airflow curve)
+  ESP_HIGH = 0x50            ///< High ESP profile
 };
 
 /**

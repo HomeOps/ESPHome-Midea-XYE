@@ -107,9 +107,9 @@ const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP = {
 };
 
 const std::map<EspProfile, const char*> ESP_PROFILE_MAP = {
-  {EspProfile::LOW, "LOW"},
-  {EspProfile::MEDIUM, "MEDIUM"},
-  {EspProfile::HIGH, "HIGH"},
+  {EspProfile::ESP_LOW, "ESP_LOW"},
+  {EspProfile::ESP_MEDIUM, "ESP_MEDIUM"},
+  {EspProfile::ESP_HIGH, "ESP_HIGH"},
 };
 
 const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP = {
