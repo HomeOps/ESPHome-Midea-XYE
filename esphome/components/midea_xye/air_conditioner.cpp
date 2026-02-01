@@ -196,7 +196,10 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
-      if (cmdSent != CLIENT_COMMAND_SET) {
+      // Don't parse responses to SET or FOLLOW_ME commands to avoid
+      // overwriting the mode we just set. The AC state will be updated
+      // on subsequent QUERY cycles.
+      if (cmdSent != CLIENT_COMMAND_SET && cmdSent != CLIENT_COMMAND_FOLLOWME) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
@@ -317,19 +320,8 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
         // The unit seems to show 0x10 when off after running auto.
         // Check to see if we haven't already matched to OFF state.
         // If not, and we match otherwise, we are in auto mode.
-        // This handles AC units that report AUTO with the 0x10 flag set.
         if (mode != ClimateMode::CLIMATE_MODE_OFF &&
             ((RXData[RX_C0_BYTE_OP_MODE] & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG)) {
-          mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-        }
-
-        // When in HEAT_COOL (AUTO) mode, the AC reports the active mode (COOL or HEAT)
-        // rather than AUTO (0x80). If we're currently in HEAT_COOL mode and the AC reports
-        // COOL or HEAT, keep the mode as HEAT_COOL to prevent unintended mode changes.
-        // This handles the case where the AC is in AUTO mode but reports what it's actively
-        // doing (cooling or heating) instead of reporting the AUTO mode setting.
-        if (this->mode == ClimateMode::CLIMATE_MODE_HEAT_COOL &&
-            (mode == ClimateMode::CLIMATE_MODE_COOL || mode == ClimateMode::CLIMATE_MODE_HEAT)) {
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
         }
 
