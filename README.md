@@ -73,6 +73,12 @@ climate:
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false
+    supported_modes:            # Recommended - list the modes you want to use
+      - HEAT_COOL               # AUTO mode - unit automatically heats or cools
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
 ```
 
 ### Follow-Me Example
@@ -112,9 +118,9 @@ climate:
       min_temperature: 17 °C    # min: 17
       max_temperature: 30 °C    # max: 30
       temperature_step: 1.0 °C  # min: 0.5
-    supported_modes:            # Optional
+    supported_modes:            # Recommended - explicitly list all modes you want to use
       - FAN_ONLY
-      - HEAT_COOL
+      - HEAT_COOL              # Note: HEAT_COOL (AUTO mode) must be explicitly listed here
       - COOL
       - HEAT
       - DRY

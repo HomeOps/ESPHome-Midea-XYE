@@ -40,6 +40,12 @@ climate:
     timeout: 100ms
     use_fahrenheit: false
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
+    supported_modes:
+      - HEAT_COOL
+      - COOL
+      - HEAT
+      - DRY
+      - FAN_ONLY
     internal_current_temperature:
       name: "Internal Current Temperature"
   
