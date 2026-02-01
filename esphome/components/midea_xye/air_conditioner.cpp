@@ -200,7 +200,10 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
     if (i == RX_LEN) {
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
-      if (cmdSent != CLIENT_COMMAND_SET) {
+      // Don't parse responses to SET or FOLLOW_ME commands to avoid
+      // overwriting the mode we just set. The AC state will be updated
+      // on subsequent QUERY cycles.
+      if (cmdSent != CLIENT_COMMAND_SET && cmdSent != CLIENT_COMMAND_FOLLOWME) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
