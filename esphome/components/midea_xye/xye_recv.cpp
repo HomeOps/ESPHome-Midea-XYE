@@ -85,8 +85,9 @@ void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
            target_temperature.value, 
            target_temperature.to_celsius());
   // Display the 16-bit engineering value
+  uint16_t engineering_value = compressor_freq_or_fan_rpm.value();
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_freq/outdoor_fan_rpm: 0x%04X (%u)"), 
-           compressor_freq_or_fan_rpm.value(), compressor_freq_or_fan_rpm.value());
+           engineering_value, engineering_value);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    outdoor_temperature: 0x%02X (%.1f°C)"), 
            outdoor_temperature.value, 
            outdoor_temperature.to_celsius());

@@ -197,6 +197,8 @@ enum class CompressorFlags : uint8_t {
 
 /**
  * @brief System status flags (C4 extended query)
+ * Note: These represent distinct system states, not independent bit flags.
+ * Bit 7 indicates system enabled, bit 2 indicates wired controller present.
  */
 enum class SystemStatusFlags : uint8_t {
   DISABLED = 0x00,                    ///< System disabled
