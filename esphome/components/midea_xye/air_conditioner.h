@@ -52,6 +52,7 @@ constexpr uint8_t CLIENT_COMMAND_CELSIUS = static_cast<uint8_t>(Command::QUERY_E
 
 constexpr uint8_t OP_MODE_OFF = static_cast<uint8_t>(OperationMode::OFF);
 constexpr uint8_t OP_MODE_AUTO = static_cast<uint8_t>(OperationMode::AUTO);
+constexpr uint8_t OP_MODE_AUTO_ALT = static_cast<uint8_t>(OperationMode::AUTO_ALT);
 constexpr uint8_t OP_MODE_FAN = static_cast<uint8_t>(OperationMode::FAN);
 constexpr uint8_t OP_MODE_DRY = static_cast<uint8_t>(OperationMode::DRY);
 constexpr uint8_t OP_MODE_HEAT = static_cast<uint8_t>(OperationMode::HEAT);

@@ -125,7 +125,10 @@ void AirConditioner::setACParams() {
       TXData[6] = OP_MODE_OFF;
       break;
     case ClimateMode::CLIMATE_MODE_HEAT_COOL:
-      TXData[6] = OP_MODE_AUTO;
+      // Use AUTO_ALT (0x91) instead of AUTO (0x80) for better compatibility
+      // with AC units that expect the 0x10 flag to be set in AUTO mode.
+      // See: https://github.com/HomeOps/ESPHome-Midea-XYE/issues/XXX
+      TXData[6] = OP_MODE_AUTO_ALT;
       break;
     case ClimateMode::CLIMATE_MODE_FAN_ONLY:
       TXData[6] = OP_MODE_FAN;
@@ -144,8 +147,8 @@ void AirConditioner::setACParams() {
   }
   
   // Log what mode was actually set in TXData[6]
-  ESP_LOGD(Constants::TAG, "setACParams: TXData[6] = 0x%02X (OFF=0x%02X, AUTO=0x%02X, FAN=0x%02X, DRY=0x%02X, HEAT=0x%02X, COOL=0x%02X)", 
-           TXData[6], OP_MODE_OFF, OP_MODE_AUTO, OP_MODE_FAN, OP_MODE_DRY, OP_MODE_HEAT, OP_MODE_COOL);
+  ESP_LOGD(Constants::TAG, "setACParams: TXData[6] = 0x%02X (OFF=0x%02X, AUTO=0x%02X, AUTO_ALT=0x%02X, FAN=0x%02X, DRY=0x%02X, HEAT=0x%02X, COOL=0x%02X)", 
+           TXData[6], OP_MODE_OFF, OP_MODE_AUTO, OP_MODE_AUTO_ALT, OP_MODE_FAN, OP_MODE_DRY, OP_MODE_HEAT, OP_MODE_COOL);
   
   // set fan mode
   if (this->mode != ClimateMode::CLIMATE_MODE_HEAT_COOL) {
@@ -313,25 +316,34 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
         ClimateFanMode fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
         ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
 
-        switch (RXData[RX_C0_BYTE_OP_MODE] & 0xEF) {
-          case OP_MODE_OFF:
-            mode = ClimateMode::CLIMATE_MODE_OFF;
-            break;
-          case OP_MODE_AUTO:
-            mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-            break;
-          case OP_MODE_FAN:
-            mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;
-            break;
-          case OP_MODE_DRY:
-            mode = ClimateMode::CLIMATE_MODE_DRY;
-            break;
-          case OP_MODE_HEAT:
-            mode = ClimateMode::CLIMATE_MODE_HEAT;
-            break;
-          case OP_MODE_COOL:
-            mode = ClimateMode::CLIMATE_MODE_COOL;
-            break;
+        uint8_t raw_mode = RXData[RX_C0_BYTE_OP_MODE];
+        
+        // First check for AUTO_ALT mode (0x91) which includes the 0x10 flag
+        // This must be checked before masking, as 0x91 & 0xEF = 0x81 (FAN)
+        if (raw_mode == OP_MODE_AUTO_ALT) {
+          mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
+        } else {
+          // Mask out the 0x10 flag for other modes
+          switch (raw_mode & 0xEF) {
+            case OP_MODE_OFF:
+              mode = ClimateMode::CLIMATE_MODE_OFF;
+              break;
+            case OP_MODE_AUTO:
+              mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
+              break;
+            case OP_MODE_FAN:
+              mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;
+              break;
+            case OP_MODE_DRY:
+              mode = ClimateMode::CLIMATE_MODE_DRY;
+              break;
+            case OP_MODE_HEAT:
+              mode = ClimateMode::CLIMATE_MODE_HEAT;
+              break;
+            case OP_MODE_COOL:
+              mode = ClimateMode::CLIMATE_MODE_COOL;
+              break;
+          }
         }
 
         // The unit seems to show 0x10 flag (OP_MODE_AUTO_FLAG) in various situations:
