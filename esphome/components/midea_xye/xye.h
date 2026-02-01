@@ -190,16 +190,17 @@ enum class ResponseCode : uint8_t {
 /**
  * @brief Compressor status flags (C4 extended query)
  * 
- * This field is defined by the protocol as a flags/bitfield where:
+ * This field is a bitmask where:
  * - Bit 7 (0x80): Compressor active/running
+ * - Bits 0-6: Currently undefined/reserved in protocol documentation
  * 
- * In the current implementation we only model the two protocol-defined
- * states where all other bits are zero:
- * - 0x00: compressor idle/not running
- * - 0x80: compressor active/running (bit 7 set)
+ * The current implementation defines only the known protocol states:
+ * - 0x00: Compressor idle (bit 7 clear)
+ * - 0x80: Compressor active (bit 7 set, other bits clear)
  * 
- * Any other bit combinations (e.g. 0x81, 0x82, etc.) are treated as
- * unknown/invalid by helper functions such as enum_to_string.
+ * If hardware sets other bits (e.g., 0x81, 0x82, 0xC0), enum_to_string will
+ * return "UNKNOWN". To check compressor status, test bit 7 directly rather
+ * than relying on exact enum match.
  */
 enum class CompressorFlags : uint8_t {
   IDLE = 0x00,           ///< Compressor idle/not running (all bits clear)
@@ -228,17 +229,23 @@ enum class ProtectionFlags : uint8_t {
 
 /**
  * @brief System status flags (C4 extended query)
- * These represent combinations of independent bit flags:
+ * 
+ * This field is a bitmask where:
  * - Bit 7 (0x80): System enabled
  * - Bit 2 (0x04): Wired controller present
+ * - Other bits: Currently undefined/reserved
  * 
- * Enum values provide named combinations for common states.
- * Other bit combinations not listed may be reported as "UNKNOWN" by enum_to_string.
+ * Enum values define common observed combinations. If hardware sets other
+ * bit combinations (e.g., 0x81, 0x85), enum_to_string will return "UNKNOWN".
+ * 
+ * To check specific flags, test bits directly:
+ * - (value & 0x80) for system enabled
+ * - (value & 0x04) for wired controller present
  */
 enum class SystemStatusFlags : uint8_t {
-  DISABLED = 0x00,                    ///< System disabled
-  WIRED_CONTROLLER = 0x04,            ///< Wired controller present (bit 2)
-  ENABLED = 0x80,                     ///< System enabled (bit 7)
+  DISABLED = 0x00,                    ///< System disabled, no controller
+  WIRED_CONTROLLER = 0x04,            ///< Wired controller present, system disabled (bit 2)
+  ENABLED = 0x80,                     ///< System enabled, no controller (bit 7)
   ENABLED_WITH_CONTROLLER = 0x84      ///< System enabled with wired controller (bits 2 and 7)
 };
 
