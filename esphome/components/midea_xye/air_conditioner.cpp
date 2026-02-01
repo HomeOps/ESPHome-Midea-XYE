@@ -196,7 +196,10 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
-      if (cmdSent != CLIENT_COMMAND_SET) {
+      // Don't parse responses to SET or FOLLOW_ME commands to avoid
+      // overwriting the mode we just set. The AC state will be updated
+      // on subsequent QUERY cycles.
+      if (cmdSent != CLIENT_COMMAND_SET && cmdSent != CLIENT_COMMAND_FOLLOWME) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
