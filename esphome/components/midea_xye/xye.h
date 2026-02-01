@@ -189,10 +189,41 @@ enum class ResponseCode : uint8_t {
 
 /**
  * @brief Compressor status flags (C4 extended query)
+ * 
+ * This field is defined by the protocol as a flags/bitfield where:
+ * - Bit 7 (0x80): Compressor active/running
+ * 
+ * In the current implementation we only model the two protocol-defined
+ * states where all other bits are zero:
+ * - 0x00: compressor idle/not running
+ * - 0x80: compressor active/running (bit 7 set)
+ * 
+ * Any other bit combinations (e.g. 0x81, 0x82, etc.) are treated as
+ * unknown/invalid by helper functions such as enum_to_string.
  */
 enum class CompressorFlags : uint8_t {
-  IDLE = 0x00,           ///< Compressor idle/not running
-  ACTIVE = 0x80          ///< Compressor active/running (bit 7 set)
+  IDLE = 0x00,           ///< Compressor idle/not running (all bits clear)
+  ACTIVE = 0x80          ///< Compressor active/running (bit 7 set, others clear)
+};
+
+/**
+ * @brief ESP (External Static Pressure) profile settings (C4 extended query)
+ * Controls airflow mode and ducted AHU fan table selection
+ */
+enum class EspProfile : uint8_t {
+  LOW = 0x10,            ///< Low ESP profile
+  MEDIUM = 0x30,         ///< Medium ESP profile (normal airflow curve)
+  HIGH = 0x50            ///< High ESP profile
+};
+
+/**
+ * @brief Protection and outdoor fan state flags (C4 extended query)
+ * Bitmask indicating various protection states and outdoor fan operation
+ */
+enum class ProtectionFlags : uint8_t {
+  NONE = 0x00,                  ///< No protections active, fan off
+  OUTDOOR_FAN_RUNNING = 0x80,   ///< Outdoor fan running (bit 7)
+  COMPRESSOR_ACTIVE = 0x8C      ///< Compressor active, outdoor fan running, no protections (0x80 | 0x0C)
 };
 
 /**
@@ -200,7 +231,9 @@ enum class CompressorFlags : uint8_t {
  * These represent combinations of independent bit flags:
  * - Bit 7 (0x80): System enabled
  * - Bit 2 (0x04): Wired controller present
+ * 
  * Enum values provide named combinations for common states.
+ * Other bit combinations not listed may be reported as "UNKNOWN" by enum_to_string.
  */
 enum class SystemStatusFlags : uint8_t {
   DISABLED = 0x00,                    ///< System disabled
@@ -212,6 +245,9 @@ enum class SystemStatusFlags : uint8_t {
 /**
  * @brief Subsystem protection/OK flags (C4 extended query)
  * Used for compressor, outdoor fan, 4-way valve, and inverter subsystems
+ * 
+ * Bit 7 (0x80) indicates subsystem OK status.
+ * Other bit combinations not listed may indicate specific protection states.
  */
 enum class SubsystemFlags : uint8_t {
   PROTECTION_ACTIVE = 0x00,  ///< Protection triggered or subsystem not OK
@@ -303,6 +339,8 @@ extern const std::map<Direction, const char*> DIRECTION_MAP;
 extern const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP;
 extern const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP;
 extern const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP;
+extern const std::map<EspProfile, const char*> ESP_PROFILE_MAP;
+extern const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP;
 extern const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP;
 extern const std::map<SubsystemFlags, const char*> SUBSYSTEM_FLAGS_MAP;
 
@@ -322,6 +360,8 @@ template<> struct EnumTraits<Direction> { static const std::map<Direction, const
 template<> struct EnumTraits<CcmErrorFlags> { static const std::map<CcmErrorFlags, const char*>& get_map() { return CCM_ERROR_FLAGS_MAP; } };
 template<> struct EnumTraits<FollowMeSubcommand> { static const std::map<FollowMeSubcommand, const char*>& get_map() { return FOLLOW_ME_SUBCOMMAND_MAP; } };
 template<> struct EnumTraits<CompressorFlags> { static const std::map<CompressorFlags, const char*>& get_map() { return COMPRESSOR_FLAGS_MAP; } };
+template<> struct EnumTraits<EspProfile> { static const std::map<EspProfile, const char*>& get_map() { return ESP_PROFILE_MAP; } };
+template<> struct EnumTraits<ProtectionFlags> { static const std::map<ProtectionFlags, const char*>& get_map() { return PROTECTION_FLAGS_MAP; } };
 template<> struct EnumTraits<SystemStatusFlags> { static const std::map<SystemStatusFlags, const char*>& get_map() { return SYSTEM_STATUS_FLAGS_MAP; } };
 template<> struct EnumTraits<SubsystemFlags> { static const std::map<SubsystemFlags, const char*>& get_map() { return SUBSYSTEM_FLAGS_MAP; } };
 

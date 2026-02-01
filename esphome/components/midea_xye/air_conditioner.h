@@ -143,14 +143,14 @@ constexpr uint8_t RX_C0_BYTE_UNKNOWN6 = 29;
 
 // Extended Query Response (0xC4) Specific byte offsets
 constexpr uint8_t RX_C4_BYTE_SET_TEMP = 18;
-constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_HIGH = 19;  // High byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
-constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_LOW = 20;   // Low byte of 16-bit engineering value (compressor Hz or outdoor fan RPM)
+constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_HIGH = 19;  // High byte of 16-bit engineering value (compressor Hz or outdoor fan RPM) - first byte in big-endian
+constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_LOW = 20;   // Low byte of 16-bit engineering value (compressor Hz or outdoor fan RPM) - second byte in big-endian
 constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
 constexpr uint8_t RX_C4_BYTE_STATIC_PRESSURE = 24;  // Data field: static pressure setting
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_COMPRESSOR = 26;   // Compressor subsystem OK flag (0x80 = OK)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_OUTDOOR_FAN = 27;  // Outdoor fan subsystem OK flag (0x80 = OK)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_4WAY_VALVE = 28;   // 4-way valve subsystem OK flag (0x80 = OK)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_INVERTER = 29;     // Inverter module subsystem OK flag (0x80 = OK)
+constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_COMPRESSOR = 26;   // Compressor subsystem OK flag (SubsystemFlags::OK = 0x80)
+constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_OUTDOOR_FAN = 27;  // Outdoor fan subsystem OK flag (SubsystemFlags::OK = 0x80)
+constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_4WAY_VALVE = 28;   // 4-way valve subsystem OK flag (SubsystemFlags::OK = 0x80)
+constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_INVERTER = 29;     // Inverter module subsystem OK flag (SubsystemFlags::OK = 0x80)
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;

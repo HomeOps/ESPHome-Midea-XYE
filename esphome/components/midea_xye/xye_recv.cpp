@@ -64,8 +64,12 @@ void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(compressor_flags),
            enum_to_string(compressor_flags));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X"), esp_profile);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X"), protection_flags);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X (%s)"), 
+           static_cast<uint8_t>(esp_profile),
+           enum_to_string(esp_profile));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(protection_flags),
+           enum_to_string(protection_flags));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_inlet_temp: 0x%02X (%.1f°C)"), 
            coil_inlet_temp.value, 
            coil_inlet_temp.to_celsius());

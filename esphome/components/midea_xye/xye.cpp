@@ -106,6 +106,18 @@ const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP = {
   {CompressorFlags::ACTIVE, "ACTIVE"},
 };
 
+const std::map<EspProfile, const char*> ESP_PROFILE_MAP = {
+  {EspProfile::LOW, "LOW"},
+  {EspProfile::MEDIUM, "MEDIUM"},
+  {EspProfile::HIGH, "HIGH"},
+};
+
+const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP = {
+  {ProtectionFlags::NONE, "NONE"},
+  {ProtectionFlags::OUTDOOR_FAN_RUNNING, "OUTDOOR_FAN_RUNNING"},
+  {ProtectionFlags::COMPRESSOR_ACTIVE, "COMPRESSOR_ACTIVE"},
+};
+
 const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP = {
   {SystemStatusFlags::DISABLED, "DISABLED"},
   {SystemStatusFlags::WIRED_CONTROLLER, "WIRED_CONTROLLER"},
