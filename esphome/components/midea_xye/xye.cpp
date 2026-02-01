@@ -119,7 +119,7 @@ const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP = {
 };
 
 const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP = {
-  {SystemStatusFlags::DISABLED, "DISABLED"},
+  {SystemStatusFlags::SYSTEM_DISABLED, "DISABLED"},
   {SystemStatusFlags::WIRED_CONTROLLER, "WIRED_CONTROLLER"},
   {SystemStatusFlags::ENABLED, "ENABLED"},
   {SystemStatusFlags::ENABLED_WITH_CONTROLLER, "ENABLED_WITH_CONTROLLER"},
