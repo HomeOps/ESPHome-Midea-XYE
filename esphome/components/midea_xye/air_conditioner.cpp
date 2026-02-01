@@ -196,10 +196,12 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
-      // Don't parse responses to SET or FOLLOW_ME commands to avoid
-      // overwriting the mode we just set. The AC state will be updated
-      // on subsequent QUERY cycles.
-      if (cmdSent != CLIENT_COMMAND_SET && cmdSent != CLIENT_COMMAND_FOLLOWME) {
+      // Don't parse responses to FOLLOW_ME commands to avoid
+      // overwriting the mode (especially HEAT_COOL/AUTO mode).
+      // For SET commands, we do parse the response to get immediate
+      // feedback on the mode change, but the parsing logic will
+      // skip AUTO flag inference to preserve the exact mode set.
+      if (cmdSent != CLIENT_COMMAND_FOLLOWME) {
         ParseResponse(cmdSent);
       }
       if (queuedCommand != 0) {
@@ -317,10 +319,16 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
             break;
         }
 
-        // The unit seems to show 0x10 when off after running auto.
-        // Check to see if we haven't already matched to OFF state.
-        // If not, and we match otherwise, we are in auto mode.
-        if (mode != ClimateMode::CLIMATE_MODE_OFF &&
+        // The unit seems to show 0x10 flag (OP_MODE_AUTO_FLAG) in various situations:
+        // - When off after running auto mode
+        // - During mode transitions
+        // - In some AC models, even in non-AUTO modes
+        //
+        // Only infer AUTO mode from the 0x10 flag for QUERY responses, not SET responses.
+        // This preserves the exact mode that was set via SET command (HEAT/COOL)
+        // while still allowing AUTO mode detection from external (remote control) changes.
+        if (cmdSent != CLIENT_COMMAND_SET &&
+            mode != ClimateMode::CLIMATE_MODE_OFF &&
             ((RXData[RX_C0_BYTE_OP_MODE] & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG)) {
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
         }
