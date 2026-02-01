@@ -83,7 +83,7 @@ union TransmitData {
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    * @return Updated bytes remaining
    */
-  size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 // Static assertions to ensure struct sizes are correct
