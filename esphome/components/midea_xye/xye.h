@@ -197,8 +197,10 @@ enum class CompressorFlags : uint8_t {
 
 /**
  * @brief System status flags (C4 extended query)
- * Note: These represent distinct system states, not independent bit flags.
- * Bit 7 indicates system enabled, bit 2 indicates wired controller present.
+ * These represent combinations of independent bit flags:
+ * - Bit 7 (0x80): System enabled
+ * - Bit 2 (0x04): Wired controller present
+ * Enum values provide named combinations for common states.
  */
 enum class SystemStatusFlags : uint8_t {
   DISABLED = 0x00,                    ///< System disabled
@@ -258,6 +260,21 @@ struct __attribute__((packed)) DirectionNode {
 struct __attribute__((packed)) Flags16 {
   uint8_t low;   ///< Low byte (bits 0-7)
   uint8_t high;  ///< High byte (bits 8-15)
+  
+  /// Get combined 16-bit value
+  uint16_t value() const;
+  
+  /// Set from 16-bit value
+  void set(uint16_t val);
+};
+
+/**
+ * @brief 16-bit value stored in big-endian byte order (high byte first)
+ * Used for engineering values where protocol transmits high byte before low byte
+ */
+struct __attribute__((packed)) Flags16BigEndian {
+  uint8_t high;  ///< High byte (bits 8-15)
+  uint8_t low;   ///< Low byte (bits 0-7)
   
   /// Get combined 16-bit value
   uint16_t value() const;

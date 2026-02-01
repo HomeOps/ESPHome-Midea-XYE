@@ -26,6 +26,16 @@ void Flags16::set(uint16_t val) {
   high = (val >> 8) & 0xFF;
 }
 
+// Flags16BigEndian methods
+uint16_t Flags16BigEndian::value() const {
+  return static_cast<uint16_t>(low) | (static_cast<uint16_t>(high) << 8);
+}
+
+void Flags16BigEndian::set(uint16_t val) {
+  low = val & 0xFF;
+  high = (val >> 8) & 0xFF;
+}
+
 // Static maps for enum-to-string conversion
 const std::map<Command, const char*> COMMAND_MAP = {
   {Command::QUERY, "QUERY"},

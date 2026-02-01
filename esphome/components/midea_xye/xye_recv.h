@@ -94,7 +94,7 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
   SystemStatusFlags system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
   NodeId indoor_unit_address;  ///< [11] Indoor unit address/zone index (0x01 = address 1)
   Temperature target_temperature;   ///< [12] Target temperature (may be in Fahrenheit with offset)
-  Flags16 compressor_freq_or_fan_rpm; ///< [13-14] 16-bit engineering value (compressor Hz or outdoor fan RPM), stored as Flags16 with high byte at [13] and low byte at [14]
+  Flags16BigEndian compressor_freq_or_fan_rpm; ///< [13-14] 16-bit engineering value (compressor Hz or outdoor fan RPM), big-endian byte order
   Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
   uint8_t reserved2;            ///< [16] Reserved/unused
   uint8_t reserved3;            ///< [17] Reserved/unused
