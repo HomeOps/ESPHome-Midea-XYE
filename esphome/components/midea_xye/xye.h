@@ -292,7 +292,12 @@ struct __attribute__((packed)) Temperature {
   static Temperature from_celsius(float celsius);
   
   /// Print debug information
-  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param bytes_remaining Bytes remaining to read
+  /// @param level Log level
+  /// @return Number of bytes consumed (0 if not enough data)
+  size_t print_debug(const char *tag, const char *name, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -303,7 +308,12 @@ struct __attribute__((packed)) DirectionNode {
   NodeId node_id;       ///< Node identifier
   
   /// Print debug information
-  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param bytes_remaining Bytes remaining to read
+  /// @param level Log level
+  /// @return Number of bytes consumed (0 if not enough data)
+  size_t print_debug(const char *tag, const char *name, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -320,7 +330,12 @@ struct __attribute__((packed)) Flags16 {
   void set(uint16_t val);
   
   /// Print debug information
-  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param bytes_remaining Bytes remaining to read
+  /// @param level Log level
+  /// @return Number of bytes consumed (0 if not enough data)
+  size_t print_debug(const char *tag, const char *name, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -338,7 +353,12 @@ struct __attribute__((packed)) Flags16BigEndian {
   void set(uint16_t val);
   
   /// Print debug information
-  void print_debug(const char *tag, const char *name, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param bytes_remaining Bytes remaining to read
+  /// @param level Log level
+  /// @return Number of bytes consumed (0 if not enough data)
+  size_t print_debug(const char *tag, const char *name, size_t bytes_remaining, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**

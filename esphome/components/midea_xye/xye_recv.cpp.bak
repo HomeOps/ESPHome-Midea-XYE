@@ -106,124 +106,76 @@ size_t QueryResponseData::print_debug(const char *tag, size_t bytes_remaining, i
 }
 
 // ExtendedQueryResponseData methods
-size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
-  size_t consumed = 0;
-  size_t left = bytes_remaining;
-  
+void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_pwm: 0x%02X"), indoor_fan_pwm);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_tach: 0x%02X"), indoor_fan_tach);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(compressor_flags),
            enum_to_string(compressor_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X (%s)"), 
            static_cast<uint8_t>(esp_profile),
            enum_to_string(esp_profile));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(protection_flags),
            enum_to_string(protection_flags));
-  left -= 1; consumed += 1;
-  
-  left -= coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
-  consumed += sizeof(Temperature);
-  left -= coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
-  consumed += sizeof(Temperature);
-  left -= discharge_temp.print_debug(tag, "discharge_temp", left, level);
-  consumed += sizeof(Temperature);
-  
-  if (left < 1) return consumed;
+  coil_inlet_temp.print_debug(tag, "coil_inlet_temp", level);
+  coil_outlet_temp.print_debug(tag, "coil_outlet_temp", level);
+  discharge_temp.print_debug(tag, "discharge_temp", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (%s)"), 
            static_cast<uint8_t>(system_status_flags),
            enum_to_string(system_status_flags));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
-  left -= 1; consumed += 1;
-  
-  left -= target_temperature.print_debug(tag, "target_temperature", left, level);
-  consumed += sizeof(Temperature);
-  left -= compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
-  consumed += sizeof(Flags16BigEndian);
-  left -= outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
-  consumed += sizeof(Temperature);
-  
-  if (left < 1) return consumed;
+  target_temperature.print_debug(tag, "target_temperature", level);
+  compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", level);
+  outdoor_temperature.print_debug(tag, "outdoor_temperature", level);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved2: 0x%02X"), reserved2);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved3: 0x%02X"), reserved3);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    static_pressure: 0x%02X"), static_pressure);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved4: 0x%02X"), reserved4);
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_compressor: 0x%02X (%s)"), 
            static_cast<uint8_t>(subsystem_ok_compressor),
            enum_to_string(subsystem_ok_compressor));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_outdoor_fan: 0x%02X (%s)"), 
            static_cast<uint8_t>(subsystem_ok_outdoor_fan),
            enum_to_string(subsystem_ok_outdoor_fan));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_4way_valve: 0x%02X (%s)"), 
            static_cast<uint8_t>(subsystem_ok_4way_valve),
            enum_to_string(subsystem_ok_4way_valve));
-  left -= 1; consumed += 1;
-  
-  if (left < 1) return consumed;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_inverter: 0x%02X (%s)"), 
            static_cast<uint8_t>(subsystem_ok_inverter),
            enum_to_string(subsystem_ok_inverter));
-  left -= 1; consumed += 1;
-  
-  return consumed;
 }
 
 // ReceiveMessageData methods
-size_t ReceiveMessageData::print_debug(const char *tag, size_t bytes_remaining, int level) const {
-  size_t consumed = 0;
-  size_t left = bytes_remaining;
-  
+void ReceiveMessageData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ReceiveMessageData (generic):"));
-  for (size_t i = 0; i < 24 && i < left; i++) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[%u]: 0x%02X"), i, data[i]);
-    consumed++;
-  }
-  return consumed;
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[0]: 0x%02X"), data[0]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[1]: 0x%02X"), data[1]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[2]: 0x%02X"), data[2]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[3]: 0x%02X"), data[3]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[4]: 0x%02X"), data[4]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[5]: 0x%02X"), data[5]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[6]: 0x%02X"), data[6]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[7]: 0x%02X"), data[7]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[8]: 0x%02X"), data[8]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[9]: 0x%02X"), data[9]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[10]: 0x%02X"), data[10]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[11]: 0x%02X"), data[11]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[12]: 0x%02X"), data[12]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[13]: 0x%02X"), data[13]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[14]: 0x%02X"), data[14]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[15]: 0x%02X"), data[15]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[16]: 0x%02X"), data[16]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[17]: 0x%02X"), data[17]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[18]: 0x%02X"), data[18]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[19]: 0x%02X"), data[19]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[20]: 0x%02X"), data[20]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[21]: 0x%02X"), data[21]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[22]: 0x%02X"), data[22]);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    byte[23]: 0x%02X"), data[23]);
 }
 
 // ReceiveData methods
@@ -231,52 +183,28 @@ Command ReceiveData::get_command() const {
   return message.frame.header.command;
 }
 
-void ReceiveData::print_debug(const char *tag, size_t received_size, int level) const {
-  // Start with bytes_remaining equal to received_size
-  // Subtract the frame header size (6 bytes)
-  size_t left = received_size;
-  
+void ReceiveData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    preamble: 0x%02X"), static_cast<uint8_t>(message.frame.preamble));
-  left -= 1;
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    command: 0x%02X (%s)"), 
            static_cast<uint8_t>(message.frame.header.command),
            enum_to_string(message.frame.header.command));
-  left -= 1;
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    direction: 0x%02X (%s)"), 
            static_cast<uint8_t>(message.frame.header.direction),
            enum_to_string(message.frame.header.direction));
-  left -= 1;
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    destination1: 0x%02X"), message.frame.header.destination1);
-  left -= 1;
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    source: 0x%02X"), message.frame.header.source);
-  left -= 1;
-  
-  if (left < 1) return;
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    destination2: 0x%02X"), message.frame.header.destination2);
-  left -= 1;
   
   // Delegate to the appropriate data struct's print_debug method based on command type
   switch (message.frame.header.command) {
     case Command::QUERY:
-      message.data.query_response.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      message.data.query_response.print_debug(tag, level);
       break;
     
     case Command::QUERY_EXTENDED:
-      message.data.extended_query_response.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      message.data.extended_query_response.print_debug(tag, level);
       break;
     
     case Command::SET:
@@ -284,20 +212,13 @@ void ReceiveData::print_debug(const char *tag, size_t received_size, int level) 
     case Command::LOCK:
     case Command::UNLOCK:
     default:
-      message.data.generic.print_debug(tag, left, level);
-      left = 0;  // Assume all data consumed
+      message.data.generic.print_debug(tag, level);
       break;
   }
   
-  // Only print frame end if we have enough bytes
-  // Frame end is at bytes 30-31 in a 32-byte message
-  if (received_size >= 31) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    crc: 0x%02X"), message.frame_end.crc);
-  }
-  if (received_size >= 32) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    prologue: 0x%02X"), static_cast<uint8_t>(message.frame_end.prologue));
-  }
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    crc: 0x%02X"), message.frame_end.crc);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    prologue: 0x%02X"), static_cast<uint8_t>(message.frame_end.prologue));
 }
 
 }  // namespace xye

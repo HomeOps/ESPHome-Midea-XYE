@@ -199,7 +199,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
     }
     if (i == RX_LEN) {
       // Log incoming message at debug level
-      rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
+      rx_data.print_debug(Constants::TAG, i, ESPHOME_LOG_LEVEL_DEBUG);
       if (cmdSent != CLIENT_COMMAND_SET) {
         ParseResponse(cmdSent);
       }
@@ -224,7 +224,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       }
     } else {
       ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
-      rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+      rx_data.print_debug(Constants::TAG, i, ESPHOME_LOG_LEVEL_ERROR);
     }
   });
 }
