@@ -59,34 +59,58 @@ void QueryResponseData::print_debug(const char *tag, int level) const {
 // ExtendedQueryResponseData methods
 void ExtendedQueryResponseData::print_debug(const char *tag, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown1: 0x%02X"), unknown1);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown2: 0x%02X"), unknown2);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown3: 0x%02X"), unknown3);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown4: 0x%02X"), unknown4);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown5: 0x%02X"), unknown5);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown6: 0x%02X"), unknown6);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown7: 0x%02X"), unknown7);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown8: 0x%02X"), unknown8);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown9: 0x%02X"), unknown9);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown10: 0x%02X"), unknown10);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown11: 0x%02X"), unknown11);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown12: 0x%02X"), unknown12);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_pwm: 0x%02X"), indoor_fan_pwm);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_fan_tach: 0x%02X"), indoor_fan_tach);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(compressor_flags),
+           enum_to_string(compressor_flags));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    esp_profile: 0x%02X (%s)"), 
+           static_cast<uint8_t>(esp_profile),
+           enum_to_string(esp_profile));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    protection_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(protection_flags),
+           enum_to_string(protection_flags));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_inlet_temp: 0x%02X (%.1f°C)"), 
+           coil_inlet_temp.value, 
+           coil_inlet_temp.to_celsius());
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    coil_outlet_temp: 0x%02X (%.1f°C)"), 
+           coil_outlet_temp.value, 
+           coil_outlet_temp.to_celsius());
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    discharge_temp: 0x%02X (%.1f°C)"), 
+           discharge_temp.value, 
+           discharge_temp.to_celsius());
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    expansion_valve_pos: 0x%02X"), expansion_valve_pos);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    system_status_flags: 0x%02X (%s)"), 
+           static_cast<uint8_t>(system_status_flags),
+           enum_to_string(system_status_flags));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    indoor_unit_address: 0x%02X"), indoor_unit_address);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
            target_temperature.value, 
            target_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown13: 0x%02X"), unknown13);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown14: 0x%02X"), unknown14);
+  // Display the 16-bit engineering value
+  uint16_t engineering_value = compressor_freq_or_fan_rpm.value();
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    compressor_freq/outdoor_fan_rpm: 0x%04X (%u)"), 
+           engineering_value, engineering_value);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    outdoor_temperature: 0x%02X (%.1f°C)"), 
            outdoor_temperature.value, 
            outdoor_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown16: 0x%02X"), unknown16);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown17: 0x%02X"), unknown17);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved2: 0x%02X"), reserved2);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved3: 0x%02X"), reserved3);
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    static_pressure: 0x%02X"), static_pressure);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown18: 0x%02X"), unknown18);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown19: 0x%02X"), unknown19);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown20: 0x%02X"), unknown20);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown21: 0x%02X"), unknown21);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    unknown22: 0x%02X"), unknown22);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved4: 0x%02X"), reserved4);
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_compressor: 0x%02X (%s)"), 
+           static_cast<uint8_t>(subsystem_ok_compressor),
+           enum_to_string(subsystem_ok_compressor));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_outdoor_fan: 0x%02X (%s)"), 
+           static_cast<uint8_t>(subsystem_ok_outdoor_fan),
+           enum_to_string(subsystem_ok_outdoor_fan));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_4way_valve: 0x%02X (%s)"), 
+           static_cast<uint8_t>(subsystem_ok_4way_valve),
+           enum_to_string(subsystem_ok_4way_valve));
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    subsystem_ok_inverter: 0x%02X (%s)"), 
+           static_cast<uint8_t>(subsystem_ok_inverter),
+           enum_to_string(subsystem_ok_inverter));
 }
 
 // ReceiveMessageData methods

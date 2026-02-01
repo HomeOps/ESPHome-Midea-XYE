@@ -462,18 +462,11 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
             this->publish_state();
         }
 #endif
-
-        // Validate fixed protocol marker bytes that identify valid C4 responses
-        // Bytes 19-20 and 26-29 are protocol constants that should match across all units
-        if (RXData[RX_C4_BYTE_PROTOCOL_MARKER1] != RX_C4_PROTOCOL_MARKER1_VALUE ||
-            RXData[RX_C4_BYTE_PROTOCOL_MARKER2] != RX_C4_PROTOCOL_MARKER2_VALUE ||
-            RXData[RX_C4_BYTE_FIXED_MARKER1] != RX_C4_FIXED_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_FIXED_MARKER2] != RX_C4_FIXED_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_FIXED_MARKER3] != RX_C4_FIXED_MARKER_VALUE ||
-            RXData[RX_C4_BYTE_FIXED_MARKER4] != RX_C4_FIXED_MARKER_VALUE) {
-          ESP_LOGE(Constants::TAG, "C4: Unexpected extended query response data");
-          rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
-        }
+        // Note: Previous versions validated fixed protocol marker bytes (0xBC, 0xD6, 0x80, 0x80, 0x80, 0x80)
+        // but investigation shows these bytes are actually dynamic engineering values:
+        // - Bytes 19-20 (0xBCD6): 16-bit compressor frequency or outdoor fan RPM
+        // - Bytes 26-29 (0x80): Subsystem OK flags (compressor, outdoor fan, 4-way valve, inverter)
+        // The validation has been removed to support all unit models correctly.
         ForceReadNextCycle = 0;
         break;
     }

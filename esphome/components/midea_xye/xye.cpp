@@ -26,6 +26,16 @@ void Flags16::set(uint16_t val) {
   high = (val >> 8) & 0xFF;
 }
 
+// Flags16BigEndian methods
+uint16_t Flags16BigEndian::value() const {
+  return static_cast<uint16_t>(low) | (static_cast<uint16_t>(high) << 8);
+}
+
+void Flags16BigEndian::set(uint16_t val) {
+  low = val & 0xFF;
+  high = (val >> 8) & 0xFF;
+}
+
 // Static maps for enum-to-string conversion
 const std::map<Command, const char*> COMMAND_MAP = {
   {Command::QUERY, "QUERY"},
@@ -89,6 +99,35 @@ const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP = {
   {FollowMeSubcommand::UPDATE, "UPDATE"},
   {FollowMeSubcommand::STATIC_PRESSURE, "STATIC_PRESSURE"},
   {FollowMeSubcommand::INIT, "INIT"},
+};
+
+const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP = {
+  {CompressorFlags::IDLE, "IDLE"},
+  {CompressorFlags::ACTIVE, "ACTIVE"},
+};
+
+const std::map<EspProfile, const char*> ESP_PROFILE_MAP = {
+  {EspProfile::ESP_LOW, "ESP_LOW"},
+  {EspProfile::ESP_MEDIUM, "ESP_MEDIUM"},
+  {EspProfile::ESP_HIGH, "ESP_HIGH"},
+};
+
+const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP = {
+  {ProtectionFlags::NONE, "NONE"},
+  {ProtectionFlags::OUTDOOR_FAN_RUNNING, "OUTDOOR_FAN_RUNNING"},
+  {ProtectionFlags::COMPRESSOR_ACTIVE, "COMPRESSOR_ACTIVE"},
+};
+
+const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP = {
+  {SystemStatusFlags::DISABLED, "DISABLED"},
+  {SystemStatusFlags::WIRED_CONTROLLER, "WIRED_CONTROLLER"},
+  {SystemStatusFlags::ENABLED, "ENABLED"},
+  {SystemStatusFlags::ENABLED_WITH_CONTROLLER, "ENABLED_WITH_CONTROLLER"},
+};
+
+const std::map<SubsystemFlags, const char*> SUBSYSTEM_FLAGS_MAP = {
+  {SubsystemFlags::PROTECTION_ACTIVE, "PROTECTION_ACTIVE"},
+  {SubsystemFlags::OK, "OK"},
 };
 
 }  // namespace xye
