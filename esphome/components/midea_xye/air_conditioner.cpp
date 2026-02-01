@@ -110,9 +110,12 @@ void AirConditioner::setACParams() {
   prepareTXData(CLIENT_COMMAND_SET);
 
   // Log the mode being set for debugging
-  ESP_LOGD(Constants::TAG, "setACParams: this->mode = %d (HEAT_COOL=%d, HEAT=%d, COOL=%d)", 
+  ESP_LOGD(Constants::TAG, "setACParams: this->mode = %d (OFF=%d, HEAT_COOL=%d, FAN_ONLY=%d, DRY=%d, HEAT=%d, COOL=%d)", 
            static_cast<int>(this->mode),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_OFF),
            static_cast<int>(ClimateMode::CLIMATE_MODE_HEAT_COOL),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_FAN_ONLY),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_DRY),
            static_cast<int>(ClimateMode::CLIMATE_MODE_HEAT),
            static_cast<int>(ClimateMode::CLIMATE_MODE_COOL));
 
@@ -141,8 +144,8 @@ void AirConditioner::setACParams() {
   }
   
   // Log what mode was actually set in TXData[6]
-  ESP_LOGD(Constants::TAG, "setACParams: TXData[6] = 0x%02X (AUTO=0x%02X, HEAT=0x%02X, COOL=0x%02X)", 
-           TXData[6], OP_MODE_AUTO, OP_MODE_HEAT, OP_MODE_COOL);
+  ESP_LOGD(Constants::TAG, "setACParams: TXData[6] = 0x%02X (OFF=0x%02X, AUTO=0x%02X, FAN=0x%02X, DRY=0x%02X, HEAT=0x%02X, COOL=0x%02X)", 
+           TXData[6], OP_MODE_OFF, OP_MODE_AUTO, OP_MODE_FAN, OP_MODE_DRY, OP_MODE_HEAT, OP_MODE_COOL);
   
   // set fan mode
   if (this->mode != ClimateMode::CLIMATE_MODE_HEAT_COOL) {
