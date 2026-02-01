@@ -109,6 +109,13 @@ void AirConditioner::setACParams() {
   // construct set command
   prepareTXData(CLIENT_COMMAND_SET);
 
+  // Log the mode being set for debugging
+  ESP_LOGD(Constants::TAG, "setACParams: this->mode = %d (HEAT_COOL=%d, HEAT=%d, COOL=%d)", 
+           static_cast<int>(this->mode),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_HEAT_COOL),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_HEAT),
+           static_cast<int>(ClimateMode::CLIMATE_MODE_COOL));
+
   // set mode
   switch (this->mode) {
     case ClimateMode::CLIMATE_MODE_OFF:
@@ -132,6 +139,11 @@ void AirConditioner::setACParams() {
     default:
       TXData[6] = OP_MODE_OFF;
   }
+  
+  // Log what mode was actually set in TXData[6]
+  ESP_LOGD(Constants::TAG, "setACParams: TXData[6] = 0x%02X (AUTO=0x%02X, HEAT=0x%02X, COOL=0x%02X)", 
+           TXData[6], OP_MODE_AUTO, OP_MODE_HEAT, OP_MODE_COOL);
+  
   // set fan mode
   if (this->mode != ClimateMode::CLIMATE_MODE_HEAT_COOL) {
     switch (this->fan_mode.value()) {
