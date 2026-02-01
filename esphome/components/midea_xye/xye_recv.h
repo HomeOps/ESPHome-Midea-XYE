@@ -81,15 +81,15 @@ struct __attribute__((packed)) QueryResponseData {
  * - Indoor unit addressing and ESP profile settings
  */
 struct __attribute__((packed)) ExtendedQueryResponseData {
-  uint8_t indoor_fan_pwm;       ///< [0] Indoor fan PWM control (0x00 = not exposed on some models)
-  uint8_t indoor_fan_tach;      ///< [1] Indoor fan tachometer feedback (0x00 = not exposed on some models)
+  FanPwm indoor_fan_pwm;       ///< [0] Indoor fan PWM control (0x00 = not exposed on some models)
+  FanTach indoor_fan_tach;      ///< [1] Indoor fan tachometer feedback (0x00 = not exposed on some models)
   CompressorFlags compressor_flags;     ///< [2] Compressor status flags (bit 7: compressor active/running)
   EspProfile esp_profile;          ///< [3] Airflow/ESP (External Static Pressure) profile (0x30 = medium ESP)
   ProtectionFlags protection_flags;     ///< [4] Protection and outdoor fan state flags (bits: defrost, anti-freeze, outdoor fan)
   Temperature coil_inlet_temp;      ///< [5] Coil inlet temperature (0x00 = unused on some models)
   Temperature coil_outlet_temp;     ///< [6] Coil outlet temperature (0x00 = unused on some models)
   Temperature discharge_temp;       ///< [7] Discharge temperature (0x00 = unused on some models)
-  uint8_t expansion_valve_pos;  ///< [8] Expansion valve position (0x00 = unused on some models)
+  ValvePosition expansion_valve_pos;  ///< [8] Expansion valve position (0x00 = unused on some models)
   uint8_t reserved1;            ///< [9] Reserved/unused
   SystemStatusFlags system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
   NodeId indoor_unit_address;  ///< [11] Indoor unit address/zone index (0x01 = address 1)

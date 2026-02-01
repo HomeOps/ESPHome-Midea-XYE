@@ -10,8 +10,11 @@ namespace esphome {
 namespace midea {
 namespace xye {
 
-// Type aliases for node identifiers
+// Type aliases for node identifiers and measurement values
 using NodeId = uint8_t;  ///< Node ID type for server and client identifiers (0x00..0x3F, 0xFF for broadcast)
+using FanPwm = uint8_t;  ///< Fan PWM duty cycle (0-255, 0x00 = off, 0xFF = max)
+using FanTach = uint8_t; ///< Fan tachometer feedback value (0x00 = not available on some models)
+using ValvePosition = uint8_t; ///< Expansion valve position (0-255, 0x00 = closed/not available)
 
 /**
  * @brief Protocol framing markers
