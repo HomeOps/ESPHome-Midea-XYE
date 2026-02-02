@@ -1,7 +1,7 @@
-#include "virtual_thermostat.h"
+#include "smart_climate.h"
 
 namespace esphome {
-namespace virtual_thermostat {
+namespace smart_climate {
 
 void Preset::min_entity(number::Number *n) {
   min_entity_ = n;
@@ -63,7 +63,7 @@ optional<climate::ClimateMode> Preset::getModeForRealClimate() const {
     if (std::isnan(inside_temp)) {
       // Don't change the real device mode when inside temperature is unavailable
       // Return current mode to keep device unchanged
-      ESP_LOGD("virtual_thermostat", "Inside temperature unavailable, keeping current mode");
+      ESP_LOGD("smart_climate", "Inside temperature unavailable, keeping current mode");
       return thermostat->real_climate_->mode;
     }
     
@@ -120,7 +120,7 @@ void Preset::on_min_changed(float new_min) {
     if (max_entity_->traits.get_max_value() >= new_max) {
       max_entity_->publish_state(new_max);
     } else {
-      ESP_LOGW("virtual_thermostat", "Cannot adjust max temperature to %.1f (exceeds maximum %.1f)",
+      ESP_LOGW("smart_climate", "Cannot adjust max temperature to %.1f (exceeds maximum %.1f)",
                new_max, max_entity_->traits.get_max_value());
       // Revert min to maintain valid state where min < max
       if (min_entity_ && max_entity_->has_state()) {
@@ -157,7 +157,7 @@ void Preset::on_max_changed(float new_max) {
     if (min_entity_->traits.get_min_value() <= new_min) {
       min_entity_->publish_state(new_min);
     } else {
-      ESP_LOGW("virtual_thermostat", "Cannot adjust min temperature to %.1f (below minimum %.1f)",
+      ESP_LOGW("smart_climate", "Cannot adjust min temperature to %.1f (below minimum %.1f)",
                new_min, min_entity_->traits.get_min_value());
       // Revert max to maintain valid state where max > min
       if (max_entity_ && min_entity_->has_state()) {
@@ -181,5 +181,5 @@ void Preset::on_max_changed(float new_max) {
   updating_ = false;
 }
 
-}  // namespace virtual_thermostat
+}  // namespace smart_climate
 }  // namespace esphome

@@ -1,0 +1,10 @@
+name: "smart_climate"
+version: "1.0.0"
+components:
+  - id: smart_climate
+    files:
+      - smart_climate.h
+      - smart_climate.cpp
+      - preset.h
+      - preset.cpp
+
