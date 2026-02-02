@@ -167,9 +167,9 @@ class Constants {
   static const char *const TURBO;
 };
 
-class AirConditioner : public PollingComponent, public climate::Climate, public StaticPressureInterface {
+class ClimateMideaXYE : public PollingComponent, public climate::Climate, public StaticPressureInterface {
  public:
-  AirConditioner() : PollingComponent(1000) { this->response_timeout = 100; }
+  ClimateMideaXYE() : PollingComponent(1000) { this->response_timeout = 100; }
 
 #ifdef USE_REMOTE_TRANSMITTER
   void set_transmitter(RemoteTransmitterBase *transmitter) { this->transmitter_.set_transmitter(transmitter); }

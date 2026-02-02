@@ -1,6 +1,6 @@
 #ifdef USE_ARDUINO
 
-#include "air_conditioner.h"
+#include "climate_midea_xye.h"
 
 #include "esphome/core/log.h"
 
@@ -30,7 +30,7 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
   }
 }
 
-void AirConditioner::control(const ClimateCall &call) {
+void ClimateMideaXYE::control(const ClimateCall &call) {
   if (call.get_mode().has_value()) {
     this->mode = call.get_mode().value();
     // Reset Follow-Me initialization flag when mode changes to ensure
@@ -54,7 +54,7 @@ void AirConditioner::control(const ClimateCall &call) {
   }
 }
 
-void AirConditioner::setup() {
+void ClimateMideaXYE::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
   this->last_on_mode_ = *this->supported_modes_.begin();
   controlState = STATE_SEND_QUERY;
@@ -65,7 +65,7 @@ void AirConditioner::setup() {
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
 }
 
-void AirConditioner::set_follow_me_sensor(Sensor *sensor) {
+void ClimateMideaXYE::set_follow_me_sensor(Sensor *sensor) {
   this->follow_me_sensor_ = sensor;
   if (sensor != nullptr) {
     sensor->add_on_state_callback([this](float state) { this->on_follow_me_sensor_update_(state); });
@@ -73,7 +73,7 @@ void AirConditioner::set_follow_me_sensor(Sensor *sensor) {
 }
 
 // TODO: Not sure if we really need this.
-void AirConditioner::setPowerState(bool state) {
+void ClimateMideaXYE::setPowerState(bool state) {
   if (state)
     this->mode = this->last_on_mode_;
   else
@@ -86,7 +86,7 @@ void AirConditioner::setPowerState(bool state) {
   }
 }
 
-void AirConditioner::prepareTXData(uint8_t command) {
+void ClimateMideaXYE::prepareTXData(uint8_t command) {
   TXData[0] = PREAMBLE;
   TXData[1] = command;
   TXData[2] = SERVER_ID;
@@ -105,7 +105,7 @@ void AirConditioner::prepareTXData(uint8_t command) {
   TXData[14] = CalculateCRC(TXData, TX_LEN);
 }
 
-void AirConditioner::setACParams() {
+void ClimateMideaXYE::setACParams() {
   // construct set command
   prepareTXData(CLIENT_COMMAND_SET);
 
@@ -179,7 +179,7 @@ void AirConditioner::setACParams() {
   TXData[14] = CalculateCRC(TXData, TX_LEN);
 }
 
-void AirConditioner::sendRecv(uint8_t cmdSent) {
+void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
   // TODO: Reimplement flow control for manual RS485 flow control chips
   // digitalWrite(ComControlPin, RS485_TX_PIN_VALUE);
   // Log outgoing message at debug level
@@ -232,7 +232,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
   });
 }
 
-void AirConditioner::update() {
+void ClimateMideaXYE::update() {
   uint8_t cmdSent = 0x00;
   // Possible States:
   // 0: Waiting for Response from Command
@@ -280,7 +280,7 @@ void AirConditioner::update() {
   }
 }
 
-uint8_t AirConditioner::CalculateCRC(uint8_t *data, uint8_t len) {
+uint8_t ClimateMideaXYE::CalculateCRC(uint8_t *data, uint8_t len) {
   uint32_t crc = 0;
   for (uint8_t i = 0; i < len; i++) {
     if (i != len - 2) {
@@ -290,7 +290,7 @@ uint8_t AirConditioner::CalculateCRC(uint8_t *data, uint8_t len) {
   return 0xFF - (crc & 0xFF);
 }
 
-void AirConditioner::ParseResponse(uint8_t cmdSent) {
+void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
   // validate the response
   if ((RXData[RX_BYTE_PREAMBLE] == PREAMBLE) && (RXData[RX_BYTE_PROLOGUE] == PROLOGUE) &&
       (RXData[RX_BYTE_TO_CLIENT] == TO_CLIENT) && (RXData[RX_BYTE_CRC] == CalculateCRC(RXData, RX_LEN))) {
@@ -483,7 +483,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
   }
 }
 
-uint8_t AirConditioner::CalculateSetTime(uint32_t time) {
+uint8_t ClimateMideaXYE::CalculateSetTime(uint32_t time) {
   uint32_t current_time = time;
   uint8_t timeValue = 0;
 
@@ -518,7 +518,7 @@ uint8_t AirConditioner::CalculateSetTime(uint32_t time) {
   return timeValue;
 }
 
-uint32_t AirConditioner::CalculateGetTime(uint8_t time) {
+uint32_t ClimateMideaXYE::CalculateGetTime(uint8_t time) {
   uint32_t timeValue = 0;
 
   if (time & 0x40) {
@@ -545,9 +545,9 @@ uint32_t AirConditioner::CalculateGetTime(uint8_t time) {
   return timeValue;
 }
 
-float AirConditioner::CalculateTemp(uint8_t byte) { return (byte - 0x28) / 2.0; }
+float ClimateMideaXYE::CalculateTemp(uint8_t byte) { return (byte - 0x28) / 2.0; }
 
-climate::ClimateTraits AirConditioner::traits() {
+climate::ClimateTraits ClimateMideaXYE::traits() {
   auto traits = climate::ClimateTraits();
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
@@ -576,7 +576,7 @@ climate::ClimateTraits AirConditioner::traits() {
   return traits;
 }
 
-void AirConditioner::dump_config() {
+void ClimateMideaXYE::dump_config() {
   ESP_LOGCONFIG(Constants::TAG, "MideaXYE:");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Period: %dms", this->get_update_interval());
   ESP_LOGCONFIG(Constants::TAG, "  [x] Response timeout: %dms", this->response_timeout);
@@ -590,7 +590,7 @@ void AirConditioner::dump_config() {
 
 /* ACTIONS */
 
-void AirConditioner::do_follow_me(float temperature, bool beeper) {
+void ClimateMideaXYE::do_follow_me(float temperature, bool beeper) {
 #ifdef USE_REMOTE_TRANSMITTER
   IrFollowMeData data(static_cast<uint8_t>(lroundf(temperature)), beeper);
   this->transmitter_.transmit(data);
@@ -625,7 +625,7 @@ void AirConditioner::do_follow_me(float temperature, bool beeper) {
 #endif
 }
 
-void AirConditioner::set_static_pressure(uint8_t static_pressure) {
+void ClimateMideaXYE::set_static_pressure(uint8_t static_pressure) {
   if (static_pressure > 15) {
     ESP_LOGW(Constants::TAG, "Cannot set static pressure %d > 15", static_pressure);
     return;
@@ -650,7 +650,7 @@ void AirConditioner::set_static_pressure(uint8_t static_pressure) {
   }
 }
 
-void AirConditioner::do_swing_step() {
+void ClimateMideaXYE::do_swing_step() {
 #ifdef USE_REMOTE_TRANSMITTER
   IrSpecialData data(0x01);
   this->transmitter_.transmit(data);
@@ -659,7 +659,7 @@ void AirConditioner::do_swing_step() {
 #endif
 }
 
-void AirConditioner::do_display_toggle() {
+void ClimateMideaXYE::do_display_toggle() {
 #ifdef USE_REMOTE_TRANSMITTER
   IrSpecialData data(0x08);
   this->transmitter_.transmit(data);
@@ -668,7 +668,7 @@ void AirConditioner::do_display_toggle() {
 #endif
 }
 
-void AirConditioner::on_follow_me_sensor_update_(float state) {
+void ClimateMideaXYE::on_follow_me_sensor_update_(float state) {
   if (std::isnan(state)) {
     return;
   }
@@ -684,7 +684,7 @@ void AirConditioner::on_follow_me_sensor_update_(float state) {
   this->do_follow_me(state, false);
 }
 
-void AirConditioner::update_current_temperature_from_sensors_(bool &need_publish) {
+void ClimateMideaXYE::update_current_temperature_from_sensors_(bool &need_publish) {
   // Use follow_me_sensor as current_temperature if available, otherwise use internal temperature
   if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state() &&
       !std::isnan(this->follow_me_sensor_->state)) {
