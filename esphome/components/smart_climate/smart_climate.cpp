@@ -81,7 +81,7 @@ std::pair<bool, bool> SmartClimate::apply_preset(const Preset& p) {
   bool virtual_changed = false;
   bool real_changed = false;
   
-  // Update virtual thermostat state
+  // Update smart climate state
   if (this->preset != p.id) {
     this->preset = p.id;
     virtual_changed = true;
@@ -330,7 +330,7 @@ void SmartClimate::on_real_climate_update() {
       virtual_needs_publish = true;
     }
     
-    // Update virtual thermostat to match real climate
+    // Update smart climate to match real climate
     if (this->mode == climate::CLIMATE_MODE_AUTO) {
       // In AUTO mode, we need to adjust both low and high target temperatures
       // to center around the new target temperature from real climate
@@ -357,7 +357,7 @@ void SmartClimate::on_real_climate_update() {
              static_cast<int>(this->real_climate_->mode), static_cast<int>(*expected_mode));
   }
   
-  // Sync hvac_action to virtual thermostat (for display purposes)
+  // Sync hvac_action to smart climate (for display purposes)
   if (this->action != this->real_climate_->action) {
     this->action = this->real_climate_->action;
     virtual_needs_publish = true;

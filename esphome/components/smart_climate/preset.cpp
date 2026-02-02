@@ -40,11 +40,11 @@ climate::ClimateFanMode Preset::getFanModeForRealClimate() const {
   return thermostat->fan_mode.value_or(climate::CLIMATE_FAN_AUTO);
 }
 
-climate::ClimateMode Preset::getModeForVirtualThermostat() const {
+climate::ClimateMode Preset::getModeForSmartClimate() const {
   if (id != climate::CLIMATE_PRESET_NONE) {
     return climate::CLIMATE_MODE_AUTO;
   } else {
-    // In manual mode, keep the current mode of the virtual thermostat
+    // In manual mode, keep the current mode of the smart climate
     // This should only be called during initial setup; normally we don't change the mode when switching to manual
     return thermostat->mode;
   }
