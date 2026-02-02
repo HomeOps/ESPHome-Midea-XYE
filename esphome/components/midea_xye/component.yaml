@@ -5,7 +5,7 @@ components:
     files:
       - climate_midea_xye.h
       - climate_midea_xye.cpp
-      - ac_automations.h
+      - climate_automations.h
       - ir_transmitter.h
       - static_pressure_interface.h
       - static_pressure_number.h
