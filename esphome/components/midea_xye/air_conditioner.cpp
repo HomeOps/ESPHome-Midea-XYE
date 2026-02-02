@@ -182,6 +182,8 @@ void AirConditioner::setACParams() {
 void AirConditioner::sendRecv(uint8_t cmdSent) {
   // TODO: Reimplement flow control for manual RS485 flow control chips
   // digitalWrite(ComControlPin, RS485_TX_PIN_VALUE);
+  // Log outgoing message at debug level
+  tx_data.print_debug(Constants::TAG, TX_MESSAGE_LENGTH, ESPHOME_LOG_LEVEL_DEBUG);
   this->uart_->write_array(TXData, TX_LEN);
   this->uart_->flush();
   controlState = STATE_WAIT_DATA;
@@ -196,6 +198,8 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_LEN) {
+      // Log incoming message at debug level
+      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
@@ -223,7 +227,7 @@ void AirConditioner::sendRecv(uint8_t cmdSent) {
       }
     } else {
       ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
-      rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
     }
   });
 }
@@ -475,7 +479,7 @@ void AirConditioner::ParseResponse(uint8_t cmdSent) {
     }
   } else {
     ESP_LOGE(Constants::TAG, "Received invalid response from AC");
-    rx_data.print_debug(Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+    rx_data.print_debug(RX_MESSAGE_LENGTH, Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
   }
 }
 

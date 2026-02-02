@@ -8,48 +8,42 @@ namespace midea {
 namespace xye {
 
 // TransmitMessageData methods
-void TransmitMessageData::print_debug(const char *tag, Command command, int level) const {
+size_t TransmitMessageData::print_debug(const char *tag, Command command, size_t left, int level) const {
   (void)command;  // Unused parameter, kept for API consistency
+  
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  TransmitMessageData:"));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    operation_mode: 0x%02X (%s)"), 
-           static_cast<uint8_t>(operation_mode),
-           enum_to_string(operation_mode));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    fan_mode: 0x%02X (%s)"), 
-           static_cast<uint8_t>(fan_mode),
-           enum_to_string(fan_mode));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
-           target_temperature.value, 
-           target_temperature.to_celsius());
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_start: 0x%02X"), timer_start);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    timer_stop: 0x%02X"), timer_stop);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    mode_flags: 0x%02X (%s)"), 
-           static_cast<uint8_t>(mode_flags),
-           enum_to_string(mode_flags));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    reserved1: 0x%02X"), reserved1);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    complement: 0x%02X"), complement);
+  
+  left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
+  left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
+  left = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left = print_debug_uint8(tag, "timer_start", timer_start, left, level);
+  left = print_debug_uint8(tag, "timer_stop", timer_stop, left, level);
+  left = print_debug_enum(tag, "mode_flags", mode_flags, left, level);
+  left = print_debug_uint8(tag, "reserved1", reserved1, left, level);
+  left = print_debug_uint8(tag, "complement", complement, left, level);
+  
+  return left;
 }
 
 // TransmitData methods
-void TransmitData::print_debug(const char *tag, int level) const {
+size_t TransmitData::print_debug(const char *tag, size_t left, int level) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("TX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    preamble: 0x%02X"), static_cast<uint8_t>(message.frame.preamble));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    command: 0x%02X (%s)"), 
-           static_cast<uint8_t>(message.frame.header.command),
-           enum_to_string(message.frame.header.command));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    server_id: 0x%02X"), message.frame.header.server_id);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    client_id1: 0x%02X"), message.frame.header.client_id1);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    direction: 0x%02X (%s)"), 
-           static_cast<uint8_t>(message.frame.header.direction_node.direction),
-           enum_to_string(message.frame.header.direction_node.direction));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    node_id: 0x%02X"), message.frame.header.direction_node.node_id);
+  
+  left = print_debug_uint8(tag, "preamble", static_cast<uint8_t>(message.frame.preamble), left, level);
+  left = print_debug_enum(tag, "command", message.frame.header.command, left, level);
+  left = print_debug_uint8(tag, "server_id", message.frame.header.server_id, left, level);
+  left = print_debug_uint8(tag, "client_id1", message.frame.header.client_id1, left, level);
+  left = message.frame.header.direction_node.print_debug(tag, "direction_node", left, level);
   
   // Delegate to the data struct's print_debug method
-  message.data.standard.print_debug(tag, message.frame.header.command, level);
+  left = message.data.standard.print_debug(tag, message.frame.header.command, left, level);
   
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame End:"));
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    crc: 0x%02X"), message.frame_end.crc);
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    prologue: 0x%02X"), static_cast<uint8_t>(message.frame_end.prologue));
+  left = print_debug_uint8(tag, "crc", message.frame_end.crc, left, level);
+  left = print_debug_uint8(tag, "prologue", static_cast<uint8_t>(message.frame_end.prologue), left, level);
+  
+  return left;
 }
 
 }  // namespace xye

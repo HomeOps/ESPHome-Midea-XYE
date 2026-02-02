@@ -290,6 +290,14 @@ struct __attribute__((packed)) Temperature {
   
   /// Create from degrees Celsius
   static Temperature from_celsius(float celsius);
+  
+  /// Print debug information
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param left Bytes remaining to read
+  /// @param level Log level
+  /// @return Updated bytes remaining
+  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -298,6 +306,14 @@ struct __attribute__((packed)) Temperature {
 struct __attribute__((packed)) DirectionNode {
   Direction direction;  ///< Direction indicator
   NodeId node_id;       ///< Node identifier
+  
+  /// Print debug information
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param left Bytes remaining to read
+  /// @param level Log level
+  /// @return Updated bytes remaining
+  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -312,6 +328,14 @@ struct __attribute__((packed)) Flags16 {
   
   /// Set from 16-bit value
   void set(uint16_t val);
+  
+  /// Print debug information
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param left Bytes remaining to read
+  /// @param level Log level
+  /// @return Updated bytes remaining
+  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -327,6 +351,14 @@ struct __attribute__((packed)) Flags16BigEndian {
   
   /// Set from 16-bit value
   void set(uint16_t val);
+  
+  /// Print debug information
+  /// @param tag Log tag
+  /// @param name Field name
+  /// @param left Bytes remaining to read
+  /// @param level Log level
+  /// @return Updated bytes remaining
+  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -387,6 +419,38 @@ const char* enum_to_string(EnumType value) {
     return it->second;
   }
   return "UNKNOWN";
+}
+
+/**
+ * @brief Helper to print a uint8_t field with bounds checking
+ * @param tag Log tag
+ * @param name Field name
+ * @param value The uint8_t value to print
+ * @param left Bytes remaining
+ * @param level Log level
+ * @return Updated bytes remaining
+ */
+inline size_t print_debug_uint8(const char *tag, const char *name, uint8_t value, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) {
+  if (left < 1) return left;
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X"), name, value);
+  return left - 1;
+}
+
+/**
+ * @brief Helper to print an enum field with bounds checking
+ * @param tag Log tag
+ * @param name Field name  
+ * @param value The enum value to print
+ * @param left Bytes remaining
+ * @param level Log level
+ * @return Updated bytes remaining
+ */
+template<typename EnumType>
+inline size_t print_debug_enum(const char *tag, const char *name, EnumType value, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) {
+  if (left < 1) return left;
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%s)"), 
+           name, static_cast<uint8_t>(value), enum_to_string(value));
+  return left - 1;
 }
 
 // Static assertions

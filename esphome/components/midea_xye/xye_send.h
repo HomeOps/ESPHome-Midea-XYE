@@ -46,9 +46,11 @@ struct __attribute__((packed)) TransmitMessageData {
    * @brief Print debug information for this data struct
    * @param tag Log tag to use
    * @param command The command type (for context, all fields are always printed)
+   * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
+   * @return Updated bytes remaining
    */
-  void print_debug(const char *tag, Command command, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, Command command, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 /**
@@ -76,10 +78,12 @@ union TransmitData {
   /**
    * @brief Pretty print the transmit message for debugging
    * Takes into account the kind of message based on command type
+   * @param left Bytes remaining (for TX always TX_MESSAGE_LENGTH)
    * @param tag Log tag to use
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
+   * @return Updated bytes remaining
    */
-  void print_debug(const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
 };
 
 // Static assertions to ensure struct sizes are correct
