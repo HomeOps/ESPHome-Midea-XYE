@@ -118,13 +118,47 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 };
 
 /**
+ * @brief SET command response data (Client to Server, command 0xC3)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using SetResponseData = QueryResponseData;
+
+/**
+ * @brief FOLLOW_ME command response data (Client to Server, command 0xC6)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using FollowMeResponseData = QueryResponseData;
+
+/**
+ * @brief LOCK command response data (Client to Server, command 0xCC)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using LockResponseData = QueryResponseData;
+
+/**
+ * @brief UNLOCK command response data (Client to Server, command 0xCD)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using UnlockResponseData = QueryResponseData;
+
+/**
  * @brief Generic receive message data - typedef to QueryResponseData
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
- * Instead of having a separate struct filled with unknown fields,
- * we use QueryResponseData as it contains the most information.
- * This allows unknown commands to be interpreted with meaningful field names
- * rather than generic unknown0-23 placeholders.
+ * Fallback for unknown or unspecified command types.
+ * Uses QueryResponseData as it contains the most information.
  */
 using ReceiveMessageData = QueryResponseData;
 
@@ -133,9 +167,13 @@ using ReceiveMessageData = QueryResponseData;
  * Provides type-safe access to different data types based on command
  */
 union ReceiveMessageDataUnion {
-  ReceiveMessageData generic;                       ///< Generic data access
+  ReceiveMessageData generic;                       ///< Generic data access (fallback)
   QueryResponseData query_response;                 ///< Query response (0xC0) data
   ExtendedQueryResponseData extended_query_response;///< Extended query response (0xC4) data
+  SetResponseData set_response;                     ///< Set response (0xC3) data
+  FollowMeResponseData follow_me_response;          ///< Follow-Me response (0xC6) data
+  LockResponseData lock_response;                   ///< Lock response (0xCC) data
+  UnlockResponseData unlock_response;               ///< Unlock response (0xCD) data
 };
 
 /**

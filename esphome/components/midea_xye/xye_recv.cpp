@@ -95,9 +95,21 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
       break;
     
     case Command::SET:
+      left = message.data.set_response.print_debug(tag, left, level);
+      break;
+    
     case Command::FOLLOW_ME:
+      left = message.data.follow_me_response.print_debug(tag, left, level);
+      break;
+    
     case Command::LOCK:
+      left = message.data.lock_response.print_debug(tag, left, level);
+      break;
+    
     case Command::UNLOCK:
+      left = message.data.unlock_response.print_debug(tag, left, level);
+      break;
+    
     default:
       left = message.data.generic.print_debug(tag, left, level);
       break;
