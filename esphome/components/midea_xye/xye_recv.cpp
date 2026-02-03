@@ -15,7 +15,7 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) c
   left = print_debug_enum(tag, "capabilities", capabilities, left, level);
   left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
   left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
-  left = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
   left = t1_temperature.print_debug(tag, "t1_temperature", left, level);
   left = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
   left = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
