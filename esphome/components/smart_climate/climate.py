@@ -16,12 +16,12 @@ CONF_SLEEP_MAX = "sleep_max"
 CONF_AWAY_MIN = "away_min"
 CONF_AWAY_MAX = "away_max"
 
-virtual_thermostat_ns = cg.esphome_ns.namespace("virtual_thermostat")
-VirtualThermostat = virtual_thermostat_ns.class_("VirtualThermostat", climate.Climate, cg.Component)
+smart_climate_ns = cg.esphome_ns.namespace("smart_climate")
+SmartClimate = smart_climate_ns.class_("SmartClimate", climate.Climate, cg.Component)
 
 CONFIG_SCHEMA = climate._CLIMATE_SCHEMA.extend(
     {
-        cv.GenerateID(): cv.declare_id(VirtualThermostat),
+        cv.GenerateID(): cv.declare_id(SmartClimate),
 
         cv.Required(CONF_INSIDE_SENSOR): cv.use_id(sensor.Sensor),
         cv.Required(CONF_OUTSIDE_SENSOR): cv.use_id(sensor.Sensor),

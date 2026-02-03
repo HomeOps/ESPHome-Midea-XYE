@@ -3,9 +3,9 @@ version: "1.0.0"
 components:
   - id: midea_xye
     files:
-      - air_conditioner.h
-      - air_conditioner.cpp
-      - ac_automations.h
+      - climate_midea_xye.h
+      - climate_midea_xye.cpp
+      - climate_automations.h
       - ir_transmitter.h
       - static_pressure_interface.h
       - static_pressure_number.h

@@ -64,7 +64,7 @@ CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
-AirConditioner = midea_xye_ns.class_("AirConditioner", climate.Climate, cg.Component)
+ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
 Capabilities = midea_xye_ns.namespace("Constants")
 
@@ -130,9 +130,9 @@ validate_custom_fan_modes = cv.enum(CUSTOM_FAN_MODES, upper=True)
 validate_custom_presets = cv.enum(CUSTOM_PRESETS, upper=True)
 
 CONFIG_SCHEMA = cv.All(
-    climate.climate_schema(AirConditioner).extend(
+    climate.climate_schema(ClimateMideaXYE).extend(
         {
-            cv.GenerateID(): cv.declare_id(AirConditioner),
+            cv.GenerateID(): cv.declare_id(ClimateMideaXYE),
             cv.Optional(CONF_PERIOD, default="1s"): cv.time_period,
             cv.Optional(CONF_TIMEOUT, default="100ms"): cv.time_period,
             cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
@@ -262,7 +262,7 @@ PowerToggleAction = midea_xye_ns.class_("PowerToggleAction", automation.Action)
 
 MIDEA_ACTION_BASE_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_ID): cv.use_id(AirConditioner),
+        cv.GenerateID(CONF_ID): cv.use_id(ClimateMideaXYE),
     }
 )
 

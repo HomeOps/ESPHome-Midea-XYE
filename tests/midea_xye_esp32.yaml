@@ -25,7 +25,7 @@ external_components:
   - source: 
       type: local
       path: ../esphome/components
-    components: [midea_xye, virtual_thermostat]
+    components: [midea_xye, smart_climate]
   
 # UART settings for RS485 converter dongle (required)
 uart:
@@ -45,9 +45,9 @@ climate:
     internal_current_temperature:
       name: "Internal Current Temperature"
   
-  # Virtual thermostat for testing
-  - platform: virtual_thermostat
-    name: Virtual Thermostat Test
+  # Smart climate for testing
+  - platform: smart_climate
+    name: Smart Climate Test
     inside_sensor: test_sensor
     outside_sensor: outside_sensor
     real_climate: main_climate
@@ -58,7 +58,7 @@ climate:
     away_min: away_min_temp
     away_max: away_max_temp
     
-# Temperature sensor required for virtual thermostat
+# Temperature sensor required for smart climate
 sensor:
   - platform: homeassistant
     id: test_sensor

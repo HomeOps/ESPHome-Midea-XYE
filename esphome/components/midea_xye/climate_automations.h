@@ -3,7 +3,7 @@
 #ifdef USE_ARDUINO
 
 #include "esphome/core/automation.h"
-#include "air_conditioner.h"
+#include "climate_midea_xye.h"
 
 namespace esphome {
 namespace midea {
@@ -11,10 +11,10 @@ namespace xye {
 
 template<typename... Ts> class MideaActionBase : public Action<Ts...> {
  public:
-  void set_parent(AirConditioner *parent) { this->parent_ = parent; }
+  void set_parent(ClimateMideaXYE *parent) { this->parent_ = parent; }
 
  protected:
-  AirConditioner *parent_;
+  ClimateMideaXYE *parent_;
 };
 
 template<typename... Ts> class FollowMeAction : public MideaActionBase<Ts...> {

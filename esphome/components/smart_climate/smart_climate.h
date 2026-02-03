@@ -4,9 +4,9 @@
 #include "preset.h"
 
 namespace esphome {
-namespace virtual_thermostat {
+namespace smart_climate {
 
-class VirtualThermostat : public climate::Climate, public Component {
+class SmartClimate : public climate::Climate, public Component {
 friend class Preset;
 public:
   // External inputs (required sensors and climate device)
@@ -23,7 +23,7 @@ public:
   Preset away { climate::CLIMATE_PRESET_AWAY, this };
   Preset manual { climate::CLIMATE_PRESET_NONE, this };
 
-  VirtualThermostat(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate);
+  SmartClimate(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate);
 
   
   void setup() override;
@@ -50,6 +50,6 @@ public:
   uint32_t last_update_time_{0};
 };
 
-}  // namespace virtual_thermostat
+}  // namespace smart_climate
 }  // namespace esphome
 

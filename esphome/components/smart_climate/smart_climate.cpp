@@ -1,17 +1,17 @@
-#include "virtual_thermostat.h"
+#include "smart_climate.h"
 
 namespace esphome {
-namespace virtual_thermostat {
+namespace smart_climate {
 
-VirtualThermostat::VirtualThermostat(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate) 
+SmartClimate::SmartClimate(sensor::Sensor *inside_sensor, sensor::Sensor *outside_sensor, climate::Climate *real_climate) 
   : inside_sensor_(inside_sensor), outside_sensor_(outside_sensor), real_climate_(real_climate) {
 }
 
-void VirtualThermostat::setup() {
+void SmartClimate::setup() {
   // Subscribe to inside sensor state changes for real-time temperature updates
   // CALLBACK LIFETIME SAFETY: The lambda captures 'this' pointer, which is safe because
-  // VirtualThermostat is a Component managed by ESPHome's lifecycle system, and the
-  // inside_sensor is also managed by the same system and will not outlive VirtualThermostat.
+  // SmartClimate is a Component managed by ESPHome's lifecycle system, and the
+  // inside_sensor is also managed by the same system and will not outlive SmartClimate.
   if (this->inside_sensor_ != nullptr) {
     this->inside_sensor_->add_on_state_callback([this](float temperature) { 
       this->on_inside_sensor_update(temperature); 
@@ -19,7 +19,7 @@ void VirtualThermostat::setup() {
   }
   
   // Subscribe to outside sensor state changes
-  // CALLBACK LIFETIME SAFETY: Same as above - both the VirtualThermostat and outside_sensor
+  // CALLBACK LIFETIME SAFETY: Same as above - both the SmartClimate and outside_sensor
   // are managed by ESPHome's component system with synchronized lifecycles.
   if (this->outside_sensor_ != nullptr) {
     this->outside_sensor_->add_on_state_callback([this](float temperature) { 
@@ -28,7 +28,7 @@ void VirtualThermostat::setup() {
   }
   
   // Subscribe to real climate state changes
-  // CALLBACK LIFETIME SAFETY: Same as above - both the VirtualThermostat and real_climate
+  // CALLBACK LIFETIME SAFETY: Same as above - both the SmartClimate and real_climate
   // are managed by ESPHome's component system with synchronized lifecycles.
   if (this->real_climate_ != nullptr) {
     this->real_climate_->add_on_state_callback([this](climate::Climate &climate) { 
@@ -59,7 +59,7 @@ void VirtualThermostat::setup() {
   }
 }
 
-climate::ClimateTraits VirtualThermostat::traits() {
+climate::ClimateTraits SmartClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supported_modes({climate::CLIMATE_MODE_AUTO, climate::CLIMATE_MODE_HEAT, climate::CLIMATE_MODE_COOL});
   traits.add_feature_flags(
@@ -77,11 +77,11 @@ climate::ClimateTraits VirtualThermostat::traits() {
   return traits;
 }
 
-std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
+std::pair<bool, bool> SmartClimate::apply_preset(const Preset& p) {
   bool virtual_changed = false;
   bool real_changed = false;
   
-  // Update virtual thermostat state
+  // Update smart climate state
   if (this->preset != p.id) {
     this->preset = p.id;
     virtual_changed = true;
@@ -109,7 +109,7 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
     }
   }
   
-  auto new_virtual_mode = p.getModeForVirtualThermostat();
+  auto new_virtual_mode = p.getModeForSmartClimate();
   if (this->mode != new_virtual_mode) {
     this->mode = new_virtual_mode;
     virtual_changed = true;
@@ -131,18 +131,18 @@ std::pair<bool, bool> VirtualThermostat::apply_preset(const Preset& p) {
   return {virtual_changed, real_changed};
 }
 
-const Preset& VirtualThermostat::getActivePreset() const {
+const Preset& SmartClimate::getActivePreset() const {
   return getActivePresetFromId(this->preset.value_or(climate::CLIMATE_PRESET_NONE));
 }
 
-const Preset& VirtualThermostat::getActivePresetFromId(climate::ClimatePreset id) const {
+const Preset& SmartClimate::getActivePresetFromId(climate::ClimatePreset id) const {
   if (id == home.id)  return home;
   if (id == sleep.id) return sleep;
   if (id == away.id)  return away;
   return manual;  // unknown or empty → manual
 }
 
-void VirtualThermostat::control(const climate::ClimateCall &call) {
+void SmartClimate::control(const climate::ClimateCall &call) {
   // Set guard flag to indicate we're updating from control, not from external changes
   if (this->updating_from_real_) {
     // Avoid processing control calls while we're processing real climate updates
@@ -242,12 +242,12 @@ void VirtualThermostat::control(const climate::ClimateCall &call) {
   this->updating_from_control_ = false;
 }
 
-void VirtualThermostat::loop() {
+void SmartClimate::loop() {
   // State updates are now handled via callbacks, no periodic polling needed
   // The loop is kept for future extensions if needed
 }
 
-void VirtualThermostat::update_real_climate() {
+void SmartClimate::update_real_climate() {
   if (!this->real_climate_) return;
   
   const auto& active_preset = getActivePreset();
@@ -263,7 +263,7 @@ void VirtualThermostat::update_real_climate() {
   }
 }
 
-void VirtualThermostat::on_inside_sensor_update(float temperature) {
+void SmartClimate::on_inside_sensor_update(float temperature) {
   // Update current temperature from inside sensor in real-time
   if (!std::isnan(temperature)) {
     // Use epsilon for float comparison to avoid precision issues
@@ -287,7 +287,7 @@ void VirtualThermostat::on_inside_sensor_update(float temperature) {
   }
 }
 
-void VirtualThermostat::on_outside_sensor_update(float temperature) {
+void SmartClimate::on_outside_sensor_update(float temperature) {
   // When outside temperature changes, reevaluate real climate mode if in preset mode
   // This is important when inside temp is in range and we use outside temp to decide mode
   if (!std::isnan(temperature)) {
@@ -302,7 +302,7 @@ void VirtualThermostat::on_outside_sensor_update(float temperature) {
   }
 }
 
-void VirtualThermostat::on_real_climate_update() {
+void SmartClimate::on_real_climate_update() {
   // Avoid feedback loops
   if (this->updating_from_control_ || !this->real_climate_) {
     return;
@@ -321,7 +321,7 @@ void VirtualThermostat::on_real_climate_update() {
   if (!std::isnan(this->real_climate_->target_temperature) && 
       std::abs(this->real_climate_->target_temperature - expected_temp) > 0.1f) {
     // Real climate target temperature changed externally - exit preset mode
-    ESP_LOGD("virtual_thermostat", "Real climate target temperature changed externally (%.1f -> %.1f), exiting preset mode",
+    ESP_LOGD("smart_climate", "Real climate target temperature changed externally (%.1f -> %.1f), exiting preset mode",
              expected_temp, this->real_climate_->target_temperature);
     
     // Switch to manual mode
@@ -330,7 +330,7 @@ void VirtualThermostat::on_real_climate_update() {
       virtual_needs_publish = true;
     }
     
-    // Update virtual thermostat to match real climate
+    // Update smart climate to match real climate
     if (this->mode == climate::CLIMATE_MODE_AUTO) {
       // In AUTO mode, we need to adjust both low and high target temperatures
       // to center around the new target temperature from real climate
@@ -353,11 +353,11 @@ void VirtualThermostat::on_real_climate_update() {
   if (expected_mode.has_value() && this->real_climate_->mode != *expected_mode && active_preset.id != manual.id) {
     // Real climate mode changed externally - this could be from the device itself
     // We'll log it but not necessarily exit preset mode, as mode changes in preset are normal
-    ESP_LOGD("virtual_thermostat", "Real climate mode changed: %d (expected: %d)", 
+    ESP_LOGD("smart_climate", "Real climate mode changed: %d (expected: %d)", 
              static_cast<int>(this->real_climate_->mode), static_cast<int>(*expected_mode));
   }
   
-  // Sync hvac_action to virtual thermostat (for display purposes)
+  // Sync hvac_action to smart climate (for display purposes)
   if (this->action != this->real_climate_->action) {
     this->action = this->real_climate_->action;
     virtual_needs_publish = true;
@@ -370,6 +370,6 @@ void VirtualThermostat::on_real_climate_update() {
   this->updating_from_real_ = false;
 }
 
-}  // namespace virtual_thermostat
+}  // namespace smart_climate
 }  // namespace esphome
 
