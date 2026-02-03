@@ -118,53 +118,62 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 };
 
 /**
- * @brief Generic receive message data
+ * @brief SET command response data (Server to Client, command 0xC3)
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
  */
-struct __attribute__((packed)) ReceiveMessageData {
-  uint8_t unknown0;   ///< [0] Unknown byte 0
-  uint8_t unknown1;   ///< [1] Unknown byte 1
-  uint8_t unknown2;   ///< [2] Unknown byte 2
-  uint8_t unknown3;   ///< [3] Unknown byte 3
-  uint8_t unknown4;   ///< [4] Unknown byte 4
-  uint8_t unknown5;   ///< [5] Unknown byte 5
-  uint8_t unknown6;   ///< [6] Unknown byte 6
-  uint8_t unknown7;   ///< [7] Unknown byte 7
-  uint8_t unknown8;   ///< [8] Unknown byte 8
-  uint8_t unknown9;   ///< [9] Unknown byte 9
-  uint8_t unknown10;  ///< [10] Unknown byte 10
-  uint8_t unknown11;  ///< [11] Unknown byte 11
-  uint8_t unknown12;  ///< [12] Unknown byte 12
-  uint8_t unknown13;  ///< [13] Unknown byte 13
-  uint8_t unknown14;  ///< [14] Unknown byte 14
-  uint8_t unknown15;  ///< [15] Unknown byte 15
-  uint8_t unknown16;  ///< [16] Unknown byte 16
-  uint8_t unknown17;  ///< [17] Unknown byte 17
-  uint8_t unknown18;  ///< [18] Unknown byte 18
-  uint8_t unknown19;  ///< [19] Unknown byte 19
-  uint8_t unknown20;  ///< [20] Unknown byte 20
-  uint8_t unknown21;  ///< [21] Unknown byte 21
-  uint8_t unknown22;  ///< [22] Unknown byte 22
-  uint8_t unknown23;  ///< [23] Unknown byte 23
+using SetResponseData = QueryResponseData;
 
-  /**
-   * @brief Print debug information for generic receive data
-   * @param tag Log tag to use
-   * @param left Bytes remaining to read
-   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @return Updated bytes remaining
-   */
-  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
-};
+/**
+ * @brief FOLLOW_ME command response data (Server to Client, command 0xC6)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using FollowMeResponseData = QueryResponseData;
+
+/**
+ * @brief LOCK command response data (Server to Client, command 0xCC)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using LockResponseData = QueryResponseData;
+
+/**
+ * @brief UNLOCK command response data (Server to Client, command 0xCD)
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Uses QueryResponseData structure as it contains the most information.
+ * This allows the response to be interpreted with meaningful field names.
+ */
+using UnlockResponseData = QueryResponseData;
+
+/**
+ * @brief Generic receive message data - typedef to QueryResponseData
+ * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Fallback for unknown or unspecified command types.
+ * Uses QueryResponseData as it contains the most information.
+ */
+using ReceiveMessageData = QueryResponseData;
 
 /**
  * @brief Union for receive message data payloads
  * Provides type-safe access to different data types based on command
  */
 union ReceiveMessageDataUnion {
-  ReceiveMessageData generic;                       ///< Generic data access
+  ReceiveMessageData generic;                       ///< Generic data access (fallback)
   QueryResponseData query_response;                 ///< Query response (0xC0) data
   ExtendedQueryResponseData extended_query_response;///< Extended query response (0xC4) data
+  SetResponseData set_response;                     ///< Set response (0xC3) data
+  FollowMeResponseData follow_me_response;          ///< Follow-Me response (0xC6) data
+  LockResponseData lock_response;                   ///< Lock response (0xCC) data
+  UnlockResponseData unlock_response;               ///< Unlock response (0xCD) data
 };
 
 /**

@@ -68,36 +68,6 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
   return left;
 }
 
-// ReceiveMessageData methods
-size_t ReceiveMessageData::print_debug(const char *tag, size_t left, int level) const {
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ReceiveMessageData (generic):"));
-  left = print_debug_uint8(tag, "unknown0", unknown0, left, level);
-  left = print_debug_uint8(tag, "unknown1", unknown1, left, level);
-  left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
-  left = print_debug_uint8(tag, "unknown3", unknown3, left, level);
-  left = print_debug_uint8(tag, "unknown4", unknown4, left, level);
-  left = print_debug_uint8(tag, "unknown5", unknown5, left, level);
-  left = print_debug_uint8(tag, "unknown6", unknown6, left, level);
-  left = print_debug_uint8(tag, "unknown7", unknown7, left, level);
-  left = print_debug_uint8(tag, "unknown8", unknown8, left, level);
-  left = print_debug_uint8(tag, "unknown9", unknown9, left, level);
-  left = print_debug_uint8(tag, "unknown10", unknown10, left, level);
-  left = print_debug_uint8(tag, "unknown11", unknown11, left, level);
-  left = print_debug_uint8(tag, "unknown12", unknown12, left, level);
-  left = print_debug_uint8(tag, "unknown13", unknown13, left, level);
-  left = print_debug_uint8(tag, "unknown14", unknown14, left, level);
-  left = print_debug_uint8(tag, "unknown15", unknown15, left, level);
-  left = print_debug_uint8(tag, "unknown16", unknown16, left, level);
-  left = print_debug_uint8(tag, "unknown17", unknown17, left, level);
-  left = print_debug_uint8(tag, "unknown18", unknown18, left, level);
-  left = print_debug_uint8(tag, "unknown19", unknown19, left, level);
-  left = print_debug_uint8(tag, "unknown20", unknown20, left, level);
-  left = print_debug_uint8(tag, "unknown21", unknown21, left, level);
-  left = print_debug_uint8(tag, "unknown22", unknown22, left, level);
-  left = print_debug_uint8(tag, "unknown23", unknown23, left, level);
-  return left;
-}
-
 // ReceiveData methods
 Command ReceiveData::get_command() const {
   return message.frame.header.command;
@@ -125,9 +95,21 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
       break;
     
     case Command::SET:
+      left = message.data.set_response.print_debug(tag, left, level);
+      break;
+    
     case Command::FOLLOW_ME:
+      left = message.data.follow_me_response.print_debug(tag, left, level);
+      break;
+    
     case Command::LOCK:
+      left = message.data.lock_response.print_debug(tag, left, level);
+      break;
+    
     case Command::UNLOCK:
+      left = message.data.unlock_response.print_debug(tag, left, level);
+      break;
+    
     default:
       left = message.data.generic.print_debug(tag, left, level);
       break;
