@@ -118,44 +118,15 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 };
 
 /**
- * @brief Generic receive message data
+ * @brief Generic receive message data - typedef to QueryResponseData
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
+ * 
+ * Instead of having a separate struct filled with unknown fields,
+ * we use QueryResponseData as it contains the most information.
+ * This allows unknown commands to be interpreted with meaningful field names
+ * rather than generic unknown0-23 placeholders.
  */
-struct __attribute__((packed)) ReceiveMessageData {
-  uint8_t unknown0;   ///< [0] Unknown byte 0
-  uint8_t unknown1;   ///< [1] Unknown byte 1
-  uint8_t unknown2;   ///< [2] Unknown byte 2
-  uint8_t unknown3;   ///< [3] Unknown byte 3
-  uint8_t unknown4;   ///< [4] Unknown byte 4
-  uint8_t unknown5;   ///< [5] Unknown byte 5
-  uint8_t unknown6;   ///< [6] Unknown byte 6
-  uint8_t unknown7;   ///< [7] Unknown byte 7
-  uint8_t unknown8;   ///< [8] Unknown byte 8
-  uint8_t unknown9;   ///< [9] Unknown byte 9
-  uint8_t unknown10;  ///< [10] Unknown byte 10
-  uint8_t unknown11;  ///< [11] Unknown byte 11
-  uint8_t unknown12;  ///< [12] Unknown byte 12
-  uint8_t unknown13;  ///< [13] Unknown byte 13
-  uint8_t unknown14;  ///< [14] Unknown byte 14
-  uint8_t unknown15;  ///< [15] Unknown byte 15
-  uint8_t unknown16;  ///< [16] Unknown byte 16
-  uint8_t unknown17;  ///< [17] Unknown byte 17
-  uint8_t unknown18;  ///< [18] Unknown byte 18
-  uint8_t unknown19;  ///< [19] Unknown byte 19
-  uint8_t unknown20;  ///< [20] Unknown byte 20
-  uint8_t unknown21;  ///< [21] Unknown byte 21
-  uint8_t unknown22;  ///< [22] Unknown byte 22
-  uint8_t unknown23;  ///< [23] Unknown byte 23
-
-  /**
-   * @brief Print debug information for generic receive data
-   * @param tag Log tag to use
-   * @param left Bytes remaining to read
-   * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @return Updated bytes remaining
-   */
-  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
-};
+using ReceiveMessageData = QueryResponseData;
 
 /**
  * @brief Union for receive message data payloads
