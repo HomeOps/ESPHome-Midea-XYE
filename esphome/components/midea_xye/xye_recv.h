@@ -118,7 +118,7 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 };
 
 /**
- * @brief SET command response data (Client to Server, command 0xC3)
+ * @brief SET command response data (Server to Client, command 0xC3)
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
  * Uses QueryResponseData structure as it contains the most information.
@@ -127,7 +127,7 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
 using SetResponseData = QueryResponseData;
 
 /**
- * @brief FOLLOW_ME command response data (Client to Server, command 0xC6)
+ * @brief FOLLOW_ME command response data (Server to Client, command 0xC6)
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
  * Uses QueryResponseData structure as it contains the most information.
@@ -136,7 +136,7 @@ using SetResponseData = QueryResponseData;
 using FollowMeResponseData = QueryResponseData;
 
 /**
- * @brief LOCK command response data (Client to Server, command 0xCC)
+ * @brief LOCK command response data (Server to Client, command 0xCC)
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
  * Uses QueryResponseData structure as it contains the most information.
@@ -145,7 +145,7 @@ using FollowMeResponseData = QueryResponseData;
 using LockResponseData = QueryResponseData;
 
 /**
- * @brief UNLOCK command response data (Client to Server, command 0xCD)
+ * @brief UNLOCK command response data (Server to Client, command 0xCD)
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
  * Uses QueryResponseData structure as it contains the most information.
