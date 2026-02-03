@@ -270,6 +270,14 @@ enum class SubsystemFlags : uint8_t {
 constexpr uint8_t TEMP_FAN_MODE = 0xFF;
 
 /**
+ * @brief Temperature encoding type
+ */
+enum class TemperatureEncoding : uint8_t {
+  ENCODED = 0,  ///< Standard encoding: (celsius * 2.0) + 0x28
+  RAW = 1       ///< Raw Celsius value (no encoding)
+};
+
+/**
  * @brief Temperature value (encoded)
  * 
  * Temperature Encoding Formula (Celsius):
@@ -296,8 +304,10 @@ struct __attribute__((packed)) Temperature {
   /// @param name Field name
   /// @param left Bytes remaining to read
   /// @param level Log level
+  /// @param encoding Temperature encoding type (ENCODED by default)
   /// @return Updated bytes remaining
-  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, const char *name, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG, 
+                     TemperatureEncoding encoding = TemperatureEncoding::ENCODED) const;
 };
 
 /**

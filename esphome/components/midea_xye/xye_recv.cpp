@@ -15,12 +15,7 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) c
   left = print_debug_enum(tag, "capabilities", capabilities, left, level);
   left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
   left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
-  // QueryResponseData.target_temperature stores raw Celsius values (not encoded)
-  if (left >= sizeof(Temperature)) {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    target_temperature: 0x%02X (%.1f°C)"), 
-             target_temperature.value, static_cast<float>(target_temperature.value));
-    left -= sizeof(Temperature);
-  }
+  left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
   left = t1_temperature.print_debug(tag, "t1_temperature", left, level);
   left = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
   left = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
