@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.4...v0.1.5) (2026-04-05)
+
+
+### Bug Fixes
+
+* Mask 0x40 bit from set temperature byte in C0 response parsing ([#73](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/73)) ([f008a52](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/f008a52b70e4dfa0840ef6510eb2d10c5c46b319))
+
 ## [0.1.4](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.3...v0.1.4) (2026-04-05)
 
 
