@@ -24,7 +24,20 @@ Kudos to these projects:
 
 ## Installation
 
-Add this external component to your ESPHome configuration:
+Add this external component to your ESPHome configuration.
+
+**Recommended: pin to a specific release tag for stability:**
+
+```yaml
+external_components:
+  - source: 
+      type: git
+      url: https://github.com/HomeOps/ESPHome-Midea-XYE
+      ref: v1.0.0  # replace with the latest release tag
+    components: [midea_xye]
+```
+
+Or use the latest development version from the `main` branch:
 
 ```yaml
 external_components:
@@ -34,6 +47,8 @@ external_components:
       ref: main
     components: [midea_xye]
 ```
+
+See the [Releases page](https://github.com/HomeOps/ESPHome-Midea-XYE/releases) for available versions and changelogs.
 
 ## Configuration
 
@@ -58,7 +73,7 @@ external_components:
   - source: 
       type: git
       url: https://github.com/HomeOps/ESPHome-Midea-XYE
-      ref: main
+      ref: v1.0.0  # replace with the latest release tag
     components: [midea_xye]
 
 # UART settings for RS-485 converter dongle (required)
