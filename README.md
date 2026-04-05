@@ -33,7 +33,7 @@ external_components:
   - source: 
       type: git
       url: https://github.com/HomeOps/ESPHome-Midea-XYE
-      ref: v1.0.0  # replace with the latest release tag
+      ref: vX.Y.Z  # replace with the latest release tag
     components: [midea_xye]
 ```
 
