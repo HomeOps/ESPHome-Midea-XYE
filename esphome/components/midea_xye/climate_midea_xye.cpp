@@ -140,9 +140,9 @@ void ClimateMideaXYE::setACParams() {
   // Data always comes in as C, but user may want it set in F.
   if (this->use_fahrenheit_) {
     float tgt_temp = ((9.0 / 5.0) * this->target_temperature + 32.0);
-    d.target_temperature.value = static_cast<uint8_t>((int) tgt_temp + FAHRENHEIT_TEMP_OFFSET);
+    d.target_temperature.value = static_cast<uint8_t>(static_cast<int>(tgt_temp) + FAHRENHEIT_TEMP_OFFSET);
   } else {
-    d.target_temperature.value = static_cast<uint8_t>((int) this->target_temperature);
+    d.target_temperature.value = static_cast<uint8_t>(static_cast<int>(this->target_temperature));
   }
 
   d.mode_flags = static_cast<ModeFlags>(
