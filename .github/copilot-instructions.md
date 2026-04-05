@@ -77,7 +77,7 @@ All PR titles and commit messages **must** follow the [Conventional Commits](htt
 | `feat:` | New feature | minor (0.x.0) |
 | `chore:` | Maintenance, CI, tooling — no release | none |
 | `docs:` | Documentation only — no release | none |
-| `refactor:` | Code restructure without behaviour change — no release | none |
+| `refactor:` | Code restructure without behavior change — no release | none |
 | `test:` | Adding or updating tests — no release | none |
 | `ci:` | CI/CD changes — no release | none |
 | `perf:` | Performance improvement | patch |
@@ -85,7 +85,7 @@ All PR titles and commit messages **must** follow the [Conventional Commits](htt
 Examples:
 - ✅ `fix: mask status flag bit from set temperature byte in C0 response`
 - ✅ `feat: add outside temperature sensor for intelligent mode selection`
-- ✅ `chore: remove unused smart_climate component`
+- ✅ `chore: update CI workflow for ESPHome compile checks`
 - ❌ `Fix status flag in C0 response` (missing type prefix — release-please cannot parse this)
 
 > **Important:** GitHub squash-merges use the PR title as the commit message. Always set the PR title to match the conventional commit format above.
