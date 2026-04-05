@@ -52,18 +52,43 @@ This repository contains an ESPHome external component for controlling Midea HVA
 3. Add test coverage in `tests/midea_xye.yaml`
 4. Verify compilation with `esphome compile tests/midea_xye.yaml`
 5. Update documentation if needed
+6. Set the PR title to `feat: <short description>` so release-please creates a minor-version release
 
 ### Fixing a Bug
 1. Add or update tests to reproduce the issue
 2. Implement the fix
 3. Verify all tests still pass
 4. Consider if documentation needs updates
+5. Set the PR title to `fix: <short description>` so release-please creates a patch-version release
 
 ### Making Changes
 - Keep changes minimal and focused
 - Test changes locally before committing
 - Ensure CI passes before requesting review
 - Update tests to cover new functionality
+
+### Conventional Commits (Required)
+
+All PR titles and commit messages **must** follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. release-please uses these to automatically determine the next version and generate changelogs.
+
+| Prefix | When to use | Version bump |
+|--------|-------------|--------------|
+| `fix:` | Bug fix | patch (0.1.x) |
+| `feat:` | New feature | minor (0.x.0) |
+| `chore:` | Maintenance, CI, tooling — no release | none |
+| `docs:` | Documentation only — no release | none |
+| `refactor:` | Code restructure without behaviour change — no release | none |
+| `test:` | Adding or updating tests — no release | none |
+| `ci:` | CI/CD changes — no release | none |
+| `perf:` | Performance improvement | patch |
+
+Examples:
+- ✅ `fix: mask status flag bit from set temperature byte in C0 response`
+- ✅ `feat: add outside temperature sensor for intelligent mode selection`
+- ✅ `chore: remove unused smart_climate component`
+- ❌ `Fix status flag in C0 response` (missing type prefix — release-please cannot parse this)
+
+> **Important:** GitHub squash-merges use the PR title as the commit message. Always set the PR title to match the conventional commit format above.
 
 ## Architecture
 
