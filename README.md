@@ -213,6 +213,12 @@ Example debug output:
 ### Not Tested
 - IR integration (however, not needed for Follow-Me functionality)
 
+## Smart Thermostat
+
+Smart thermostat features (preset-based temperature management, inside/outside sensor logic, Home/Sleep/Away modes) are implemented as a Home Assistant-level virtual climate device:
+
+👉 **[HomeOps/HASS-Smart-Climate](https://github.com/HomeOps/HASS-Smart-Climate)**
+
 ## Community
 
 For additional guidance and community support, visit the Home Assistant Community discussion:
