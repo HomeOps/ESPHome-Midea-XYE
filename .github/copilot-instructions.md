@@ -8,8 +8,7 @@ This repository contains an ESPHome external component for controlling Midea HVA
 ### Code Structure
 - **Component Location**: All ESPHome components are in `esphome/components/`
 - **Main Component**: `midea_xye` - The primary climate component for Midea HVAC control
-- **Additional Components**: 
-  - `virtual_thermostat` - Virtual thermostat component for testing
+- **Additional Components**: None currently
 
 ### Testing
 - Test configurations are located in the `tests/` directory
