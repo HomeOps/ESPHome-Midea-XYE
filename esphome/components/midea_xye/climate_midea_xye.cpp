@@ -140,7 +140,7 @@ void ClimateMideaXYE::setACParams() {
   // Data always comes in as C, but user may want it set in F.
   if (this->use_fahrenheit_) {
     float tgt_temp = ((9.0 / 5.0) * this->target_temperature + 32.0);
-    d.target_temperature.value = static_cast<uint8_t>((int) tgt_temp + 0x87);
+    d.target_temperature.value = static_cast<uint8_t>((int) tgt_temp + FAHRENHEIT_TEMP_OFFSET);
   } else {
     d.target_temperature.value = static_cast<uint8_t>((int) this->target_temperature);
   }
@@ -270,7 +270,7 @@ void ClimateMideaXYE::ParseResponse() {
       ClimateFanMode fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
       ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
 
-      const uint8_t op_mode_raw = static_cast<uint8_t>(qr.operation_mode) & 0xEF;
+      const uint8_t op_mode_raw = static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK;
       switch (op_mode_raw) {
         case OP_MODE_OFF:
           mode = ClimateMode::CLIMATE_MODE_OFF;
@@ -300,7 +300,7 @@ void ClimateMideaXYE::ParseResponse() {
         mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
       }
 
-      const uint8_t current_fan_speed = static_cast<uint8_t>(qr.fan_mode) & 0x0F;
+      const uint8_t current_fan_speed = static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK;
       switch (current_fan_speed) {
         case FAN_MODE_HIGH:
           fan_mode = ClimateFanMode::CLIMATE_FAN_HIGH;
@@ -348,34 +348,34 @@ void ClimateMideaXYE::ParseResponse() {
                         static_cast<float>(qr.target_temperature.value & SET_TEMP_VALUE_MASK), need_publish);
 #endif
 
-        if ((this->mode == climate::CLIMATE_MODE_HEAT) && (static_cast<uint8_t>(qr.fan_mode) & 0x0F) != 0x00) {
+        if ((this->mode == climate::CLIMATE_MODE_HEAT) && (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) != 0x00) {
           if (this->action != climate::CLIMATE_ACTION_HEATING) {
             this->action = climate::CLIMATE_ACTION_HEATING;
             need_publish = true;
           }
-        } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (static_cast<uint8_t>(qr.fan_mode) & 0x0F) != 0x00) {
+        } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) != 0x00) {
           if (this->action != climate::CLIMATE_ACTION_COOLING) {
             this->action = climate::CLIMATE_ACTION_COOLING;
             need_publish = true;
           }
         } else if ((this->action != climate::CLIMATE_ACTION_IDLE) &&
-                   (static_cast<uint8_t>(qr.fan_mode) & 0x0F) == 0x00) {
+                   (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) == 0x00) {
           this->action = climate::CLIMATE_ACTION_IDLE;
           need_publish = true;
         }
 
         if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-            ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_COOL) &&
+            ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_COOL) &&
             (this->action != climate::CLIMATE_ACTION_COOLING)) {
           this->action = climate::CLIMATE_ACTION_COOLING;
           need_publish = true;
         } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                   ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_FAN) &&
+                   ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_FAN) &&
                    (this->action != climate::CLIMATE_ACTION_FAN)) {
           this->action = climate::CLIMATE_ACTION_FAN;
           need_publish = true;
         } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                   ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_HEAT) &&
+                   ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_HEAT) &&
                    (this->action != climate::CLIMATE_ACTION_HEATING)) {
           this->action = climate::CLIMATE_ACTION_HEATING;
           need_publish = true;
@@ -391,7 +391,7 @@ void ClimateMideaXYE::ParseResponse() {
           need_publish = true;
         this->preset = preset;
       } else if ((this->action != climate::CLIMATE_ACTION_IDLE) &&
-                 (static_cast<uint8_t>(qr.fan_mode) & 0x0F) == 0x00) {
+                 (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) == 0x00) {
         this->action = climate::CLIMATE_ACTION_IDLE;
         need_publish = true;
       }
@@ -413,12 +413,12 @@ void ClimateMideaXYE::ParseResponse() {
       bool need_publish = false;
       const auto &exr = rx_data.message.data.extended_query_response;
       set_sensor(this->outdoor_sensor_, CalculateTemp(exr.outdoor_temperature.value));
-      set_number(this->static_pressure_number_, static_cast<float>(0x0F & exr.static_pressure));
+      set_number(this->static_pressure_number_, static_cast<float>(STATIC_PRESSURE_VALUE_MASK & exr.static_pressure));
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
       if (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
         float incoming_target_temp = 0.0;
         if (this->use_fahrenheit_) {
-          incoming_target_temp = (float) (((exr.target_temperature.value - 0x87) - 32.0) * 5.0 / 9.0);
+          incoming_target_temp = (float) (((exr.target_temperature.value - FAHRENHEIT_TEMP_OFFSET) - 32.0) * 5.0 / 9.0);
           if (incoming_target_temp != this->target_temperature) {
             need_publish = true;
             update_property(this->target_temperature, incoming_target_temp, need_publish);
@@ -596,7 +596,7 @@ void ClimateMideaXYE::set_static_pressure(uint8_t static_pressure) {
   // Prepare Follow-Me command for static pressure setting
   tx_data = TransmitData(Command::FOLLOW_ME);
   auto &d = tx_data.message.data.standard;
-  d.target_temperature.value = static_cast<uint8_t>(0x10 | (static_pressure & 0x0F));
+  d.target_temperature.value = static_cast<uint8_t>(STATIC_PRESSURE_FLAG | (static_pressure & STATIC_PRESSURE_VALUE_MASK));
   d.timer_stop = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;
   d.mode_flags = static_cast<ModeFlags>(lastFollowMeTemperature);
   tx_data.update_crc();

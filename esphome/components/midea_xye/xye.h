@@ -146,6 +146,35 @@ enum class CcmErrorFlags : uint8_t {
 constexpr uint8_t OP_MODE_AUTO_FLAG = 0x10;
 
 /**
+ * @brief Mask to extract the operation mode value, clearing the auto-mode flag bit.
+ * Clears OP_MODE_AUTO_FLAG (0x10) while preserving all other bits.
+ */
+constexpr uint8_t OP_MODE_VALUE_MASK = static_cast<uint8_t>(~OP_MODE_AUTO_FLAG);  ///< 0xEF
+
+/**
+ * @brief Mask to extract the fan speed from the lower 4 bits of the fan mode byte.
+ */
+constexpr uint8_t FAN_SPEED_MASK = 0x0F;
+
+/**
+ * @brief Flag bit set in the target temperature byte of a Follow-Me static pressure message.
+ * Bit 4 (0x10) signals to the unit that the lower nibble carries a static pressure value.
+ */
+constexpr uint8_t STATIC_PRESSURE_FLAG = 0x10;
+
+/**
+ * @brief Mask to extract the 4-bit static pressure value from its byte.
+ */
+constexpr uint8_t STATIC_PRESSURE_VALUE_MASK = 0x0F;
+
+/**
+ * @brief Engineering offset for Fahrenheit temperatures in the XYE protocol.
+ * The unit stores Fahrenheit setpoints as: encoded = (int)fahrenheit + FAHRENHEIT_TEMP_OFFSET.
+ * To decode: fahrenheit = encoded - FAHRENHEIT_TEMP_OFFSET.
+ */
+constexpr uint8_t FAHRENHEIT_TEMP_OFFSET = 0x87;
+
+/**
  * @brief Timer duration flags (combinable)
  */
 enum class TimerFlags : uint8_t {
