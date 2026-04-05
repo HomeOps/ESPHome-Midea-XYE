@@ -10,6 +10,7 @@ jobs:
   esphome-build:
     runs-on: ubuntu-latest
     name: ESPHome Build Test
+    if: ${{ !startsWith(github.head_ref, 'release-please') }}
     permissions:
       contents: read
     steps:
