@@ -74,7 +74,9 @@ Byte    Field               Description
 7       Capabilities        Unit capability flags
 8       Operation Mode      Current operation mode
 9       Fan Mode            Current fan speed
-10      Target Temp         Target temperature setpoint
+10      Target Temp         Target temperature setpoint (raw Celsius). Bit 6 (0x40) is a
+                            status flag unrelated to the temperature — it must be masked out
+                            with SET_TEMP_VALUE_MASK (0xBF) before interpreting the value.
 11      T1 Temperature      Internal/room temperature sensor
 12      T2A Temperature     Indoor coil inlet temperature
 13      T2B Temperature     Indoor coil outlet temperature

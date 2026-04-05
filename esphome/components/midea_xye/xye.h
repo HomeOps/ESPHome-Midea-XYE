@@ -270,6 +270,23 @@ enum class SubsystemFlags : uint8_t {
 constexpr uint8_t TEMP_FAN_MODE = 0xFF;
 
 /**
+ * @brief Status flag bit in the target temperature byte (byte 10 of C0 response).
+ *
+ * Bit 6 (0x40) of the target temperature byte can be set by the unit to signal
+ * an internal state (exact meaning unknown; observed when unit is in certain states).
+ * It is unrelated to the temperature value and must be cleared before converting
+ * the byte to a Celsius setpoint. Temperature is always transmitted as raw Celsius.
+ */
+constexpr uint8_t SET_TEMP_STATUS_FLAG = 0x40;
+
+/**
+ * @brief Mask to extract the actual temperature value from the target temperature byte.
+ *
+ * Clears SET_TEMP_STATUS_FLAG (0x40) while preserving all other bits.
+ */
+constexpr uint8_t SET_TEMP_VALUE_MASK = static_cast<uint8_t>(~SET_TEMP_STATUS_FLAG);  ///< 0xBF
+
+/**
  * @brief Temperature encoding type
  */
 enum class TemperatureEncoding : uint8_t {

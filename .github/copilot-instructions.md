@@ -39,6 +39,7 @@ This repository contains an ESPHome external component for controlling Midea HVA
 - Use 2-space indentation for YAML files
 - Keep code modular and well-documented
 - Add comments for complex logic
+- **Never use hardcoded numeric literals** for protocol values, flags, masks, or byte offsets — always define a named `constexpr` constant in `xye.h` (for protocol-level values) or `climate_midea_xye.h` (for implementation-level constants), with a descriptive name and a doc comment explaining its meaning
 
 ### External Components
 - Components are designed to be used as external components in ESPHome configurations
