@@ -203,6 +203,10 @@ union ReceiveData {
    * @return Updated bytes remaining
    */
   size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+
+  /// Returns true when the preamble, prologue, direction, and CRC of the
+  /// received message are all valid.
+  bool is_valid() const noexcept;
 };
 
 // Static assertions to ensure struct sizes are correct

@@ -47,17 +47,18 @@ void ClimateMideaXYE::control(const ClimateCall &call) {
     this->preset = call.get_preset().value();
   this->publish_state();
 
-  if (controlState != STATE_WAIT_DATA) {
-    controlState = STATE_SEND_SET;
+  if (controlState != ControlState::WAIT_DATA) {
+    controlState = ControlState::SEND_SET;
   } else {
-    queuedCommand = STATE_SEND_SET;
+    queuedCommand = ControlState::SEND_SET;
   }
 }
 
 void ClimateMideaXYE::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
   this->last_on_mode_ = *this->supported_modes_.begin();
-  controlState = STATE_SEND_QUERY;
+  controlState = ControlState::SEND_QUERY;
+  queuedCommand = ControlState::WAIT_DATA;
   ForceReadNextCycle = 1;
   followMeInit = false;
 
@@ -79,104 +80,77 @@ void ClimateMideaXYE::setPowerState(bool state) {
   else
     this->mode = ClimateMode::CLIMATE_MODE_OFF;
 
-  if (controlState != STATE_WAIT_DATA) {
-    controlState = STATE_SEND_SET;
+  if (controlState != ControlState::WAIT_DATA) {
+    controlState = ControlState::SEND_SET;
   } else {
-    queuedCommand = STATE_SEND_SET;
+    queuedCommand = ControlState::SEND_SET;
   }
-}
-
-void ClimateMideaXYE::prepareTXData(uint8_t command) {
-  TXData[0] = PREAMBLE;
-  TXData[1] = command;
-  TXData[2] = SERVER_ID;
-  TXData[3] = CLIENT_ID;
-  TXData[4] = FROM_CLIENT;
-  TXData[5] = CLIENT_ID;
-  TXData[6] = 0;
-  TXData[7] = 0;
-  TXData[8] = 0;
-  TXData[9] = 0;
-  TXData[10] = 0;
-  TXData[11] = 0;
-  TXData[12] = 0;
-  TXData[13] = 0xFF - TXData[1];
-  TXData[15] = PROLOGUE;
-  TXData[14] = CalculateCRC(TXData, TX_LEN);
 }
 
 void ClimateMideaXYE::setACParams() {
-  // construct set command
-  prepareTXData(CLIENT_COMMAND_SET);
+  tx_data = TransmitData(Command::SET);
+  auto &d = tx_data.message.data.standard;
 
-  // set mode
   switch (this->mode) {
     case ClimateMode::CLIMATE_MODE_OFF:
-      TXData[6] = OP_MODE_OFF;
+      d.operation_mode = OperationMode::OFF;
       break;
     case ClimateMode::CLIMATE_MODE_HEAT_COOL:
-      TXData[6] = OP_MODE_AUTO;
+      d.operation_mode = OperationMode::AUTO;
       break;
     case ClimateMode::CLIMATE_MODE_FAN_ONLY:
-      TXData[6] = OP_MODE_FAN;
+      d.operation_mode = OperationMode::FAN;
       break;
     case ClimateMode::CLIMATE_MODE_DRY:
-      TXData[6] = OP_MODE_DRY;
+      d.operation_mode = OperationMode::DRY;
       break;
     case ClimateMode::CLIMATE_MODE_HEAT:
-      TXData[6] = OP_MODE_HEAT;
+      d.operation_mode = OperationMode::HEAT;
       break;
     case ClimateMode::CLIMATE_MODE_COOL:
-      TXData[6] = OP_MODE_COOL;
+      d.operation_mode = OperationMode::COOL;
       break;
     default:
-      TXData[6] = OP_MODE_OFF;
+      d.operation_mode = OperationMode::OFF;
   }
-  // set fan mode
+
   if (this->mode != ClimateMode::CLIMATE_MODE_HEAT_COOL) {
     switch (this->fan_mode.value()) {
       case ClimateFanMode::CLIMATE_FAN_AUTO:
-        TXData[7] = FAN_MODE_AUTO;
+        d.fan_mode = FanMode::FAN_AUTO;
         break;
       case ClimateFanMode::CLIMATE_FAN_HIGH:
-        TXData[7] = FAN_MODE_HIGH;
+        d.fan_mode = FanMode::FAN_HIGH;
         break;
       case ClimateFanMode::CLIMATE_FAN_MEDIUM:
-        TXData[7] = FAN_MODE_MEDIUM;
+        d.fan_mode = FanMode::FAN_MEDIUM;
         break;
       case ClimateFanMode::CLIMATE_FAN_LOW:
-        TXData[7] = FAN_MODE_LOW;
+        d.fan_mode = FanMode::FAN_LOW;
         break;
       default:
-        TXData[7] = FAN_MODE_AUTO;
+        d.fan_mode = FanMode::FAN_AUTO;
     }
   } else {
     // Auto is full-auto - can't set fan mode either.
     this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
-    TXData[7] = FAN_MODE_AUTO;
+    d.fan_mode = FanMode::FAN_AUTO;
   }
-  // set temp
+
   // Data always comes in as C, but user may want it set in F.
   if (this->use_fahrenheit_) {
     float tgt_temp = ((9.0 / 5.0) * this->target_temperature + 32.0);
-
-    TXData[8] = (int) tgt_temp + 0x87;  // Offset from actual to engineering value
+    d.target_temperature.value = static_cast<uint8_t>((int) tgt_temp + 0x87);
   } else {
-    TXData[8] = (int) this->target_temperature;
+    d.target_temperature.value = static_cast<uint8_t>((int) this->target_temperature);
   }
 
-  // set mode flags
-  TXData[11] = ((this->preset == ClimatePreset::CLIMATE_PRESET_BOOST) * MODE_FLAG_AUX_HEAT) |
-               ((this->preset == ClimatePreset::CLIMATE_PRESET_SLEEP) * MODE_FLAG_ECO) |
-               ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) * MODE_FLAG_SWING) | (0 * MODE_FLAG_VENT);
+  d.mode_flags = static_cast<ModeFlags>(
+      ((this->preset == ClimatePreset::CLIMATE_PRESET_BOOST) * MODE_FLAG_AUX_HEAT) |
+      ((this->preset == ClimatePreset::CLIMATE_PRESET_SLEEP) * MODE_FLAG_ECO) |
+      ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) * MODE_FLAG_SWING) | (0 * MODE_FLAG_VENT));
 
-  // set timer start
-  // TODO: This is not tested. If you use it probably want to switch to
-  // State.TimerStart so timer doesn't get ovedrridden TXData[9] =
-  // CalculateSetTime(DesiredState.TimerStart); set timer stop TXData[10] =
-  // CalculateSetTime(DesiredState.TimerStop);
-
-  TXData[14] = CalculateCRC(TXData, TX_LEN);
+  tx_data.update_crc();
 }
 
 void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
@@ -184,44 +158,44 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
   // digitalWrite(ComControlPin, RS485_TX_PIN_VALUE);
   // Log outgoing message at debug level
   tx_data.print_debug(Constants::TAG, TX_MESSAGE_LENGTH, ESPHOME_LOG_LEVEL_DEBUG);
-  this->uart_->write_array(TXData, TX_LEN);
+  this->uart_->write_array(tx_data.raw, TX_MESSAGE_LENGTH);
   this->uart_->flush();
-  controlState = STATE_WAIT_DATA;
-  // Delay the remaining for 100 ms to allow response from the AC unit.
-  this->set_timeout("read-result", 100, [this, cmdSent]() {
+  controlState = ControlState::WAIT_DATA;
+  // Delay for response_timeout ms to allow response from the AC unit.
+  this->set_timeout("read-result", this->response_timeout, [this, cmdSent]() {
     // digitalWrite(ComControlPin, RS485_RX_PIN_VALUE);
 
     uint8_t i = 0;
     while (this->uart_->available()) {
-      if (i < RX_LEN)
-        this->uart_->read_byte(&RXData[i]);
+      if (i < RX_MESSAGE_LENGTH)
+        this->uart_->read_byte(&rx_data.raw[i]);
       i++;
     }
-    if (i == RX_LEN) {
+    if (i == RX_MESSAGE_LENGTH) {
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
       if (cmdSent != CLIENT_COMMAND_SET && cmdSent != CLIENT_COMMAND_FOLLOWME) {
-        ParseResponse(cmdSent);
+        ParseResponse();
       }
-      if (queuedCommand != 0) {
+      if (queuedCommand != ControlState::WAIT_DATA) {
         controlState = queuedCommand;
-        queuedCommand = 0;
+        queuedCommand = ControlState::WAIT_DATA;
       } else {
         switch (cmdSent) {
           case CLIENT_COMMAND_QUERY:
-            controlState = STATE_SEND_QUERY_EXTENDED;
+            controlState = ControlState::SEND_QUERY_EXTENDED;
             break;
           case CLIENT_COMMAND_SET:
-            controlState = STATE_SEND_FOLLOWME;
+            controlState = ControlState::SEND_FOLLOWME;
             break;
           case CLIENT_COMMAND_QUERY_EXTENDED:
-            controlState = STATE_SEND_QUERY;
+            controlState = ControlState::SEND_QUERY;
             break;
           case CLIENT_COMMAND_FOLLOWME:
-            controlState = STATE_SEND_QUERY;
+            controlState = ControlState::SEND_QUERY;
             break;
         }
       }
@@ -241,13 +215,13 @@ void ClimateMideaXYE::update() {
   // 3: Sending Query C0 Command
   // 4: Sending Query C4 Command
   switch (controlState) {
-    case STATE_SEND_SET: {
+    case ControlState::SEND_SET: {
       setACParams();
       cmdSent = CLIENT_COMMAND_SET;
       sendRecv(cmdSent);
       break;
     }
-    case STATE_SEND_FOLLOWME: {
+    case ControlState::SEND_FOLLOWME: {
       // If the AC mode changed, follow-me should be
       // refreshed, if emulating the wired controller's
       // behavior.
@@ -260,228 +234,216 @@ void ClimateMideaXYE::update() {
       }
       break;
     }
-    case STATE_SEND_QUERY: {
-      // construct query command
-      prepareTXData(CLIENT_COMMAND_QUERY);
+    case ControlState::SEND_QUERY: {
+      tx_data = TransmitData(Command::QUERY);
+      tx_data.update_crc();
       cmdSent = CLIENT_COMMAND_QUERY;
       sendRecv(cmdSent);
       break;
     }
-    case STATE_SEND_QUERY_EXTENDED: {
-      prepareTXData(CLIENT_COMMAND_QUERY_EXTENDED);
+    case ControlState::SEND_QUERY_EXTENDED: {
+      tx_data = TransmitData(Command::QUERY_EXTENDED);
+      tx_data.update_crc();
       cmdSent = CLIENT_COMMAND_QUERY_EXTENDED;
       sendRecv(cmdSent);
       break;
     }
-    case STATE_WAIT_DATA: {
+    case ControlState::WAIT_DATA: {
       // Wait for data to processed. Do nothing during the loop.
       break;
     }
   }
 }
 
-uint8_t ClimateMideaXYE::CalculateCRC(uint8_t *data, uint8_t len) {
-  uint32_t crc = 0;
-  for (uint8_t i = 0; i < len; i++) {
-    if (i != len - 2) {
-      crc += data[i];
-    }
+void ClimateMideaXYE::ParseResponse() {
+  if (!rx_data.is_valid()) {
+    ESP_LOGE(Constants::TAG, "Received invalid response from AC");
+    rx_data.print_debug(RX_MESSAGE_LENGTH, Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+    return;
   }
-  return 0xFF - (crc & 0xFF);
-}
 
-void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
-  // validate the response
-  if ((RXData[RX_BYTE_PREAMBLE] == PREAMBLE) && (RXData[RX_BYTE_PROLOGUE] == PROLOGUE) &&
-      (RXData[RX_BYTE_TO_CLIENT] == TO_CLIENT) && (RXData[RX_BYTE_CRC] == CalculateCRC(RXData, RX_LEN))) {
-    switch (RXData[RX_BYTE_COMMAND_TYPE]) {
-      case CLIENT_COMMAND_QUERY: {
-        ClimateMode mode = ClimateMode::CLIMATE_MODE_OFF;
-        ClimateFanMode fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
-        ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
+  const auto &qr = rx_data.message.data.query_response;
 
-        switch (RXData[RX_C0_BYTE_OP_MODE] & 0xEF) {
-          case OP_MODE_OFF:
-            mode = ClimateMode::CLIMATE_MODE_OFF;
-            break;
-          case OP_MODE_AUTO:
-            mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-            break;
-          case OP_MODE_FAN:
-            mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;
-            break;
-          case OP_MODE_DRY:
-            mode = ClimateMode::CLIMATE_MODE_DRY;
-            break;
-          case OP_MODE_HEAT:
-            mode = ClimateMode::CLIMATE_MODE_HEAT;
-            break;
-          case OP_MODE_COOL:
-            mode = ClimateMode::CLIMATE_MODE_COOL;
-            break;
-        }
+  switch (rx_data.message.frame.header.command) {
+    case Command::QUERY: {
+      ClimateMode mode = ClimateMode::CLIMATE_MODE_OFF;
+      ClimateFanMode fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
+      ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
 
-        // The unit seems to show 0x10 when off after running auto.
-        // Check to see if we haven't already matched to OFF state.
-        // If not, and we match otherwise, we are in auto mode.
-        if (mode != ClimateMode::CLIMATE_MODE_OFF &&
-            ((RXData[RX_C0_BYTE_OP_MODE] & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG)) {
+      const uint8_t op_mode_raw = static_cast<uint8_t>(qr.operation_mode) & 0xEF;
+      switch (op_mode_raw) {
+        case OP_MODE_OFF:
+          mode = ClimateMode::CLIMATE_MODE_OFF;
+          break;
+        case OP_MODE_AUTO:
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-        }
+          break;
+        case OP_MODE_FAN:
+          mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;
+          break;
+        case OP_MODE_DRY:
+          mode = ClimateMode::CLIMATE_MODE_DRY;
+          break;
+        case OP_MODE_HEAT:
+          mode = ClimateMode::CLIMATE_MODE_HEAT;
+          break;
+        case OP_MODE_COOL:
+          mode = ClimateMode::CLIMATE_MODE_COOL;
+          break;
+      }
 
-        uint8_t current_fan_speed = RXData[RX_C0_BYTE_FAN_MODE] & 0x0F;
-        switch (current_fan_speed) {
-          case FAN_MODE_HIGH:
-            fan_mode = ClimateFanMode::CLIMATE_FAN_HIGH;
-            break;
-          case FAN_MODE_MEDIUM:
-            fan_mode = ClimateFanMode::CLIMATE_FAN_MEDIUM;
-            break;
-          case FAN_MODE_LOW:
-            fan_mode = ClimateFanMode::CLIMATE_FAN_LOW;
-            break;
-          case FAN_MODE_OFF:
-            fan_mode = ClimateFanMode::CLIMATE_FAN_OFF;
-            break;
-        }
-        if ((RXData[RX_C0_BYTE_FAN_MODE] & FAN_MODE_AUTO) == FAN_MODE_AUTO) {
-          fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
-        }
+      // The unit seems to show 0x10 when off after running auto.
+      // Check to see if we haven't already matched to OFF state.
+      // If not, and we match otherwise, we are in auto mode.
+      if (mode != ClimateMode::CLIMATE_MODE_OFF &&
+          (static_cast<uint8_t>(qr.operation_mode) & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG) {
+        mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
+      }
 
-        if (RXData[RX_C0_BYTE_MODE_FLAGS] & MODE_FLAG_AUX_HEAT)
-          preset = ClimatePreset::CLIMATE_PRESET_BOOST;
-        else if (RXData[RX_C0_BYTE_MODE_FLAGS] & MODE_FLAG_ECO)
-          preset = ClimatePreset::CLIMATE_PRESET_SLEEP;
+      const uint8_t current_fan_speed = static_cast<uint8_t>(qr.fan_mode) & 0x0F;
+      switch (current_fan_speed) {
+        case FAN_MODE_HIGH:
+          fan_mode = ClimateFanMode::CLIMATE_FAN_HIGH;
+          break;
+        case FAN_MODE_MEDIUM:
+          fan_mode = ClimateFanMode::CLIMATE_FAN_MEDIUM;
+          break;
+        case FAN_MODE_LOW:
+          fan_mode = ClimateFanMode::CLIMATE_FAN_LOW;
+          break;
+        case FAN_MODE_OFF:
+          fan_mode = ClimateFanMode::CLIMATE_FAN_OFF;
+          break;
+      }
+      if ((static_cast<uint8_t>(qr.fan_mode) & FAN_MODE_AUTO) == FAN_MODE_AUTO) {
+        fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
+      }
 
-        bool need_publish = false;
+      if (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_AUX_HEAT)
+        preset = ClimatePreset::CLIMATE_PRESET_BOOST;
+      else if (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_ECO)
+        preset = ClimatePreset::CLIMATE_PRESET_SLEEP;
 
-        update_property(this->mode, mode, need_publish);
-        if (mode != ClimateMode::CLIMATE_MODE_OFF)  // Don't update below states
-                                                    // unless mode is an ON state
-        {
-          this->last_on_mode_ = mode;
-        }
+      bool need_publish = false;
 
-        if (mode != ClimateMode::CLIMATE_MODE_OFF ||
-            ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
-        {
-          // Don't update the fan mode. Assume it set correctly.
-          // Show Heating vs Heat at least in Heat mode. Will figure
-          // out how to determine if compressor is on in other modes later.
-          // Store the internal temperature from the XYE bus
-          this->internal_temperature_ = CalculateTemp(RXData[RX_C0_BYTE_T1_TEMP]);
+      update_property(this->mode, mode, need_publish);
+      if (mode != ClimateMode::CLIMATE_MODE_OFF) {
+        this->last_on_mode_ = mode;
+      }
 
-          // Publish the internal temperature to the sensor if configured
-          set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
+      if (mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
+        // Store the internal temperature from the XYE bus
+        this->internal_temperature_ = CalculateTemp(qr.t1_temperature.value);
 
-          // Update current_temperature based on sensor availability
-          this->update_current_temperature_from_sensors_(need_publish);
+        // Publish the internal temperature to the sensor if configured
+        set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
+
+        // Update current_temperature based on sensor availability
+        this->update_current_temperature_from_sensors_(need_publish);
 
 #ifndef SET_TARGET_TEMP_ON_QUERY
-          // Temperature is raw Celsius; bit 6 (SET_TEMP_STATUS_FLAG / 0x40) may be set
-          // by the unit in certain states and must be masked out before use.
-          update_property(this->target_temperature, static_cast<float>(RXData[RX_C0_BYTE_SET_TEMP] & SET_TEMP_VALUE_MASK),
-                          need_publish);
+        // Temperature is raw Celsius; bit 6 (SET_TEMP_STATUS_FLAG / 0x40) may be set
+        // by the unit in certain states and must be masked out before use.
+        update_property(this->target_temperature,
+                        static_cast<float>(qr.target_temperature.value & SET_TEMP_VALUE_MASK), need_publish);
 #endif
 
-          if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
-            if (this->action != climate::CLIMATE_ACTION_HEATING) {
-              this->action = climate::CLIMATE_ACTION_HEATING;
-              need_publish = true;
-            }
-          } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
-            if (this->action != climate::CLIMATE_ACTION_COOLING) {
-              this->action = climate::CLIMATE_ACTION_COOLING;
-              need_publish = true;
-            }
-          } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
-            this->action = climate::CLIMATE_ACTION_IDLE;
-            need_publish = true;
-          }
-
-          if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-              ((RXData[RX_C0_BYTE_OP_MODE] & 0xEF) == OP_MODE_COOL) &&
-              (this->action != climate::CLIMATE_ACTION_COOLING)) {
-            this->action = climate::CLIMATE_ACTION_COOLING;
-            need_publish = true;
-          } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                     ((RXData[RX_C0_BYTE_OP_MODE] & 0xEF) == OP_MODE_FAN) &&
-                     (this->action != climate::CLIMATE_ACTION_FAN)) {
-            this->action = climate::CLIMATE_ACTION_FAN;
-            need_publish = true;
-          } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                     ((RXData[RX_C0_BYTE_OP_MODE] & 0xEF) == OP_MODE_HEAT) &&
-                     (this->action != climate::CLIMATE_ACTION_HEATING)) {
+        if ((this->mode == climate::CLIMATE_MODE_HEAT) && (static_cast<uint8_t>(qr.fan_mode) & 0x0F) != 0x00) {
+          if (this->action != climate::CLIMATE_ACTION_HEATING) {
             this->action = climate::CLIMATE_ACTION_HEATING;
             need_publish = true;
           }
-
-          if ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) !=
-              (bool) (RXData[RX_C0_BYTE_MODE_FLAGS] & MODE_FLAG_SWING))
+        } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (static_cast<uint8_t>(qr.fan_mode) & 0x0F) != 0x00) {
+          if (this->action != climate::CLIMATE_ACTION_COOLING) {
+            this->action = climate::CLIMATE_ACTION_COOLING;
             need_publish = true;
-          this->swing_mode = (RXData[RX_C0_BYTE_MODE_FLAGS] & MODE_FLAG_SWING)
-                                 ? ClimateSwingMode::CLIMATE_SWING_VERTICAL
-                                 : ClimateSwingMode::CLIMATE_SWING_OFF;
-          if (this->preset != preset)
-            need_publish = true;
-          this->preset = preset;
-        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
+          }
+        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) &&
+                   (static_cast<uint8_t>(qr.fan_mode) & 0x0F) == 0x00) {
           this->action = climate::CLIMATE_ACTION_IDLE;
           need_publish = true;
         }
 
+        if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
+            ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_COOL) &&
+            (this->action != climate::CLIMATE_ACTION_COOLING)) {
+          this->action = climate::CLIMATE_ACTION_COOLING;
+          need_publish = true;
+        } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
+                   ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_FAN) &&
+                   (this->action != climate::CLIMATE_ACTION_FAN)) {
+          this->action = climate::CLIMATE_ACTION_FAN;
+          need_publish = true;
+        } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
+                   ((static_cast<uint8_t>(qr.operation_mode) & 0xEF) == OP_MODE_HEAT) &&
+                   (this->action != climate::CLIMATE_ACTION_HEATING)) {
+          this->action = climate::CLIMATE_ACTION_HEATING;
+          need_publish = true;
+        }
+
+        if ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) !=
+            (bool) (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_SWING))
+          need_publish = true;
+        this->swing_mode = (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_SWING)
+                               ? ClimateSwingMode::CLIMATE_SWING_VERTICAL
+                               : ClimateSwingMode::CLIMATE_SWING_OFF;
+        if (this->preset != preset)
+          need_publish = true;
+        this->preset = preset;
+      } else if ((this->action != climate::CLIMATE_ACTION_IDLE) &&
+                 (static_cast<uint8_t>(qr.fan_mode) & 0x0F) == 0x00) {
+        this->action = climate::CLIMATE_ACTION_IDLE;
+        need_publish = true;
+      }
+
+      if (need_publish)
+        this->publish_state();
+
+      set_sensor(this->temperature_2a_sensor_, CalculateTemp(qr.t2a_temperature.value));
+      set_sensor(this->temperature_2b_sensor_, CalculateTemp(qr.t2b_temperature.value));
+      set_sensor(this->temperature_3_sensor_, CalculateTemp(qr.t3_temperature.value));
+      set_sensor(this->current_sensor_, static_cast<float>(qr.current));
+      set_sensor(this->timer_start_sensor_, CalculateGetTime(qr.timer_start));
+      set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
+      set_sensor(this->error_flags_sensor_, static_cast<float>(qr.error_flags.value()));
+      set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
+      break;
+    }
+    case Command::QUERY_EXTENDED: {
+      bool need_publish = false;
+      const auto &exr = rx_data.message.data.extended_query_response;
+      set_sensor(this->outdoor_sensor_, CalculateTemp(exr.outdoor_temperature.value));
+      set_number(this->static_pressure_number_, static_cast<float>(0x0F & exr.static_pressure));
+#ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
+      if (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
+        float incoming_target_temp = 0.0;
+        if (this->use_fahrenheit_) {
+          incoming_target_temp = (float) (((exr.target_temperature.value - 0x87) - 32.0) * 5.0 / 9.0);
+          if (incoming_target_temp != this->target_temperature) {
+            need_publish = true;
+            update_property(this->target_temperature, incoming_target_temp, need_publish);
+          }
+        } else {
+          incoming_target_temp = CalculateTemp(exr.target_temperature.value);
+          if (incoming_target_temp != this->target_temperature) {
+            need_publish = true;
+            update_property(this->target_temperature, incoming_target_temp, need_publish);
+          }
+        }
         if (need_publish)
           this->publish_state();
-
-        set_sensor(this->temperature_2a_sensor_, CalculateTemp(RXData[RX_C0_BYTE_T2A_TEMP]));
-        set_sensor(this->temperature_2b_sensor_, CalculateTemp(RXData[RX_C0_BYTE_T2B_TEMP]));
-        set_sensor(this->temperature_3_sensor_, CalculateTemp(RXData[RX_C0_BYTE_T3_TEMP]));
-        set_sensor(this->current_sensor_, RXData[RX_C0_BYTE_CURRENT]);
-        set_sensor(this->timer_start_sensor_, CalculateGetTime(RXData[RX_C0_BYTE_TIMER_START]));
-        set_sensor(this->timer_stop_sensor_, CalculateGetTime(RXData[RX_C0_BYTE_TIMER_STOP]));
-        set_sensor(this->error_flags_sensor_,
-                   (RXData[RX_C0_BYTE_ERROR_FLAGS1] << 0) | (RXData[RX_C0_BYTE_ERROR_FLAGS2] << 8));
-        set_sensor(this->protect_flags_sensor_,
-                   (RXData[RX_C0_BYTE_PROTECT_FLAGS1] << 0) | (RXData[RX_C0_BYTE_PROTECT_FLAGS2] << 8));
-        break;
       }
-      case CLIENT_COMMAND_QUERY_EXTENDED:
-        bool need_publish = false;
-        set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[RX_C4_BYTE_OUTDOOR_SENSOR]));
-        set_number(this->static_pressure_number_, 0x0F & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
-#ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
-        if (mode != ClimateMode::CLIMATE_MODE_OFF ||
-            ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
-        {
-          float incoming_target_temp = 0.0;
-          if (this->use_fahrenheit_) {
-            incoming_target_temp = (float) (((RXData[RX_C4_BYTE_SET_TEMP] - 0x87) - 32.0) * 5.0 / 9.0);
-            if (incoming_target_temp != this->target_temperature) {
-              need_publish = true;
-              update_property(this->target_temperature, incoming_target_temp, need_publish);
-            }
-          } else {
-            incoming_target_temp = CalculateTemp(RXData[RX_C4_BYTE_SET_TEMP]);
-            if (incoming_target_temp != this->target_temperature) {
-              need_publish = true;
-              update_property(this->target_temperature, incoming_target_temp, need_publish);
-            }
-          }
-          if (need_publish)
-            this->publish_state();
-        }
 #endif
-        // Note: Previous versions validated fixed protocol marker bytes (0xBC, 0xD6, 0x80, 0x80, 0x80, 0x80)
-        // but investigation shows these bytes are actually dynamic engineering values:
-        // - Bytes 19-20 (0xBCD6): 16-bit compressor frequency or outdoor fan RPM
-        // - Bytes 26-29 (0x80): Subsystem OK flags (compressor, outdoor fan, 4-way valve, inverter)
-        // The validation has been removed to support all unit models correctly.
-        ForceReadNextCycle = 0;
-        break;
+      // Note: Previous versions validated fixed protocol marker bytes (0xBC, 0xD6, 0x80, 0x80, 0x80, 0x80)
+      // but investigation shows these bytes are actually dynamic engineering values:
+      // - Bytes 19-20 (0xBCD6): 16-bit compressor frequency or outdoor fan RPM
+      // - Bytes 26-29 (0x80): Subsystem OK flags (compressor, outdoor fan, 4-way valve, inverter)
+      // The validation has been removed to support all unit models correctly.
+      ForceReadNextCycle = 0;
+      break;
     }
-  } else {
-    ESP_LOGE(Constants::TAG, "Received invalid response from AC");
-    rx_data.print_debug(RX_MESSAGE_LENGTH, Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+    default:
+      break;
   }
 }
 
@@ -598,29 +560,27 @@ void ClimateMideaXYE::do_follow_me(float temperature, bool beeper) {
   this->transmitter_.transmit(data);
 #else
   // Prepare Follow-Me command for temperature update
-  prepareTXData(CLIENT_COMMAND_FOLLOWME);
-  
-  // TXData[10] is a subcommand type field for Follow-Me commands.
+  tx_data = TransmitData(Command::FOLLOW_ME);
+  auto &d = tx_data.message.data.standard;
+
+  // timer_stop is a subcommand type field for Follow-Me commands.
   // Subcommand values: 0x06=Init, 0x02=Update, 0x04=Static pressure
   // The followMeInit flag tracks whether we've sent the initialization command.
   // It gets reset to false whenever the AC mode changes (see control() function),
   // ensuring a proper initialization sequence after mode changes.
-  if (followMeInit) {
-    TXData[10] = FOLLOWME_SUBCOMMAND_UPDATE;  // Follow-Me update
-  } else {
-    TXData[10] = FOLLOWME_SUBCOMMAND_INIT;  // Follow-Me initialization
+  d.timer_stop = followMeInit ? FOLLOWME_SUBCOMMAND_UPDATE : FOLLOWME_SUBCOMMAND_INIT;
+  if (!followMeInit)
     followMeInit = true;
-  }
   lastFollowMeTemperature = static_cast<uint8_t>(lroundf(temperature));
-  TXData[11] = lastFollowMeTemperature;
-  TXData[14] = CalculateCRC(TXData, TX_LEN);
+  d.mode_flags = static_cast<ModeFlags>(lastFollowMeTemperature);
+  tx_data.update_crc();
   // Only send if mode is something other than off.
   // Wired controller does not send Follow-Me command when off.
   if (this->mode != ClimateMode::CLIMATE_MODE_OFF) {
-    if (controlState != STATE_WAIT_DATA) {
-      controlState = STATE_SEND_FOLLOWME;
+    if (controlState != ControlState::WAIT_DATA) {
+      controlState = ControlState::SEND_FOLLOWME;
     } else {
-      queuedCommand = STATE_SEND_FOLLOWME;
+      queuedCommand = ControlState::SEND_FOLLOWME;
     }
     ESP_LOGI(Constants::TAG, "Queued Follow-Me data.");
   }
@@ -634,17 +594,18 @@ void ClimateMideaXYE::set_static_pressure(uint8_t static_pressure) {
   }
 
   // Prepare Follow-Me command for static pressure setting
-  prepareTXData(CLIENT_COMMAND_FOLLOWME);
-  TXData[8] = 0x10 | (static_pressure & 0x0F);
-  TXData[10] = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
-  TXData[11] = lastFollowMeTemperature;
-  TXData[14] = CalculateCRC(TXData, TX_LEN);
+  tx_data = TransmitData(Command::FOLLOW_ME);
+  auto &d = tx_data.message.data.standard;
+  d.target_temperature.value = static_cast<uint8_t>(0x10 | (static_pressure & 0x0F));
+  d.timer_stop = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;
+  d.mode_flags = static_cast<ModeFlags>(lastFollowMeTemperature);
+  tx_data.update_crc();
 
   if (this->mode == ClimateMode::CLIMATE_MODE_OFF) {
-    if (controlState != STATE_WAIT_DATA) {
-      controlState = STATE_SEND_FOLLOWME;
+    if (controlState != ControlState::WAIT_DATA) {
+      controlState = ControlState::SEND_FOLLOWME;
     } else {
-      queuedCommand = STATE_SEND_FOLLOWME;
+      queuedCommand = ControlState::SEND_FOLLOWME;
     }
     ESP_LOGI(Constants::TAG, "Queued setting static pressure to %d", static_pressure);
   } else {

@@ -160,7 +160,7 @@ enum class TimerFlags : uint8_t {
 };
 
 /**
- * @brief Follow-Me subcommand types (used in TXData[10])
+ * @brief Follow-Me subcommand types (used in the timer_stop field of a Follow-Me transmit message)
  */
 enum class FollowMeSubcommand : uint8_t {
   UPDATE = 0x02,          ///< Regular temperature update
@@ -483,6 +483,24 @@ inline size_t print_debug_enum(const char *tag, const char *name, EnumType value
 // Static assertions
 static_assert(sizeof(ProtocolMarker) == 1, "ProtocolMarker must be 1 byte");
 static_assert(sizeof(MessageFrameEnd) == 2, "MessageFrameEnd must be 2 bytes (CRC + prologue)");
+
+/// Compute XYE protocol CRC.
+///
+/// Sums all bytes in the buffer except the byte at position @c len-2 (the CRC
+/// slot itself).  Returns @c 0xFF minus the low byte of that sum.
+///
+/// @param data  Pointer to the start of the message buffer.
+/// @param len   Total buffer length, including the CRC byte and the trailing
+///              prologue byte.
+/// @return      The computed CRC byte.
+inline uint8_t compute_protocol_crc(const uint8_t *data, uint8_t len) {
+  uint32_t crc = 0;
+  for (uint8_t i = 0; i < len; i++) {
+    if (i != len - 2)
+      crc += data[i];
+  }
+  return static_cast<uint8_t>(0xFF - (crc & 0xFF));
+}
 
 }  // namespace xye
 }  // namespace midea
