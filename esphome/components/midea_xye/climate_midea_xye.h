@@ -6,6 +6,15 @@
 #include "esphome/components/climate/climate_traits.h"
 #include "esphome/components/number/number.h"
 #include "esphome/components/sensor/sensor.h"
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
+#ifdef USE_BINARY_SENSOR
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#endif
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
@@ -197,6 +206,15 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_protect_flags_sensor(Sensor *sensor) { this->protect_flags_sensor_ = sensor; }
   void set_humidity_setpoint_sensor(Sensor *sensor) { this->humidity_sensor_ = sensor; }
   void set_power_sensor(Sensor *sensor) { this->power_sensor_ = sensor; }
+#ifdef USE_SWITCH
+  void set_use_fahrenheit_switch(switch_::Switch *sw) { this->use_fahrenheit_switch_ = sw; }
+#endif
+#ifdef USE_BINARY_SENSOR
+  void set_defrost_sensor(binary_sensor::BinarySensor *sensor) { this->defrost_sensor_ = sensor; }
+#endif
+#ifdef USE_TEXT_SENSOR
+  void set_fan_speed_sensor(text_sensor::TextSensor *sensor) { this->fan_speed_sensor_ = sensor; }
+#endif
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
@@ -275,6 +293,15 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   Sensor *protect_flags_sensor_{nullptr};
   Sensor *humidity_sensor_{nullptr};
   Sensor *power_sensor_{nullptr};
+#ifdef USE_SWITCH
+  switch_::Switch *use_fahrenheit_switch_{nullptr};
+#endif
+#ifdef USE_BINARY_SENSOR
+  binary_sensor::BinarySensor *defrost_sensor_{nullptr};
+#endif
+#ifdef USE_TEXT_SENSOR
+  text_sensor::TextSensor *fan_speed_sensor_{nullptr};
+#endif
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};

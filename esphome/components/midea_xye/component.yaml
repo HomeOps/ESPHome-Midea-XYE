@@ -15,3 +15,5 @@ components:
       - xye_send.cpp
       - xye_recv.h
       - xye_recv.cpp
+      - use_fahrenheit_switch.h
+      - use_fahrenheit_switch.cpp

@@ -23,6 +23,20 @@ static void set_number(number::Number *number, float value) {
     number->publish_state(value);
 }
 
+#ifdef USE_TEXT_SENSOR
+static void set_text_sensor(text_sensor::TextSensor *sens, const std::string &value) {
+  if (sens != nullptr && (!sens->has_state() || sens->get_raw_state() != value))
+    sens->publish_state(value);
+}
+#endif
+
+#ifdef USE_BINARY_SENSOR
+static void set_binary_sensor(binary_sensor::BinarySensor *sens, bool value) {
+  if (sens != nullptr && (!sens->has_state() || sens->state != value))
+    sens->publish_state(value);
+}
+#endif
+
 template<typename T> void update_property(T &property, const T &value, bool &flag) {
   if (property != value) {
     property = value;
@@ -63,6 +77,11 @@ void ClimateMideaXYE::setup() {
 
   // Start up in Auto fan mode (since unit doesn't report it correctly)
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
+#ifdef USE_SWITCH
+  if (this->use_fahrenheit_switch_ != nullptr) {
+    this->use_fahrenheit_switch_->publish_state(this->use_fahrenheit_);
+  }
+#endif
 }
 
 void ClimateMideaXYE::set_follow_me_sensor(Sensor *sensor) {
@@ -441,8 +460,31 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
         set_sensor(this->timer_stop_sensor_, CalculateGetTime(RXData[RX_C0_BYTE_TIMER_STOP]));
         set_sensor(this->error_flags_sensor_,
                    (RXData[RX_C0_BYTE_ERROR_FLAGS1] << 0) | (RXData[RX_C0_BYTE_ERROR_FLAGS2] << 8));
-        set_sensor(this->protect_flags_sensor_,
-                   (RXData[RX_C0_BYTE_PROTECT_FLAGS1] << 0) | (RXData[RX_C0_BYTE_PROTECT_FLAGS2] << 8));
+        uint16_t protect_flags = (RXData[RX_C0_BYTE_PROTECT_FLAGS1] << 0) | (RXData[RX_C0_BYTE_PROTECT_FLAGS2] << 8);
+        set_sensor(this->protect_flags_sensor_, protect_flags);
+#ifdef USE_BINARY_SENSOR
+        set_binary_sensor(this->defrost_sensor_, (protect_flags & DEFROST_PROTECT_FLAG) != 0);
+#endif
+#ifdef USE_TEXT_SENSOR
+        {
+          const char *fan_speed_text;
+          switch (current_fan_speed) {
+            case FAN_MODE_LOW:
+              fan_speed_text = "Low";
+              break;
+            case FAN_MODE_MEDIUM:
+              fan_speed_text = "Medium";
+              break;
+            case FAN_MODE_HIGH:
+              fan_speed_text = "High";
+              break;
+            default:
+              fan_speed_text = "Off";
+              break;
+          }
+          set_text_sensor(this->fan_speed_sensor_, fan_speed_text);
+        }
+#endif
         break;
       }
       case CLIENT_COMMAND_QUERY_EXTENDED:

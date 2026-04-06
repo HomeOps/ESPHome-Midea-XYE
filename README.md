@@ -15,6 +15,7 @@ Kudos to these projects:
 - Working implementation using ESP32: https://github.com/Bunicutz/ESP32_Midea_RS485
 - Working implementation by wtahler: https://github.com/wtahler/esphome-mideaXYE-rs485
 - Fully integrated Midea Climate component: https://github.com/esphome/esphome/tree/dev/esphome/components/midea
+- Units switch, fan speed, and defrost features: https://github.com/mdrobnak/esphome/tree/units_switch
 
 ## Hardware Requirements
 
@@ -170,6 +171,12 @@ climate:
       name: Error Flags
     protect_flags:              # Optional
       name: Protect Flags
+    defrost:                    # Optional. Defrost active status
+      name: Defrost Active
+    fan_speed:                  # Optional. Current fan speed (Off, Low, Medium, High)
+      name: Fan Speed
+    use_fahrenheit_switch:      # Optional. Runtime toggle between Fahrenheit and Celsius
+      name: Use Fahrenheit
 ```
 
 ## Debugging
@@ -207,11 +214,13 @@ Example debug output:
 
 ### What Works
 - Setting mode (off, auto, fan, cool, heat, dry)
-- Setting temperature (can send in Celsius or Fahrenheit; handles AC results in both; must manually set in YAML)
+- Setting temperature (can send in Celsius or Fahrenheit; handles AC results in both; configurable at runtime via the Fahrenheit switch or in YAML)
 - Setting fan mode (auto, low, medium, high)
 - Reading inside and outside air temperatures
 - Reading inside coil temperature and outside coil temperature
 - Reading timer start/stop times (set by remote)
+- Defrost status monitoring via binary sensor
+- Current fan speed reporting (Off, Low, Medium, High) via text sensor
 - Follow-Me temperature - automatically sends room temperature from a configured sensor to the AC unit. Updates on sensor state changes and every 30 seconds.
 
 ### Known Issues

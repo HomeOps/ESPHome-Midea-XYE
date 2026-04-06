@@ -1,6 +1,6 @@
 from esphome.core import coroutine
 from esphome import automation
-from esphome.components import climate, sensor, uart, remote_transmitter, number
+from esphome.components import binary_sensor, climate, sensor, switch, text_sensor, uart, remote_transmitter, number
 from esphome.components.remote_base import CONF_TRANSMITTER_ID
 import esphome.config_validation as cv
 import esphome.codegen as cg
@@ -26,6 +26,9 @@ from esphome.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_DURATION,
     DEVICE_CLASS_EMPTY,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    ICON_FAN,
     ICON_POWER,
     ICON_THERMOMETER,
     ICON_WATER_PERCENT,
@@ -48,7 +51,7 @@ from esphome.components.climate import (
 
 #CODEOWNERS = ["@dudanov"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
-AUTO_LOAD = ["number", "sensor"]
+AUTO_LOAD = ["binary_sensor", "number", "sensor", "switch", "text_sensor"]
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_TEMPERATURE_2A = "temperature_2a"
 CONF_TEMPERATURE_2B = "temperature_2b"
@@ -63,9 +66,13 @@ CONF_HUMIDITY_SETPOINT = "humidity_setpoint"
 CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
+CONF_DEFROST = "defrost"
+CONF_FAN_SPEED = "fan_speed"
+CONF_USE_FAHRENHEIT_SWITCH = "use_fahrenheit_switch"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
+UseFahrenheitSwitch = midea_xye_ns.class_("UseFahrenheitSwitch", switch.Switch, cg.Component)
 Capabilities = midea_xye_ns.namespace("Constants")
 
 def templatize(value):
@@ -242,6 +249,19 @@ CONFIG_SCHEMA = cv.All(
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_DEFROST): binary_sensor.binary_sensor_schema(
+                icon="mdi:snowflake-thermometer",
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_FAN_SPEED): text_sensor.text_sensor_schema(
+                icon=ICON_FAN,
+            ),
+            cv.Optional(CONF_USE_FAHRENHEIT_SWITCH): switch.switch_schema(
+                UseFahrenheitSwitch,
+                icon=ICON_THERMOMETER,
+                entity_category=ENTITY_CATEGORY_CONFIG,
+                default_restore_mode="DISABLED",
             ),
         }
     )
@@ -424,3 +444,13 @@ async def to_code(config):
     if CONF_INTERNAL_CURRENT_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_INTERNAL_CURRENT_TEMPERATURE])
         cg.add(var.set_internal_current_temperature_sensor(sens))
+    if CONF_DEFROST in config:
+        sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST])
+        cg.add(var.set_defrost_sensor(sens))
+    if CONF_FAN_SPEED in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_FAN_SPEED])
+        cg.add(var.set_fan_speed_sensor(sens))
+    if CONF_USE_FAHRENHEIT_SWITCH in config:
+        sw = await switch.new_switch(config[CONF_USE_FAHRENHEIT_SWITCH])
+        await cg.register_parented(sw, var)
+        cg.add(var.set_use_fahrenheit_switch(sw))
