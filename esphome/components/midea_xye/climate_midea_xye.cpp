@@ -79,7 +79,13 @@ void ClimateMideaXYE::setup() {
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
 #ifdef USE_SWITCH
   if (this->use_fahrenheit_switch_ != nullptr) {
-    this->use_fahrenheit_switch_->publish_state(this->use_fahrenheit_);
+    if (this->use_fahrenheit_switch_->has_state()) {
+      // Use the restored switch state (from flash) instead of the YAML default
+      this->use_fahrenheit_ = this->use_fahrenheit_switch_->state;
+    } else {
+      // No saved state yet - publish the YAML default to initialize the switch
+      this->use_fahrenheit_switch_->publish_state(this->use_fahrenheit_);
+    }
   }
 #endif
 }
@@ -470,16 +476,16 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
           const char *fan_speed_text;
           switch (current_fan_speed) {
             case FAN_MODE_LOW:
-              fan_speed_text = "Low";
+              fan_speed_text = xye::FAN_SPEED_TEXT_LOW;
               break;
             case FAN_MODE_MEDIUM:
-              fan_speed_text = "Medium";
+              fan_speed_text = xye::FAN_SPEED_TEXT_MEDIUM;
               break;
             case FAN_MODE_HIGH:
-              fan_speed_text = "High";
+              fan_speed_text = xye::FAN_SPEED_TEXT_HIGH;
               break;
             default:
-              fan_speed_text = "Off";
+              fan_speed_text = xye::FAN_SPEED_TEXT_OFF;
               break;
           }
           set_text_sensor(this->fan_speed_sensor_, fan_speed_text);

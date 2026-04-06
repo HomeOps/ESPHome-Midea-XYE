@@ -261,7 +261,7 @@ CONFIG_SCHEMA = cv.All(
                 UseFahrenheitSwitch,
                 icon=ICON_THERMOMETER,
                 entity_category=ENTITY_CATEGORY_CONFIG,
-                default_restore_mode="DISABLED",
+                default_restore_mode="RESTORE_DEFAULT_OFF",
             ),
         }
     )
