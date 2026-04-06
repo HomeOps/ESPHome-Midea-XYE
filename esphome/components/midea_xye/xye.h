@@ -522,7 +522,7 @@ static_assert(sizeof(MessageFrameEnd) == 2, "MessageFrameEnd must be 2 bytes (CR
 /// @param len   Total buffer length, including the CRC byte and the trailing
 ///              prologue byte.
 /// @return      The computed CRC byte.
-inline uint8_t compute_protocol_crc(const uint8_t *data, uint8_t len) {
+inline uint8_t compute_protocol_crc(const uint8_t *data, uint8_t len) noexcept {
   uint32_t crc = 0;
   for (uint8_t i = 0; i < len; i++) {
     if (i != len - 2)

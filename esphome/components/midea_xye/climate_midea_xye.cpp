@@ -30,6 +30,95 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
   }
 }
 
+// ---------------------------------------------------------------------------
+// XYEAdapter – value conversions between XYE protocol types and ESPHome types
+// ---------------------------------------------------------------------------
+
+ClimateMode XYEAdapter::get_climate_mode(OperationMode op_mode) noexcept {
+  ClimateMode mode = ClimateMode::CLIMATE_MODE_OFF;
+  switch (static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK) {
+    case OP_MODE_OFF:  mode = ClimateMode::CLIMATE_MODE_OFF;       break;
+    case OP_MODE_AUTO: mode = ClimateMode::CLIMATE_MODE_HEAT_COOL; break;
+    case OP_MODE_FAN:  mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;  break;
+    case OP_MODE_DRY:  mode = ClimateMode::CLIMATE_MODE_DRY;       break;
+    case OP_MODE_HEAT: mode = ClimateMode::CLIMATE_MODE_HEAT;      break;
+    case OP_MODE_COOL: mode = ClimateMode::CLIMATE_MODE_COOL;      break;
+  }
+  // AUTO_FLAG (0x10) overrides the base value: if set while not already OFF,
+  // the unit is in heat/cool (auto) mode.
+  if (mode != ClimateMode::CLIMATE_MODE_OFF &&
+      (static_cast<uint8_t>(op_mode) & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG) {
+    mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
+  }
+  return mode;
+}
+
+ClimateFanMode XYEAdapter::get_climate_fan_mode(FanMode fan_mode) noexcept {
+  // The AUTO flag (bit 7, 0x80) takes precedence over the speed nibble.
+  if ((static_cast<uint8_t>(fan_mode) & FAN_MODE_AUTO) == FAN_MODE_AUTO)
+    return ClimateFanMode::CLIMATE_FAN_AUTO;
+  switch (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) {
+    case FAN_MODE_HIGH:   return ClimateFanMode::CLIMATE_FAN_HIGH;
+    case FAN_MODE_MEDIUM: return ClimateFanMode::CLIMATE_FAN_MEDIUM;
+    case FAN_MODE_LOW:    return ClimateFanMode::CLIMATE_FAN_LOW;
+    case FAN_MODE_OFF:    return ClimateFanMode::CLIMATE_FAN_OFF;
+    default:              return ClimateFanMode::CLIMATE_FAN_AUTO;
+  }
+}
+
+float XYEAdapter::get_temperature(uint8_t raw) noexcept { return (raw - 0x28) / 2.0f; }
+
+float XYEAdapter::get_target_temperature(uint8_t raw) noexcept {
+  return static_cast<float>(raw & SET_TEMP_VALUE_MASK);
+}
+
+ClimateAction XYEAdapter::get_climate_action(ClimateMode mode, FanMode fan_mode,
+                                              OperationMode op_mode) noexcept {
+  const bool fan_running = (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) != 0x00;
+
+  ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
+  if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
+    action = ClimateAction::CLIMATE_ACTION_HEATING;
+  } else if (mode == ClimateMode::CLIMATE_MODE_COOL && fan_running) {
+    action = ClimateAction::CLIMATE_ACTION_COOLING;
+  }
+
+  // In heat/cool (auto) mode refine the action using the unit's reported sub-mode.
+  if (mode == ClimateMode::CLIMATE_MODE_HEAT_COOL) {
+    const uint8_t op_raw = static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK;
+    if (op_raw == OP_MODE_COOL)
+      action = ClimateAction::CLIMATE_ACTION_COOLING;
+    else if (op_raw == OP_MODE_FAN)
+      action = ClimateAction::CLIMATE_ACTION_FAN;
+    else if (op_raw == OP_MODE_HEAT)
+      action = ClimateAction::CLIMATE_ACTION_HEATING;
+  }
+
+  return action;
+}
+
+OperationMode XYEAdapter::get_operation_mode(ClimateMode mode) noexcept {
+  switch (mode) {
+    case ClimateMode::CLIMATE_MODE_HEAT_COOL: return OperationMode::AUTO;
+    case ClimateMode::CLIMATE_MODE_FAN_ONLY:  return OperationMode::FAN;
+    case ClimateMode::CLIMATE_MODE_DRY:       return OperationMode::DRY;
+    case ClimateMode::CLIMATE_MODE_HEAT:      return OperationMode::HEAT;
+    case ClimateMode::CLIMATE_MODE_COOL:      return OperationMode::COOL;
+    default:                                  return OperationMode::OFF;
+  }
+}
+
+FanMode XYEAdapter::get_fan_mode(ClimateFanMode fan_mode) noexcept {
+  switch (fan_mode) {
+    case ClimateFanMode::CLIMATE_FAN_HIGH:   return FanMode::FAN_HIGH;
+    case ClimateFanMode::CLIMATE_FAN_MEDIUM: return FanMode::FAN_MEDIUM;
+    case ClimateFanMode::CLIMATE_FAN_LOW:    return FanMode::FAN_LOW;
+    default:                                 return FanMode::FAN_AUTO;
+  }
+}
+
+// ---------------------------------------------------------------------------
+
 void ClimateMideaXYE::control(const ClimateCall &call) {
   if (call.get_mode().has_value()) {
     this->mode = call.get_mode().value();
@@ -91,46 +180,10 @@ void ClimateMideaXYE::setACParams() {
   tx_data = TransmitData(Command::SET);
   auto &d = tx_data.message.data.standard;
 
-  switch (this->mode) {
-    case ClimateMode::CLIMATE_MODE_OFF:
-      d.operation_mode = OperationMode::OFF;
-      break;
-    case ClimateMode::CLIMATE_MODE_HEAT_COOL:
-      d.operation_mode = OperationMode::AUTO;
-      break;
-    case ClimateMode::CLIMATE_MODE_FAN_ONLY:
-      d.operation_mode = OperationMode::FAN;
-      break;
-    case ClimateMode::CLIMATE_MODE_DRY:
-      d.operation_mode = OperationMode::DRY;
-      break;
-    case ClimateMode::CLIMATE_MODE_HEAT:
-      d.operation_mode = OperationMode::HEAT;
-      break;
-    case ClimateMode::CLIMATE_MODE_COOL:
-      d.operation_mode = OperationMode::COOL;
-      break;
-    default:
-      d.operation_mode = OperationMode::OFF;
-  }
+  d.operation_mode = XYEAdapter::get_operation_mode(this->mode);
 
   if (this->mode != ClimateMode::CLIMATE_MODE_HEAT_COOL) {
-    switch (this->fan_mode.value()) {
-      case ClimateFanMode::CLIMATE_FAN_AUTO:
-        d.fan_mode = FanMode::FAN_AUTO;
-        break;
-      case ClimateFanMode::CLIMATE_FAN_HIGH:
-        d.fan_mode = FanMode::FAN_HIGH;
-        break;
-      case ClimateFanMode::CLIMATE_FAN_MEDIUM:
-        d.fan_mode = FanMode::FAN_MEDIUM;
-        break;
-      case ClimateFanMode::CLIMATE_FAN_LOW:
-        d.fan_mode = FanMode::FAN_LOW;
-        break;
-      default:
-        d.fan_mode = FanMode::FAN_AUTO;
-    }
+    d.fan_mode = XYEAdapter::get_fan_mode(this->fan_mode.value());
   } else {
     // Auto is full-auto - can't set fan mode either.
     this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
@@ -266,58 +319,10 @@ void ClimateMideaXYE::ParseResponse() {
 
   switch (rx_data.message.frame.header.command) {
     case Command::QUERY: {
-      ClimateMode mode = ClimateMode::CLIMATE_MODE_OFF;
-      ClimateFanMode fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
       ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
 
-      const uint8_t op_mode_raw = static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK;
-      switch (op_mode_raw) {
-        case OP_MODE_OFF:
-          mode = ClimateMode::CLIMATE_MODE_OFF;
-          break;
-        case OP_MODE_AUTO:
-          mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-          break;
-        case OP_MODE_FAN:
-          mode = ClimateMode::CLIMATE_MODE_FAN_ONLY;
-          break;
-        case OP_MODE_DRY:
-          mode = ClimateMode::CLIMATE_MODE_DRY;
-          break;
-        case OP_MODE_HEAT:
-          mode = ClimateMode::CLIMATE_MODE_HEAT;
-          break;
-        case OP_MODE_COOL:
-          mode = ClimateMode::CLIMATE_MODE_COOL;
-          break;
-      }
-
-      // The unit seems to show 0x10 when off after running auto.
-      // Check to see if we haven't already matched to OFF state.
-      // If not, and we match otherwise, we are in auto mode.
-      if (mode != ClimateMode::CLIMATE_MODE_OFF &&
-          (static_cast<uint8_t>(qr.operation_mode) & OP_MODE_AUTO_FLAG) == OP_MODE_AUTO_FLAG) {
-        mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
-      }
-
-      const uint8_t current_fan_speed = static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK;
-      switch (current_fan_speed) {
-        case FAN_MODE_HIGH:
-          fan_mode = ClimateFanMode::CLIMATE_FAN_HIGH;
-          break;
-        case FAN_MODE_MEDIUM:
-          fan_mode = ClimateFanMode::CLIMATE_FAN_MEDIUM;
-          break;
-        case FAN_MODE_LOW:
-          fan_mode = ClimateFanMode::CLIMATE_FAN_LOW;
-          break;
-        case FAN_MODE_OFF:
-          fan_mode = ClimateFanMode::CLIMATE_FAN_OFF;
-          break;
-      }
-      if ((static_cast<uint8_t>(qr.fan_mode) & FAN_MODE_AUTO) == FAN_MODE_AUTO) {
-        fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
-      }
+      const ClimateMode mode = XYEAdapter::get_climate_mode(qr.operation_mode);
+      const ClimateFanMode fan_mode = XYEAdapter::get_climate_fan_mode(qr.fan_mode);
 
       if (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_AUX_HEAT)
         preset = ClimatePreset::CLIMATE_PRESET_BOOST;
@@ -333,7 +338,7 @@ void ClimateMideaXYE::ParseResponse() {
 
       if (mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
         // Store the internal temperature from the XYE bus
-        this->internal_temperature_ = CalculateTemp(qr.t1_temperature.value);
+        this->internal_temperature_ = XYEAdapter::get_temperature(qr.t1_temperature.value);
 
         // Publish the internal temperature to the sensor if configured
         set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
@@ -345,41 +350,12 @@ void ClimateMideaXYE::ParseResponse() {
         // Temperature is raw Celsius; bit 6 (SET_TEMP_STATUS_FLAG / 0x40) may be set
         // by the unit in certain states and must be masked out before use.
         update_property(this->target_temperature,
-                        static_cast<float>(qr.target_temperature.value & SET_TEMP_VALUE_MASK), need_publish);
+                        XYEAdapter::get_target_temperature(qr.target_temperature.value), need_publish);
 #endif
 
-        if ((this->mode == climate::CLIMATE_MODE_HEAT) && (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) != 0x00) {
-          if (this->action != climate::CLIMATE_ACTION_HEATING) {
-            this->action = climate::CLIMATE_ACTION_HEATING;
-            need_publish = true;
-          }
-        } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) != 0x00) {
-          if (this->action != climate::CLIMATE_ACTION_COOLING) {
-            this->action = climate::CLIMATE_ACTION_COOLING;
-            need_publish = true;
-          }
-        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) &&
-                   (static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK) == 0x00) {
-          this->action = climate::CLIMATE_ACTION_IDLE;
-          need_publish = true;
-        }
-
-        if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-            ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_COOL) &&
-            (this->action != climate::CLIMATE_ACTION_COOLING)) {
-          this->action = climate::CLIMATE_ACTION_COOLING;
-          need_publish = true;
-        } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                   ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_FAN) &&
-                   (this->action != climate::CLIMATE_ACTION_FAN)) {
-          this->action = climate::CLIMATE_ACTION_FAN;
-          need_publish = true;
-        } else if ((this->mode == climate::CLIMATE_MODE_HEAT_COOL) &&
-                   ((static_cast<uint8_t>(qr.operation_mode) & OP_MODE_VALUE_MASK) == OP_MODE_HEAT) &&
-                   (this->action != climate::CLIMATE_ACTION_HEATING)) {
-          this->action = climate::CLIMATE_ACTION_HEATING;
-          need_publish = true;
-        }
+        update_property(this->action,
+                        XYEAdapter::get_climate_action(mode, qr.fan_mode, qr.operation_mode),
+                        need_publish);
 
         if ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) !=
             (bool) (static_cast<uint8_t>(qr.mode_flags) & MODE_FLAG_SWING))
@@ -399,9 +375,9 @@ void ClimateMideaXYE::ParseResponse() {
       if (need_publish)
         this->publish_state();
 
-      set_sensor(this->temperature_2a_sensor_, CalculateTemp(qr.t2a_temperature.value));
-      set_sensor(this->temperature_2b_sensor_, CalculateTemp(qr.t2b_temperature.value));
-      set_sensor(this->temperature_3_sensor_, CalculateTemp(qr.t3_temperature.value));
+      set_sensor(this->temperature_2a_sensor_, XYEAdapter::get_temperature(qr.t2a_temperature.value));
+      set_sensor(this->temperature_2b_sensor_, XYEAdapter::get_temperature(qr.t2b_temperature.value));
+      set_sensor(this->temperature_3_sensor_, XYEAdapter::get_temperature(qr.t3_temperature.value));
       set_sensor(this->current_sensor_, static_cast<float>(qr.current));
       set_sensor(this->timer_start_sensor_, CalculateGetTime(qr.timer_start));
       set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
@@ -412,7 +388,7 @@ void ClimateMideaXYE::ParseResponse() {
     case Command::QUERY_EXTENDED: {
       bool need_publish = false;
       const auto &exr = rx_data.message.data.extended_query_response;
-      set_sensor(this->outdoor_sensor_, CalculateTemp(exr.outdoor_temperature.value));
+      set_sensor(this->outdoor_sensor_, XYEAdapter::get_temperature(exr.outdoor_temperature.value));
       set_number(this->static_pressure_number_, static_cast<float>(STATIC_PRESSURE_VALUE_MASK & exr.static_pressure));
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
       if (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
@@ -424,7 +400,7 @@ void ClimateMideaXYE::ParseResponse() {
             update_property(this->target_temperature, incoming_target_temp, need_publish);
           }
         } else {
-          incoming_target_temp = CalculateTemp(exr.target_temperature.value);
+          incoming_target_temp = XYEAdapter::get_temperature(exr.target_temperature.value);
           if (incoming_target_temp != this->target_temperature) {
             need_publish = true;
             update_property(this->target_temperature, incoming_target_temp, need_publish);
@@ -508,8 +484,6 @@ uint32_t ClimateMideaXYE::CalculateGetTime(uint8_t time) {
   }
   return timeValue;
 }
-
-float ClimateMideaXYE::CalculateTemp(uint8_t byte) { return (byte - 0x28) / 2.0; }
 
 climate::ClimateTraits ClimateMideaXYE::traits() {
   auto traits = climate::ClimateTraits();

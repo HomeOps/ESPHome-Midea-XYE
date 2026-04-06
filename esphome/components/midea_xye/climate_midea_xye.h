@@ -92,6 +92,7 @@ constexpr uint8_t RESPONSE_UNKNOWN1 = static_cast<uint8_t>(ResponseCode::UNKNOWN
 constexpr uint8_t RESPONSE_UNKNOWN2 = static_cast<uint8_t>(ResponseCode::UNKNOWN2);
 constexpr uint8_t RESPONSE_UNKNOWN3 = static_cast<uint8_t>(ResponseCode::UNKNOWN3);
 
+using climate::ClimateAction;
 using climate::ClimateCall;
 using climate::ClimateFanMode;
 using climate::ClimateMode;
@@ -105,6 +106,34 @@ class Constants {
   static const char *const FREEZE_PROTECTION;
   static const char *const SILENT;
   static const char *const TURBO;
+};
+
+/// @brief Static adapter class that bridges XYE protocol values and ESPHome climate entity types.
+///        All methods are static and noexcept, performing pure value conversions with no side effects.
+struct XYEAdapter {
+  /// Returns the ESPHome ClimateMode for the given XYE OperationMode byte.
+  static ClimateMode get_climate_mode(OperationMode op_mode) noexcept;
+
+  /// Returns the ESPHome ClimateFanMode for the given XYE FanMode byte.
+  static ClimateFanMode get_climate_fan_mode(FanMode fan_mode) noexcept;
+
+  /// Returns the decoded Celsius temperature from a raw XYE temperature byte.
+  static float get_temperature(uint8_t raw) noexcept;
+
+  /// Returns the target temperature in Celsius from a raw XYE byte,
+  /// masking out the SET_TEMP_STATUS_FLAG (bit 6) that the unit may set in certain states.
+  static float get_target_temperature(uint8_t raw) noexcept;
+
+  /// Returns the ClimateAction derived from the current XYE mode, fan, and operation state.
+  /// @note Intended for use when mode != CLIMATE_MODE_OFF.
+  static ClimateAction get_climate_action(ClimateMode mode, FanMode fan_mode,
+                                          OperationMode op_mode) noexcept;
+
+  /// Returns the XYE OperationMode for the given ESPHome ClimateMode.
+  static OperationMode get_operation_mode(ClimateMode mode) noexcept;
+
+  /// Returns the XYE FanMode for the given ESPHome ClimateFanMode.
+  static FanMode get_fan_mode(ClimateFanMode fan_mode) noexcept;
 };
 
 class ClimateMideaXYE : public PollingComponent, public climate::Climate, public StaticPressureInterface {
@@ -218,7 +247,6 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void ParseResponse();
   uint8_t CalculateSetTime(uint32_t time);
   uint32_t CalculateGetTime(uint8_t time);
-  static float CalculateTemp(uint8_t byte);
   void update_current_temperature_from_sensors_(bool &need_publish);
   void on_follow_me_sensor_update_(float state);
 };
