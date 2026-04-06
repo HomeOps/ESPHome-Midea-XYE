@@ -35,6 +35,14 @@ struct XYEAdapter {
 
   /// Returns the XYE FanMode for the given ESPHome ClimateFanMode.
   static FanMode get_fan_mode(climate::ClimateFanMode fan_mode) noexcept;
+
+  /// Returns the raw XYE target-temperature byte for the given ESPHome setpoint.
+  /// When use_fahrenheit is true the Celsius value is converted to Fahrenheit before encoding.
+  static uint8_t get_raw_target_temperature(float celsius, bool use_fahrenheit) noexcept;
+
+  /// Returns the XYE ModeFlags for the given ESPHome preset and swing mode.
+  static ModeFlags get_mode_flags(climate::ClimatePreset preset,
+                                  climate::ClimateSwingMode swing_mode) noexcept;
 };
 
 }  // namespace xye

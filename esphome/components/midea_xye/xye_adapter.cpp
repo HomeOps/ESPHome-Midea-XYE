@@ -94,6 +94,22 @@ FanMode XYEAdapter::get_fan_mode(climate::ClimateFanMode fan_mode) noexcept {
   }
 }
 
+uint8_t XYEAdapter::get_raw_target_temperature(float celsius, bool use_fahrenheit) noexcept {
+  if (use_fahrenheit) {
+    float fahrenheit = (9.0f / 5.0f) * celsius + 32.0f;
+    return static_cast<uint8_t>(static_cast<int>(fahrenheit) + FAHRENHEIT_TEMP_OFFSET);
+  }
+  return static_cast<uint8_t>(static_cast<int>(celsius));
+}
+
+ModeFlags XYEAdapter::get_mode_flags(climate::ClimatePreset preset,
+                                     climate::ClimateSwingMode swing_mode) noexcept {
+  return static_cast<ModeFlags>(
+      ((preset == climate::ClimatePreset::CLIMATE_PRESET_BOOST) * static_cast<uint8_t>(ModeFlags::AUX_HEAT)) |
+      ((preset == climate::ClimatePreset::CLIMATE_PRESET_SLEEP) * static_cast<uint8_t>(ModeFlags::ECO)) |
+      ((swing_mode != climate::ClimateSwingMode::CLIMATE_SWING_OFF) * static_cast<uint8_t>(ModeFlags::SWING)));
+}
+
 }  // namespace xye
 }  // namespace midea
 }  // namespace esphome

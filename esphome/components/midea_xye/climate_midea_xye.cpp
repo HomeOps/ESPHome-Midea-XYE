@@ -102,17 +102,10 @@ void ClimateMideaXYE::setACParams() {
   }
 
   // Data always comes in as C, but user may want it set in F.
-  if (this->use_fahrenheit_) {
-    float tgt_temp = ((9.0 / 5.0) * this->target_temperature + 32.0);
-    d.target_temperature.value = static_cast<uint8_t>(static_cast<int>(tgt_temp) + FAHRENHEIT_TEMP_OFFSET);
-  } else {
-    d.target_temperature.value = static_cast<uint8_t>(static_cast<int>(this->target_temperature));
-  }
+  d.target_temperature.value = XYEAdapter::get_raw_target_temperature(this->target_temperature, this->use_fahrenheit_);
 
-  d.mode_flags = static_cast<ModeFlags>(
-      ((this->preset == ClimatePreset::CLIMATE_PRESET_BOOST) * MODE_FLAG_AUX_HEAT) |
-      ((this->preset == ClimatePreset::CLIMATE_PRESET_SLEEP) * MODE_FLAG_ECO) |
-      ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) * MODE_FLAG_SWING) | (0 * MODE_FLAG_VENT));
+  d.mode_flags = XYEAdapter::get_mode_flags(
+      this->preset.value_or(ClimatePreset::CLIMATE_PRESET_NONE), this->swing_mode);
 
   tx_data.update_crc();
 }
