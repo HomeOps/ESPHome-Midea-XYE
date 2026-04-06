@@ -152,7 +152,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void loop() override {}
   void sendRecv(uint8_t cmdSent);
   void setPowerState(bool state);
-  void setACParams();
+  void setTransmitParams();
 
   /* ############### */
   /* ### ACTIONS ### */

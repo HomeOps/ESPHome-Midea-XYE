@@ -87,7 +87,7 @@ void ClimateMideaXYE::setPowerState(bool state) {
   }
 }
 
-void ClimateMideaXYE::setACParams() {
+void ClimateMideaXYE::setTransmitParams() {
   tx_data = TransmitData(Command::SET);
   auto &d = tx_data.message.data.standard;
 
@@ -173,7 +173,7 @@ void ClimateMideaXYE::update() {
   // 4: Sending Query C4 Command
   switch (controlState) {
     case ControlState::SEND_SET: {
-      setACParams();
+      setTransmitParams();
       cmdSent = CLIENT_COMMAND_SET;
       sendRecv(cmdSent);
       break;
