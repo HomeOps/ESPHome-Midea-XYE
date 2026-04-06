@@ -13,6 +13,7 @@
 #include "ir_transmitter.h"
 #include "static_pressure_number.h"
 #include "xye.h"
+#include "xye_adapter.h"
 #include "xye_send.h"
 #include "xye_recv.h"
 
@@ -106,34 +107,6 @@ class Constants {
   static const char *const FREEZE_PROTECTION;
   static const char *const SILENT;
   static const char *const TURBO;
-};
-
-/// @brief Static adapter class that bridges XYE protocol values and ESPHome climate entity types.
-///        All methods are static and noexcept, performing pure value conversions with no side effects.
-struct XYEAdapter {
-  /// Returns the ESPHome ClimateMode for the given XYE OperationMode byte.
-  static ClimateMode get_climate_mode(OperationMode op_mode) noexcept;
-
-  /// Returns the ESPHome ClimateFanMode for the given XYE FanMode byte.
-  static ClimateFanMode get_climate_fan_mode(FanMode fan_mode) noexcept;
-
-  /// Returns the decoded Celsius temperature from a raw XYE temperature byte.
-  static float get_temperature(uint8_t raw) noexcept;
-
-  /// Returns the target temperature in Celsius from a raw XYE byte,
-  /// masking out the SET_TEMP_STATUS_FLAG (bit 6) that the unit may set in certain states.
-  static float get_target_temperature(uint8_t raw) noexcept;
-
-  /// Returns the ClimateAction derived from the current XYE mode, fan, and operation state.
-  /// @note Intended for use when mode != CLIMATE_MODE_OFF.
-  static ClimateAction get_climate_action(ClimateMode mode, FanMode fan_mode,
-                                          OperationMode op_mode) noexcept;
-
-  /// Returns the XYE OperationMode for the given ESPHome ClimateMode.
-  static OperationMode get_operation_mode(ClimateMode mode) noexcept;
-
-  /// Returns the XYE FanMode for the given ESPHome ClimateFanMode.
-  static FanMode get_fan_mode(ClimateFanMode fan_mode) noexcept;
 };
 
 class ClimateMideaXYE : public PollingComponent, public climate::Climate, public StaticPressureInterface {
