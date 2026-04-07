@@ -18,7 +18,8 @@ struct XYEAdapter {
   /// Returns the ESPHome ClimateFanMode for the given XYE FanMode byte.
   static climate::ClimateFanMode get_climate_fan_mode(FanMode fan_mode) noexcept;
 
-  /// Returns the decoded Celsius temperature from a raw XYE temperature byte.
+  /// Returns the decoded Celsius temperature from an encoded XYE temperature byte.
+  /// Used for T1/T2/T3/outdoor temperature readings and the C4 setpoint when not in Fahrenheit.
   static float get_temperature(uint8_t raw) noexcept;
 
   /// Returns the target temperature in Celsius from a raw XYE byte,
