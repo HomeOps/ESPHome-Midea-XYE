@@ -90,6 +90,7 @@ FanMode XYEAdapter::get_fan_mode(climate::ClimateFanMode fan_mode) noexcept {
     case ClimateFanMode::CLIMATE_FAN_HIGH:   return FanMode::FAN_HIGH;
     case ClimateFanMode::CLIMATE_FAN_MEDIUM: return FanMode::FAN_MEDIUM;
     case ClimateFanMode::CLIMATE_FAN_LOW:    return FanMode::FAN_LOW;
+    case ClimateFanMode::CLIMATE_FAN_OFF:    return FanMode::FAN_OFF;
     default:                                 return FanMode::FAN_AUTO;
   }
 }
