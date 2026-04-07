@@ -43,7 +43,7 @@ climate::ClimateFanMode XYEAdapter::get_climate_fan_mode(FanMode fan_mode) noexc
   }
 }
 
-float XYEAdapter::get_temperature(uint8_t raw) noexcept { return (raw - 0x28) / 2.0f; }
+float XYEAdapter::get_temperature(uint8_t raw) noexcept { return Temperature{raw}.to_celsius(); }
 
 float XYEAdapter::get_target_temperature(uint8_t raw) noexcept {
   return static_cast<float>(raw & SET_TEMP_VALUE_MASK);

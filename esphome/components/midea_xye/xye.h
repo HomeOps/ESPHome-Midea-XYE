@@ -316,10 +316,25 @@ constexpr uint8_t SET_TEMP_STATUS_FLAG = 0x40;
 constexpr uint8_t SET_TEMP_VALUE_MASK = static_cast<uint8_t>(~SET_TEMP_STATUS_FLAG);  ///< 0xBF
 
 /**
+ * @brief Byte offset used in the XYE sensor-temperature encoding.
+ *
+ * Encoded formula (Celsius): encoded = (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
+ * Decode formula:            celsius = (encoded - TEMP_ENCODING_OFFSET) / TEMP_ENCODING_SCALE
+ *
+ * Used by T1/T2a/T2b/T3/outdoor temperature bytes in C0 and C4 responses.
+ */
+constexpr uint8_t TEMP_ENCODING_OFFSET = 0x28;
+
+/**
+ * @brief Scale factor used in the XYE sensor-temperature encoding (2 counts per °C).
+ */
+constexpr float TEMP_ENCODING_SCALE = 2.0f;
+
+/**
  * @brief Temperature encoding type
  */
 enum class TemperatureEncoding : uint8_t {
-  ENCODED = 0,  ///< Standard encoding: (celsius * 2.0) + 0x28
+  ENCODED = 0,  ///< Standard encoding: (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
   RAW = 1       ///< Raw Celsius value (no encoding)
 };
 
@@ -327,8 +342,8 @@ enum class TemperatureEncoding : uint8_t {
  * @brief Temperature value (encoded)
  * 
  * Temperature Encoding Formula (Celsius):
- *   encoded_value = (celsius * 2.0) + 0x28
- *   celsius = (value - 0x28) / 2.0
+ *   encoded_value = (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
+ *   celsius = (value - TEMP_ENCODING_OFFSET) / TEMP_ENCODING_SCALE
  * 
  * Example: 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
  * 

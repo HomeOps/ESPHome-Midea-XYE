@@ -9,11 +9,11 @@ namespace xye {
 
 // Temperature methods
 float Temperature::to_celsius() const {
-  return (value - 0x28) / 2.0f;
+  return (value - TEMP_ENCODING_OFFSET) / TEMP_ENCODING_SCALE;
 }
 
 Temperature Temperature::from_celsius(float celsius) {
-  return Temperature{static_cast<uint8_t>(celsius * 2.0f + 0x28)};
+  return Temperature{static_cast<uint8_t>(celsius * TEMP_ENCODING_SCALE + TEMP_ENCODING_OFFSET)};
 }
 
 size_t Temperature::print_debug(const char *tag, const char *name, size_t left, int level, TemperatureEncoding encoding) const {

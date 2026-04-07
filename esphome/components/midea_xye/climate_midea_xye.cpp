@@ -219,10 +219,9 @@ void ClimateMideaXYE::ParseResponse() {
     return;
   }
 
-  const auto &qr = rx_data.message.data.query_response;
-
   switch (rx_data.message.frame.header.command) {
     case Command::QUERY: {
+      const auto &qr = rx_data.message.data.query_response;
       ClimatePreset preset = ClimatePreset::CLIMATE_PRESET_NONE;
 
       const ClimateMode mode = XYEAdapter::get_climate_mode(qr.operation_mode);
