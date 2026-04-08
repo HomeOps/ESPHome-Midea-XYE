@@ -93,6 +93,12 @@ enum class OperationMode : uint8_t {
  * Some implementations have observed LOW fan as 0x03 instead of 0x04.
  * The exact value may vary by unit model. This implementation uses 0x04.
  * See PROTOCOL.md for details on protocol variations.
+ * 
+ * When receiving from the AC unit, the fan mode byte is a bitmask:
+ *   - Bit 7 (FAN_AUTO_FLAG = 0x80): AUTO fan mode — the unit is controlling speed automatically.
+ *   - Lower nibble (FAN_SPEED_MASK = 0x0F): Current physical speed (FAN_HIGH/MEDIUM/LOW/OFF).
+ * Combined values such as 0x81 (AUTO+HIGH), 0x82 (AUTO+MEDIUM), 0x84 (AUTO+LOW) are normal.
+ * Check bit 7 for AUTO status; mask with FAN_SPEED_MASK for the actual running speed.
  */
 enum class FanMode : uint8_t {
   FAN_OFF = 0x00,     ///< Fan off
@@ -100,8 +106,20 @@ enum class FanMode : uint8_t {
   FAN_MEDIUM = 0x02,  ///< Medium speed
   FAN_LOW_ALT = 0x03, ///< Low speed (alternate) - observed in some implementations
   FAN_LOW = 0x04,     ///< Low speed
-  FAN_AUTO = 0x80     ///< Automatic fan speed
+  FAN_AUTO = 0x80     ///< Automatic fan speed (bit 7 set; lower nibble may encode current physical speed)
 };
+
+/**
+ * @brief Bit 7 of the fan mode byte: indicates the unit is in AUTO fan mode.
+ * When this bit is set the lower nibble (FAN_SPEED_MASK) encodes the current physical speed.
+ */
+constexpr uint8_t FAN_AUTO_FLAG = 0x80;
+
+/**
+ * @brief Mask to extract the current physical fan speed from the fan mode byte.
+ * Apply this mask before comparing to FanMode enum values (FAN_HIGH/MEDIUM/LOW/OFF).
+ */
+constexpr uint8_t FAN_SPEED_MASK = 0x0F;
 
 /**
  * @brief Flags for special operation modes
@@ -139,6 +157,11 @@ enum class CcmErrorFlags : uint8_t {
   CRC_ERROR = 0x02,       ///< CRC check failed
   PROTOCOL_ERROR = 0x04   ///< Protocol violation
 };
+
+/// Mask to extract the static pressure level (0–4) from the static pressure byte.
+constexpr uint8_t STATIC_PRESSURE_LEVEL_MASK = 0x0F;
+/// Base marker byte for static pressure C6 frames: bit 4 always set; lower nibble holds the SP level (0–4).
+constexpr uint8_t STATIC_PRESSURE_BASE = 0x10;
 
 /**
  * @brief Auto mode flag in operation mode byte

@@ -11,6 +11,7 @@ This documentation is based on:
 - Implementation by wtahler: https://github.com/wtahler/esphome-mideaXYE-rs485
 - Implementation by Bunicutz: https://github.com/Bunicutz/ESP32_Midea_RS485
 - ESPHome Midea component: https://github.com/esphome/esphome/tree/dev/esphome/components/midea
+- HA Community thread reverse-engineering by mdrobnak, rymo, and others: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679 ([archived PDF](https://github.com/user-attachments/files/26555742/Midea.A_C.via.local.XYE.-.ESPHome.-.Home.Assistant.Community.pdf))
 
 ## Physical Layer
 
@@ -133,6 +134,8 @@ COOL        0x88    Cooling mode                Derived from AUTO (0x80 | 0x08)
 
 **Note**: Some implementations use AUTO_ALT (0x91 = 0x80 | 0x10 | 0x01), which includes the OP_MODE_AUTO_FLAG (0x10). The exact encoding may vary by unit model.
 
+**Important — AUTO mode and the indoor unit**: The indoor unit hardware **never** reports AUTO in its C0 response. When the user selects AUTO (heat/cool as needed), the thermostat (CCM/ESPHome) is responsible for comparing the room temperature to the setpoint and switching between HEAT and COOL commands. The AC itself always receives an explicit HEAT or COOL command and reports back that mode. A software "smart thermostat" layer (e.g. the [HASS Smart Climate](https://github.com/HomeOps/HASS-Smart-Climate) component) is required to implement the AUTO logic in Home Assistant.
+
 ## Fan Modes
 
 ```
@@ -143,10 +146,32 @@ FAN_HIGH    0x01    High speed
 FAN_MEDIUM  0x02    Medium speed                
 FAN_LOW_ALT 0x03    Low speed (alternate)       Observed in some implementations
 FAN_LOW     0x04    Low speed                   
-FAN_AUTO    0x80    Automatic fan speed         
+FAN_AUTO    0x80    Automatic fan speed         Bit 7 set; lower nibble may encode current physical speed (see below)
 ```
 
 **Note**: Low fan speed has been observed as both FAN_LOW_ALT (0x03) and FAN_LOW (0x04) in different implementations. Use the value that works with your specific unit.
+
+### Fan Mode Bitmask (received from AC)
+
+The fan mode byte returned by the AC in the C0 response is a **bitmask**:
+
+- **Bit 7 (`0x80`)** — AUTO fan flag: set when the unit is controlling fan speed automatically.
+- **Lower nibble (`0x0F`)** — Current physical speed the fan is actually running at (uses the same FAN_HIGH/MEDIUM/LOW encoding above).
+
+When the unit is in AUTO fan mode it reports combined values:
+
+| Value  | Meaning                              |
+|--------|--------------------------------------|
+| `0x80` | Auto fan, no current speed info      |
+| `0x81` | Auto fan, currently running at High  |
+| `0x82` | Auto fan, currently running at Medium|
+| `0x84` | Auto fan, currently running at Low   |
+
+To decode:
+- Check bit 7 (`value & 0x80`) to determine if the unit is in auto-fan mode.
+- Mask the lower nibble (`value & 0x0F`) to get the current physical speed.
+
+In this implementation `FAN_AUTO_FLAG = 0x80` and `FAN_SPEED_MASK = 0x0F` are defined as named constants.
 
 ## Temperature Encoding
 
@@ -156,11 +181,7 @@ encoded_value = (celsius * 2.0) + 0x28
 celsius = (encoded_value - 0x28) / 2.0
 ```
 
-**Alternative formulation** (from codeberg.org/xye/xye):
-```
-encoded_value = (celsius / 0.5) + 0x30
-```
-Both formulations are equivalent (0x28 = 40 decimal, 0x30 = 48 decimal in different contexts).
+**Note**: An alternative formulation (`(celsius / 0.5) + 0x30`) appears in the codeberg.org/xye/xye reference. This is **incorrect** — `0x30 = 48` while `0x28 = 40`, so the codeberg formula produces values that are 8 raw counts (4 °C) too high. Always use the `+ 0x28` formula.
 
 **Example**: 
 - 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
@@ -282,9 +303,29 @@ When using the FOLLOW_ME (0xC6) command, byte 10 contains a subcommand:
 Subcommand          Value   Description
 ----------          -----   -----------
 UPDATE              0x02    Regular temperature update
-STATIC_PRESSURE     0x04    Static pressure setting
+STOP                0x04    Follow-Me stop / end-of-sequence marker (present in static pressure frames)
 INIT                0x06    Initialization after mode change
 ```
+
+### Static Pressure (ESP Profile) Frames
+
+To set the external static pressure profile, byte 8 of the C6 frame encodes the profile level in the **lower nibble**, with bit 4 (`0x10`) always set:
+
+```
+Byte 8  Profile   Description
+------  -------   -----------
+0x10    SP0       Lowest static pressure profile
+0x11    SP1
+0x12    SP2
+0x13    SP3
+0x14    SP4       Highest static pressure profile
+```
+
+Byte 10 in these frames contains `0x04` (STOP), which is the Follow-Me stop flag — not a separate "static pressure subcommand".
+
+### Emergency Heat Frame
+
+To activate aux/emergency heat (backup heat strip only, compressor bypassed), send a C6 frame with **byte 8 = `0x80`** immediately after the C3 SET command.
 
 ## Communication Flow
 
@@ -376,6 +417,7 @@ The master (CCM/thermostat) uses a polling model:
 1. **XYE Reverse Engineering Project**
    - https://codeberg.org/xye/xye
    - Original reverse engineering work on the protocol
+   - **Note**: The temperature encoding formula in this reference (`+0x30`) is incorrect. Use `+0x28` (see Temperature Encoding section).
 
 2. **wtahler's Implementation**
    - https://github.com/wtahler/esphome-mideaXYE-rs485
@@ -388,6 +430,15 @@ The master (CCM/thermostat) uses a polling model:
 4. **ESPHome Midea Component**
    - https://github.com/esphome/esphome/tree/dev/esphome/components/midea
    - Related Midea protocol (different from XYE)
+
+5. **HA Community Thread — Midea A/C via local XYE**
+   - https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679
+   - [Archived PDF](https://github.com/user-attachments/files/26555742/Midea.A_C.via.local.XYE.-.ESPHome.-.Home.Assistant.Community.pdf)
+   - Extended protocol analysis including fan mode bitmask, static pressure frames, emergency heat, C4 field decoding, and AUTO mode behaviour. Contributors: mdrobnak, rymo, and others.
+
+6. **mdrobnak's units_switch branch**
+   - https://github.com/mdrobnak/esphome/tree/units_switch
+   - Source of Fahrenheit switch, defrost sensor, and fan speed text sensor features
 
 ## Version History
 

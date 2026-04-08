@@ -329,7 +329,7 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
           mode = ClimateMode::CLIMATE_MODE_HEAT_COOL;
         }
 
-        uint8_t current_fan_speed = RXData[RX_C0_BYTE_FAN_MODE] & 0x0F;
+        uint8_t current_fan_speed = RXData[RX_C0_BYTE_FAN_MODE] & FAN_SPEED_MASK;
         switch (current_fan_speed) {
           case FAN_MODE_HIGH:
             fan_mode = ClimateFanMode::CLIMATE_FAN_HIGH;
@@ -344,7 +344,7 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
             fan_mode = ClimateFanMode::CLIMATE_FAN_OFF;
             break;
         }
-        if ((RXData[RX_C0_BYTE_FAN_MODE] & FAN_MODE_AUTO) == FAN_MODE_AUTO) {
+        if ((RXData[RX_C0_BYTE_FAN_MODE] & FAN_AUTO_FLAG) == FAN_AUTO_FLAG) {
           fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
         }
 
@@ -384,17 +384,17 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
                           need_publish);
 #endif
 
-          if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
+          if ((this->mode == climate::CLIMATE_MODE_HEAT) && (RXData[RX_C0_BYTE_FAN_MODE] & FAN_SPEED_MASK) != 0x00) {
             if (this->action != climate::CLIMATE_ACTION_HEATING) {
               this->action = climate::CLIMATE_ACTION_HEATING;
               need_publish = true;
             }
-          } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) != 0x00) {
+          } else if ((this->mode == climate::CLIMATE_MODE_COOL) && (RXData[RX_C0_BYTE_FAN_MODE] & FAN_SPEED_MASK) != 0x00) {
             if (this->action != climate::CLIMATE_ACTION_COOLING) {
               this->action = climate::CLIMATE_ACTION_COOLING;
               need_publish = true;
             }
-          } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
+          } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & FAN_SPEED_MASK) == 0x00) {
             this->action = climate::CLIMATE_ACTION_IDLE;
             need_publish = true;
           }
@@ -425,7 +425,7 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
           if (this->preset != preset)
             need_publish = true;
           this->preset = preset;
-        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & 0x0F) == 0x00) {
+        } else if ((this->action != climate::CLIMATE_ACTION_IDLE) && (RXData[RX_C0_BYTE_FAN_MODE] & FAN_SPEED_MASK) == 0x00) {
           this->action = climate::CLIMATE_ACTION_IDLE;
           need_publish = true;
         }
@@ -448,7 +448,7 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
       case CLIENT_COMMAND_QUERY_EXTENDED:
         bool need_publish = false;
         set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[RX_C4_BYTE_OUTDOOR_SENSOR]));
-        set_number(this->static_pressure_number_, 0x0F & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
+        set_number(this->static_pressure_number_, STATIC_PRESSURE_LEVEL_MASK & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
         if (mode != ClimateMode::CLIMATE_MODE_OFF ||
             ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
@@ -635,7 +635,7 @@ void ClimateMideaXYE::set_static_pressure(uint8_t static_pressure) {
 
   // Prepare Follow-Me command for static pressure setting
   prepareTXData(CLIENT_COMMAND_FOLLOWME);
-  TXData[8] = 0x10 | (static_pressure & 0x0F);
+  TXData[8] = STATIC_PRESSURE_BASE | (static_pressure & STATIC_PRESSURE_LEVEL_MASK);
   TXData[10] = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;  // Subcommand type: Static pressure setting
   TXData[11] = lastFollowMeTemperature;
   TXData[14] = CalculateCRC(TXData, TX_LEN);

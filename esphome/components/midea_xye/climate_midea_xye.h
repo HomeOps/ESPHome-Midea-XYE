@@ -62,6 +62,7 @@ constexpr uint8_t FAN_MODE_OFF = static_cast<uint8_t>(FanMode::FAN_OFF);
 constexpr uint8_t FAN_MODE_HIGH = static_cast<uint8_t>(FanMode::FAN_HIGH);
 constexpr uint8_t FAN_MODE_MEDIUM = static_cast<uint8_t>(FanMode::FAN_MEDIUM);
 constexpr uint8_t FAN_MODE_LOW = static_cast<uint8_t>(FanMode::FAN_LOW);
+// FAN_AUTO_FLAG (0x80) and FAN_SPEED_MASK (0x0F) are defined in xye.h and available in this namespace.
 
 constexpr uint8_t TEMP_SET_FAN_MODE = xye::TEMP_FAN_MODE;
 
@@ -151,6 +152,8 @@ constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_COMPRESSOR = 26;   // Compressor subsyste
 constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_OUTDOOR_FAN = 27;  // Outdoor fan subsystem OK flag (SubsystemFlags::OK = 0x80)
 constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_4WAY_VALVE = 28;   // 4-way valve subsystem OK flag (SubsystemFlags::OK = 0x80)
 constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_INVERTER = 29;     // Inverter module subsystem OK flag (SubsystemFlags::OK = 0x80)
+// STATIC_PRESSURE_LEVEL_MASK (0x0F) and STATIC_PRESSURE_BASE (0x10) are defined in xye.h and available in this namespace.
+// FAN_AUTO_FLAG (0x80) and FAN_SPEED_MASK (0x0F) are defined in xye.h and available in this namespace.
 
 using climate::ClimateCall;
 using climate::ClimateFanMode;
