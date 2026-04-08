@@ -126,6 +126,13 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
   return left;
 }
 
+bool ReceiveData::is_valid() const noexcept {
+  return message.frame.preamble == ProtocolMarker::PREAMBLE &&
+         message.frame_end.prologue == ProtocolMarker::PROLOGUE &&
+         message.frame.header.direction == Direction::TO_CLIENT &&
+         message.frame_end.crc == compute_protocol_crc(raw, RX_MESSAGE_LENGTH);
+}
+
 }  // namespace xye
 }  // namespace midea
 }  // namespace esphome
