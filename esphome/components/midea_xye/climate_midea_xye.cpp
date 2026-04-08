@@ -448,7 +448,7 @@ void ClimateMideaXYE::ParseResponse(uint8_t cmdSent) {
       case CLIENT_COMMAND_QUERY_EXTENDED:
         bool need_publish = false;
         set_sensor(this->outdoor_sensor_, CalculateTemp(RXData[RX_C4_BYTE_OUTDOOR_SENSOR]));
-        set_number(this->static_pressure_number_, STATIC_PRESSURE_LEVEL_MASK & RXData[RX_C4_BYTE_STATIC_PRESSURE]);
+        set_number(this->static_pressure_number_, (RXData[RX_C4_BYTE_STATIC_PRESSURE] & STATIC_PRESSURE_LEVEL_MASK));
 #ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
         if (mode != ClimateMode::CLIMATE_MODE_OFF ||
             ForceReadNextCycle == 1)  // Don't update below states unless mode is an ON state
