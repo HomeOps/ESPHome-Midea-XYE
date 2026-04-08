@@ -270,10 +270,10 @@ companion HACS component:
 
 👉 **[HomeOps/HASS-Smart-Climate](https://github.com/HomeOps/HASS-Smart-Climate)**
 
-Install it via HACS, point it at the `climate.heatpump` entity created by this component, and
-configure your comfort temperature ranges for each preset. The smart thermostat then drives
-the real device, sending HEAT or COOL commands exactly as the Midea tstat would, while keeping
-its setpoint at the midpoint of the active range.
+Install it via HACS, point it at the climate entity created by this component (for example,
+`climate.<your_name>`), and configure your comfort temperature ranges for each preset. The
+smart thermostat then drives the real device, sending HEAT or COOL commands exactly as the
+Midea tstat would, while keeping its setpoint at the midpoint of the active range.
 
 ## Community
 
