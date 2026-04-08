@@ -293,15 +293,6 @@ enum class SubsystemFlags : uint8_t {
   OK = 0x80                  ///< Subsystem OK, no protection active (bit 7 set)
 };
 
-/// Defrost active flag in protect_flags (bit 1 of the combined 16-bit protect flags value)
-constexpr uint16_t DEFROST_PROTECT_FLAG = 0x0002;
-
-/// Fan speed display text for Home Assistant text sensor
-constexpr const char *FAN_SPEED_TEXT_OFF = "Off";       ///< Fan is not running
-constexpr const char *FAN_SPEED_TEXT_LOW = "Low";       ///< Fan running at low speed
-constexpr const char *FAN_SPEED_TEXT_MEDIUM = "Medium";  ///< Fan running at medium speed
-constexpr const char *FAN_SPEED_TEXT_HIGH = "High";     ///< Fan running at high speed
-
 /**
  * @brief Special temperature value for fan mode
  */
