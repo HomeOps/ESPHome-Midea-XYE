@@ -474,7 +474,7 @@ void ClimateMideaXYE::set_static_pressure(uint8_t static_pressure) {
   tx_data = TransmitData(Command::FOLLOW_ME);
   auto &d = tx_data.message.data.standard;
   d.target_temperature.value = static_cast<uint8_t>(STATIC_PRESSURE_FLAG | (static_pressure & STATIC_PRESSURE_VALUE_MASK));
-  d.timer_stop = FOLLOWME_SUBCOMMAND_STATIC_PRESSURE;
+  d.timer_stop = FOLLOWME_SUBCOMMAND_STOP;
   d.mode_flags = static_cast<ModeFlags>(lastFollowMeTemperature);
   tx_data.update_crc();
 

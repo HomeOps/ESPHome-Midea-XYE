@@ -135,7 +135,7 @@ const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP = {
 
 const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP = {
   {FollowMeSubcommand::UPDATE, "UPDATE"},
-  {FollowMeSubcommand::STATIC_PRESSURE, "STATIC_PRESSURE"},
+  {FollowMeSubcommand::STOP, "STOP"},
   {FollowMeSubcommand::INIT, "INIT"},
 };
 

@@ -205,9 +205,9 @@ enum class TimerFlags : uint8_t {
  * @brief Follow-Me subcommand types (used in the timer_stop field of a Follow-Me transmit message)
  */
 enum class FollowMeSubcommand : uint8_t {
-  UPDATE = 0x02,          ///< Regular temperature update
-  STATIC_PRESSURE = 0x04, ///< Static pressure setting
-  INIT = 0x06             ///< Initialization after mode change
+  UPDATE = 0x02, ///< Regular temperature update
+  STOP   = 0x04, ///< Follow-Me stop / end-of-sequence marker (also present in static pressure frames)
+  INIT   = 0x06  ///< Initialization after mode change
 };
 
 /**

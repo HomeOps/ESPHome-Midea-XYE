@@ -72,7 +72,7 @@ constexpr uint8_t TIMER_16HOUR = static_cast<uint8_t>(xye::TimerFlags::TIMER_16H
 constexpr uint8_t TIMER_INVALID = static_cast<uint8_t>(xye::TimerFlags::INVALID);
 
 constexpr uint8_t FOLLOWME_SUBCOMMAND_UPDATE = static_cast<uint8_t>(FollowMeSubcommand::UPDATE);
-constexpr uint8_t FOLLOWME_SUBCOMMAND_STATIC_PRESSURE = static_cast<uint8_t>(FollowMeSubcommand::STATIC_PRESSURE);
+constexpr uint8_t FOLLOWME_SUBCOMMAND_STOP = static_cast<uint8_t>(FollowMeSubcommand::STOP);
 constexpr uint8_t FOLLOWME_SUBCOMMAND_INIT = static_cast<uint8_t>(FollowMeSubcommand::INIT);
 
 // SERVER Response compatibility (same as client commands)
