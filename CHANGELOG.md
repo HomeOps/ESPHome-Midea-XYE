@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.5...v0.1.6) (2026-04-08)
+
+
+### Bug Fixes
+
+* correct CLIMATE_FAN_OFF mapping and response_timeout, add XYEAdapter, remove TXData/RXData legacy pointers ([#83](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/83)) ([4e9ae8c](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/4e9ae8cd8bfc7919c8119f3eb8e0120d38604855))
+
 ## [0.1.5](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.4...v0.1.5) (2026-04-05)
 
 

@@ -46,6 +46,29 @@ size_t TransmitData::print_debug(const char *tag, size_t left, int level) const 
   return left;
 }
 
+TransmitData::TransmitData(Command cmd) noexcept {
+  message.frame.preamble = ProtocolMarker::PREAMBLE;
+  message.frame.header.command = cmd;
+  message.frame.header.server_id = SERVER_ID;
+  message.frame.header.client_id1 = CLIENT_ID;
+  message.frame.header.direction_node.direction = Direction::FROM_CLIENT;
+  message.frame.header.direction_node.node_id = CLIENT_ID;
+  message.data.standard.operation_mode = OperationMode::OFF;
+  message.data.standard.fan_mode = FanMode::FAN_OFF;
+  message.data.standard.target_temperature.value = 0;
+  message.data.standard.timer_start = 0;
+  message.data.standard.timer_stop = 0;
+  message.data.standard.mode_flags = ModeFlags::NORMAL;
+  message.data.standard.reserved1 = 0;
+  message.data.standard.complement = static_cast<uint8_t>(0xFF - static_cast<uint8_t>(cmd));
+  message.frame_end.crc = 0;
+  message.frame_end.prologue = ProtocolMarker::PROLOGUE;
+}
+
+void TransmitData::update_crc() noexcept {
+  message.frame_end.crc = compute_protocol_crc(raw, TX_MESSAGE_LENGTH);
+}
+
 }  // namespace xye
 }  // namespace midea
 }  // namespace esphome

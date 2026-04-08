@@ -146,6 +146,35 @@ enum class CcmErrorFlags : uint8_t {
 constexpr uint8_t OP_MODE_AUTO_FLAG = 0x10;
 
 /**
+ * @brief Mask to extract the operation mode value, clearing the auto-mode flag bit.
+ * Clears OP_MODE_AUTO_FLAG (0x10) while preserving all other bits.
+ */
+constexpr uint8_t OP_MODE_VALUE_MASK = static_cast<uint8_t>(~OP_MODE_AUTO_FLAG);  ///< 0xEF
+
+/**
+ * @brief Mask to extract the fan speed from the lower 4 bits of the fan mode byte.
+ */
+constexpr uint8_t FAN_SPEED_MASK = 0x0F;
+
+/**
+ * @brief Flag bit set in the target temperature byte of a Follow-Me static pressure message.
+ * Bit 4 (0x10) signals to the unit that the lower nibble carries a static pressure value.
+ */
+constexpr uint8_t STATIC_PRESSURE_FLAG = 0x10;
+
+/**
+ * @brief Mask to extract the 4-bit static pressure value from its byte.
+ */
+constexpr uint8_t STATIC_PRESSURE_VALUE_MASK = 0x0F;
+
+/**
+ * @brief Engineering offset for Fahrenheit temperatures in the XYE protocol.
+ * The unit stores Fahrenheit setpoints as: encoded = (int)fahrenheit + FAHRENHEIT_TEMP_OFFSET.
+ * To decode: fahrenheit = encoded - FAHRENHEIT_TEMP_OFFSET.
+ */
+constexpr uint8_t FAHRENHEIT_TEMP_OFFSET = 0x87;
+
+/**
  * @brief Timer duration flags (combinable)
  */
 enum class TimerFlags : uint8_t {
@@ -160,7 +189,7 @@ enum class TimerFlags : uint8_t {
 };
 
 /**
- * @brief Follow-Me subcommand types (used in TXData[10])
+ * @brief Follow-Me subcommand types (used in the timer_stop field of a Follow-Me transmit message)
  */
 enum class FollowMeSubcommand : uint8_t {
   UPDATE = 0x02,          ///< Regular temperature update
@@ -296,10 +325,25 @@ constexpr uint8_t SET_TEMP_STATUS_FLAG = 0x40;
 constexpr uint8_t SET_TEMP_VALUE_MASK = static_cast<uint8_t>(~SET_TEMP_STATUS_FLAG);  ///< 0xBF
 
 /**
+ * @brief Byte offset used in the XYE sensor-temperature encoding.
+ *
+ * Encoded formula (Celsius): encoded = (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
+ * Decode formula:            celsius = (encoded - TEMP_ENCODING_OFFSET) / TEMP_ENCODING_SCALE
+ *
+ * Used by T1/T2a/T2b/T3/outdoor temperature bytes in C0 and C4 responses.
+ */
+constexpr uint8_t TEMP_ENCODING_OFFSET = 0x28;
+
+/**
+ * @brief Scale factor used in the XYE sensor-temperature encoding (2 counts per °C).
+ */
+constexpr float TEMP_ENCODING_SCALE = 2.0f;
+
+/**
  * @brief Temperature encoding type
  */
 enum class TemperatureEncoding : uint8_t {
-  ENCODED = 0,  ///< Standard encoding: (celsius * 2.0) + 0x28
+  ENCODED = 0,  ///< Standard encoding: (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
   RAW = 1       ///< Raw Celsius value (no encoding)
 };
 
@@ -307,8 +351,8 @@ enum class TemperatureEncoding : uint8_t {
  * @brief Temperature value (encoded)
  * 
  * Temperature Encoding Formula (Celsius):
- *   encoded_value = (celsius * 2.0) + 0x28
- *   celsius = (value - 0x28) / 2.0
+ *   encoded_value = (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
+ *   celsius = (value - TEMP_ENCODING_OFFSET) / TEMP_ENCODING_SCALE
  * 
  * Example: 20°C → (20 * 2) + 0x28 = 0x50 (80 decimal)
  * 
@@ -492,6 +536,24 @@ inline size_t print_debug_enum(const char *tag, const char *name, EnumType value
 // Static assertions
 static_assert(sizeof(ProtocolMarker) == 1, "ProtocolMarker must be 1 byte");
 static_assert(sizeof(MessageFrameEnd) == 2, "MessageFrameEnd must be 2 bytes (CRC + prologue)");
+
+/// Compute XYE protocol CRC.
+///
+/// Sums all bytes in the buffer except the byte at position @c len-2 (the CRC
+/// slot itself).  Returns @c 0xFF minus the low byte of that sum.
+///
+/// @param data  Pointer to the start of the message buffer.
+/// @param len   Total buffer length, including the CRC byte and the trailing
+///              prologue byte.
+/// @return      The computed CRC byte.
+inline uint8_t compute_protocol_crc(const uint8_t *data, uint8_t len) noexcept {
+  uint32_t crc = 0;
+  for (uint8_t i = 0; i < len; i++) {
+    if (i != len - 2)
+      crc += data[i];
+  }
+  return static_cast<uint8_t>(0xFF - (crc & 0xFF));
+}
 
 }  // namespace xye
 }  // namespace midea

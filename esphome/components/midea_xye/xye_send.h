@@ -84,6 +84,15 @@ union TransmitData {
    * @return Updated bytes remaining
    */
   size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+
+  /// Initialise all fields of a transmit frame for @p cmd.
+  /// Sets preamble, command, node IDs, direction, complement, prologue, and
+  /// zeros out all payload fields.  Call update_crc() afterwards to seal the
+  /// message before transmission.
+  explicit TransmitData(Command cmd) noexcept;
+
+  /// Recompute and store the CRC byte based on the current buffer contents.
+  void update_crc() noexcept;
 };
 
 // Static assertions to ensure struct sizes are correct
