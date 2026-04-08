@@ -9,6 +9,12 @@
 #ifdef USE_SWITCH
 #include "esphome/components/switch/switch.h"
 #endif
+#ifdef USE_BINARY_SENSOR
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#endif
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
@@ -145,6 +151,12 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
 #ifdef USE_SWITCH
   void set_use_fahrenheit_switch(switch_::Switch *sw) { this->use_fahrenheit_switch_ = sw; }
 #endif
+#ifdef USE_BINARY_SENSOR
+  void set_defrost_sensor(binary_sensor::BinarySensor *sensor) { this->defrost_sensor_ = sensor; }
+#endif
+#ifdef USE_TEXT_SENSOR
+  void set_fan_speed_sensor(text_sensor::TextSensor *sensor) { this->fan_speed_sensor_ = sensor; }
+#endif
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
@@ -219,6 +231,12 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   Sensor *power_sensor_{nullptr};
 #ifdef USE_SWITCH
   switch_::Switch *use_fahrenheit_switch_{nullptr};
+#endif
+#ifdef USE_BINARY_SENSOR
+  binary_sensor::BinarySensor *defrost_sensor_{nullptr};
+#endif
+#ifdef USE_TEXT_SENSOR
+  text_sensor::TextSensor *fan_speed_sensor_{nullptr};
 #endif
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};

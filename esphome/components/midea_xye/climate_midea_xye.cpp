@@ -23,6 +23,20 @@ static void set_number(number::Number *number, float value) {
     number->publish_state(value);
 }
 
+#ifdef USE_TEXT_SENSOR
+static void set_text_sensor(text_sensor::TextSensor *sens, const std::string &value) {
+  if (sens != nullptr && (!sens->has_state() || sens->get_raw_state() != value))
+    sens->publish_state(value);
+}
+#endif
+
+#ifdef USE_BINARY_SENSOR
+static void set_binary_sensor(binary_sensor::BinarySensor *sens, bool value) {
+  if (sens != nullptr && (!sens->has_state() || sens->state != value))
+    sens->publish_state(value);
+}
+#endif
+
 template<typename T> void update_property(T &property, const T &value, bool &flag) {
   if (property != value) {
     property = value;
@@ -297,6 +311,30 @@ void ClimateMideaXYE::ParseResponse() {
       set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
       set_sensor(this->error_flags_sensor_, static_cast<float>(qr.error_flags.value()));
       set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
+#ifdef USE_BINARY_SENSOR
+      set_binary_sensor(this->defrost_sensor_, (qr.protect_flags.value() & DEFROST_PROTECT_FLAG) != 0);
+#endif
+#ifdef USE_TEXT_SENSOR
+      {
+        const uint8_t current_fan_speed = static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK;
+        const char *fan_speed_text;
+        switch (current_fan_speed) {
+          case FAN_MODE_LOW:
+            fan_speed_text = xye::FAN_SPEED_TEXT_LOW;
+            break;
+          case FAN_MODE_MEDIUM:
+            fan_speed_text = xye::FAN_SPEED_TEXT_MEDIUM;
+            break;
+          case FAN_MODE_HIGH:
+            fan_speed_text = xye::FAN_SPEED_TEXT_HIGH;
+            break;
+          default:
+            fan_speed_text = xye::FAN_SPEED_TEXT_OFF;
+            break;
+        }
+        set_text_sensor(this->fan_speed_sensor_, fan_speed_text);
+      }
+#endif
       break;
     }
     case Command::QUERY_EXTENDED: {
