@@ -210,7 +210,7 @@ Example debug output:
 ## Features
 
 ### What Works
-- Setting mode (off, fan, cool, heat, dry)
+- Setting mode (off, fan, cool, heat, dry, auto/HEAT_COOL; see note below — this does not make the indoor unit switch modes on its own)
 - Setting temperature (can send in Celsius or Fahrenheit; handles AC results in both; must manually set in YAML)
 - Setting fan mode (auto, low, medium, high)
 - Reading inside and outside air temperatures
