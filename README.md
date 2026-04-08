@@ -260,8 +260,8 @@ and COOL on its own** — it stays in whichever mode it received last.
 This ESP component cannot replicate the tstat's role because:
 
 1. The tstat's internal sensor is proprietary and inaccessible over the XYE bus.
-2. The component has no way to send the periodic HEAT/COOL switching commands that the tstat
-   normally provides.
+2. The component does not currently implement the built-in smart thermostat control loop that
+   periodically decides when to send the HEAT/COOL switching commands the tstat normally provides.
 
 A software replacement that replicates exactly what the Midea tstat does — but using
 Home Assistant sensors instead of the proprietary hardware sensor, and adding configurable
