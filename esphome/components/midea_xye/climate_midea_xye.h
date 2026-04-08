@@ -27,7 +27,6 @@ using xye::OperationMode;
 using xye::FanMode;
 using xye::FollowMeSubcommand;
 using xye::ControlState;
-using xye::ResponseCode;
 using xye::TransmitData;
 using xye::ReceiveData;
 
@@ -87,64 +86,6 @@ constexpr uint8_t CAPABILITIES_SWING = static_cast<uint8_t>(xye::Capabilities::S
 
 constexpr uint8_t OP_FLAG_WATER_PUMP = static_cast<uint8_t>(xye::OperationFlags::WATER_PUMP);
 constexpr uint8_t OP_FLAG_WATER_LOCK = static_cast<uint8_t>(xye::OperationFlags::WATER_LOCK);
-
-constexpr uint8_t COMMAND_UNKNOWN = static_cast<uint8_t>(ResponseCode::UNKNOWN);
-constexpr uint8_t RESPONSE_UNKNOWN = static_cast<uint8_t>(ResponseCode::OK);
-constexpr uint8_t RESPONSE_UNKNOWN1 = static_cast<uint8_t>(ResponseCode::UNKNOWN1);
-constexpr uint8_t RESPONSE_UNKNOWN2 = static_cast<uint8_t>(ResponseCode::UNKNOWN2);
-constexpr uint8_t RESPONSE_UNKNOWN3 = static_cast<uint8_t>(ResponseCode::UNKNOWN3);
-
-constexpr uint8_t TX_LEN = xye::TX_MESSAGE_LENGTH;
-
-// Common Bytes - using offsets for compatibility with array access
-constexpr uint8_t RX_BYTE_PREAMBLE = 0;
-constexpr uint8_t RX_BYTE_COMMAND_TYPE = 1;
-constexpr uint8_t RX_BYTE_TO_CLIENT = 2;
-constexpr uint8_t RX_BYTE_DESTINATION1 = 3;
-constexpr uint8_t RX_BYTE_SOURCE = 4;
-constexpr uint8_t RX_BYTE_DESTINATION2 = 5;
-constexpr uint8_t RX_BYTE_CRC = 30;
-constexpr uint8_t RX_BYTE_PROLOGUE = 31;
-constexpr uint8_t RX_LEN = xye::RX_MESSAGE_LENGTH;
-
-// Query Response (0xC0) Specific byte offsets
-constexpr uint8_t RX_C0_BYTE_UNKNOWN1 = 6;
-constexpr uint8_t RX_C0_BYTE_CAPABILITIES = 7;
-constexpr uint8_t RX_C0_BYTE_OP_MODE = 8;
-constexpr uint8_t RX_C0_BYTE_FAN_MODE = 9;
-constexpr uint8_t RX_C0_BYTE_SET_TEMP = 10;
-constexpr uint8_t RX_C0_BYTE_T1_TEMP = 11;
-constexpr uint8_t RX_C0_BYTE_T2A_TEMP = 12;
-constexpr uint8_t RX_C0_BYTE_T2B_TEMP = 13;
-constexpr uint8_t RX_C0_BYTE_T3_TEMP = 14;
-constexpr uint8_t RX_C0_BYTE_CURRENT = 15;
-constexpr uint8_t RX_C0_BYTE_UNKNOWN2 = 16;
-constexpr uint8_t RX_C0_BYTE_TIMER_START = 17;
-constexpr uint8_t RX_C0_BYTE_TIMER_STOP = 18;
-constexpr uint8_t RX_C0_BYTE_UNKNOWN3 = 19;
-constexpr uint8_t RX_C0_BYTE_MODE_FLAGS = 20;
-constexpr uint8_t RX_C0_BYTE_OP_FLAGS = 21;
-constexpr uint8_t RX_C0_BYTE_ERROR_FLAGS1 = 22;
-constexpr uint8_t RX_C0_BYTE_ERROR_FLAGS2 = 23;
-constexpr uint8_t RX_C0_BYTE_PROTECT_FLAGS1 = 24;
-constexpr uint8_t RX_C0_BYTE_PROTECT_FLAGS2 = 25;
-constexpr uint8_t RX_C0_BYTE_CCM_COM_ERROR_FLAGS = 26;
-constexpr uint8_t RX_C0_BYTE_UNKNOWN4 = 27;
-constexpr uint8_t RX_C0_BYTE_UNKNOWN5 = 28;
-constexpr uint8_t RX_C0_BYTE_UNKNOWN6 = 29;
-
-// Extended Query Response (0xC4) Specific byte offsets
-constexpr uint8_t RX_C4_BYTE_SET_TEMP = 18;
-constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_HIGH = 19;  // High byte of 16-bit engineering value (compressor Hz or outdoor fan RPM) - first byte in big-endian
-constexpr uint8_t RX_C4_BYTE_COMPRESSOR_FREQ_LOW = 20;   // Low byte of 16-bit engineering value (compressor Hz or outdoor fan RPM) - second byte in big-endian
-constexpr uint8_t RX_C4_BYTE_OUTDOOR_SENSOR = 21;
-constexpr uint8_t RX_C4_BYTE_STATIC_PRESSURE = 24;  // Data field: static pressure setting
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_COMPRESSOR = 26;   // Compressor subsystem OK flag (SubsystemFlags::OK = 0x80)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_OUTDOOR_FAN = 27;  // Outdoor fan subsystem OK flag (SubsystemFlags::OK = 0x80)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_4WAY_VALVE = 28;   // 4-way valve subsystem OK flag (SubsystemFlags::OK = 0x80)
-constexpr uint8_t RX_C4_BYTE_SUBSYSTEM_INVERTER = 29;     // Inverter module subsystem OK flag (SubsystemFlags::OK = 0x80)
-// STATIC_PRESSURE_VALUE_MASK (0x0F) and STATIC_PRESSURE_FLAG (0x10) are defined in xye.h and available in this namespace.
-// FAN_AUTO_FLAG (0x80) and FAN_SPEED_MASK (0x0F) are defined in xye.h and available in this namespace.
 
 using climate::ClimateAction;
 using climate::ClimateCall;
