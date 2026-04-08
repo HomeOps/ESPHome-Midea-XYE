@@ -15,6 +15,7 @@ Kudos to these projects and people:
 - Working implementation using ESP32 by @Bunicutz: https://github.com/Bunicutz/ESP32_Midea_RS485
 - Working implementation by @wtahler: https://github.com/wtahler/esphome-mideaXYE-rs485
 - Fully integrated Midea Climate component: https://github.com/esphome/esphome/tree/dev/esphome/components/midea
+- Fahrenheit switch, defrost sensor, and fan speed text sensor by @mdrobnak: https://github.com/mdrobnak/esphome/tree/units_switch
 - Smart thermostat (HACS) companion component by @ocalvo: https://github.com/HomeOps/HASS-Smart-Climate
 - Home Assistant community discussion and contributions: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679
 
