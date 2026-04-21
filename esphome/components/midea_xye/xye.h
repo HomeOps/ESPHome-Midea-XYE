@@ -306,6 +306,10 @@ enum class SubsystemFlags : uint8_t {
   OK = 0x80                  ///< Subsystem OK, no protection active (bit 7 set)
 };
 
+/// Defrost active flag within the 16-bit `protect_flags` field of the C0 QUERY response.
+/// When set, the indoor unit is currently running a defrost cycle.
+constexpr uint16_t DEFROST_PROTECT_FLAG = 0x0002;
+
 /**
  * @brief Special temperature value for fan mode
  */

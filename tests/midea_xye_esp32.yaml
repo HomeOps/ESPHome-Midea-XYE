@@ -44,7 +44,9 @@ climate:
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
     internal_current_temperature:
       name: "Internal Current Temperature"
-    
+    defrost:
+      name: "Defrost Active"
+
 # Temperature sensor required for follow_me
 sensor:
   - platform: homeassistant

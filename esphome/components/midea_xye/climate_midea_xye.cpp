@@ -23,6 +23,13 @@ static void set_number(number::Number *number, float value) {
     number->publish_state(value);
 }
 
+#ifdef USE_BINARY_SENSOR
+static void set_binary_sensor(binary_sensor::BinarySensor *sens, bool value) {
+  if (sens != nullptr && (!sens->has_state() || sens->state != value))
+    sens->publish_state(value);
+}
+#endif
+
 template<typename T> void update_property(T &property, const T &value, bool &flag) {
   if (property != value) {
     property = value;
@@ -299,6 +306,9 @@ void ClimateMideaXYE::ParseResponse() {
       set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
       set_sensor(this->error_flags_sensor_, static_cast<float>(qr.error_flags.value()));
       set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
+#ifdef USE_BINARY_SENSOR
+      set_binary_sensor(this->defrost_sensor_, (qr.protect_flags.value() & DEFROST_PROTECT_FLAG) != 0);
+#endif
       break;
     }
     case Command::QUERY_EXTENDED: {
