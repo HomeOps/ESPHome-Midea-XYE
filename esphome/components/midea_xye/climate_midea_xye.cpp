@@ -62,6 +62,11 @@ void ClimateMideaXYE::setup() {
   ForceReadNextCycle = 1;
   followMeInit = false;
 
+  // Register custom modes on the Climate base class. ESPHome 2026.4.0
+  // deprecated the equivalent ClimateTraits setters in favor of these.
+  this->set_supported_custom_presets(this->supported_custom_presets_);
+  this->set_supported_custom_fan_modes(this->supported_custom_fan_modes_);
+
   // Start up in Auto fan mode (since unit doesn't report it correctly)
   this->fan_mode = ClimateFanMode::CLIMATE_FAN_AUTO;
 }
@@ -406,8 +411,6 @@ climate::ClimateTraits ClimateMideaXYE::traits() {
   traits.set_supported_modes(this->supported_modes_);
   traits.set_supported_swing_modes(this->supported_swing_modes_);
   traits.set_supported_presets(this->supported_presets_);
-  traits.set_supported_custom_presets(this->supported_custom_presets_);
-  traits.set_supported_custom_fan_modes(this->supported_custom_fan_modes_);
   /* + MINIMAL SET OF CAPABILITIES */
   traits.add_supported_fan_mode(ClimateFanMode::CLIMATE_FAN_AUTO);
   traits.add_supported_fan_mode(ClimateFanMode::CLIMATE_FAN_LOW);
