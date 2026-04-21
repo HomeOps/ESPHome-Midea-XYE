@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.7...v0.2.0) (2026-04-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires ESPHome >= 2026.4.0. Users pulling this as external_components with an older ESPHome will fail to compile. The deprecated traits setters would still work on 2026.4.0-2026.11.0, but we migrate now to keep the codebase on supported APIs.
+
+### Features
+
+* migrate to ESPHome 2026.4.0 custom-mode API ([#100](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/100)) ([#105](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/105)) ([515f786](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/515f78659662ef2e487e4b76a7c3198e16e95361))
+
 ## [0.1.7](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.6...v0.1.7) (2026-04-21)
 
 
