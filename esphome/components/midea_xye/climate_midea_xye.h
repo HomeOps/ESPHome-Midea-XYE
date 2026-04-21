@@ -180,6 +180,10 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   // When true, Follow-Me updates send a regular UPDATE subcommand (0x02).
   bool followMeInit;
   uint8_t lastFollowMeTemperature;
+  // Number of upcoming QUERY responses whose reported mode should be
+  // ignored after we issue a SET. Prevents a transient mode flap
+  // (e.g. cool -> off -> cool) while the unit acknowledges the new mode.
+  uint8_t post_set_grace_{0};
 
  protected:
   uart::UARTComponent *uart_;

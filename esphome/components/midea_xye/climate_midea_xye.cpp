@@ -174,6 +174,7 @@ void ClimateMideaXYE::update() {
   switch (controlState) {
     case ControlState::SEND_SET: {
       setTransmitParams();
+      post_set_grace_ = 2;
       cmdSent = CLIENT_COMMAND_SET;
       sendRecv(cmdSent);
       break;
@@ -234,9 +235,16 @@ void ClimateMideaXYE::ParseResponse() {
 
       bool need_publish = false;
 
-      update_property(this->mode, mode, need_publish);
-      if (mode != ClimateMode::CLIMATE_MODE_OFF) {
-        this->last_on_mode_ = mode;
+      if (post_set_grace_ > 0) {
+        post_set_grace_--;
+        ESP_LOGD(Constants::TAG,
+                 "Post-SET grace: ignoring reported mode=%d (%u cycle(s) remaining)",
+                 static_cast<int>(mode), post_set_grace_);
+      } else {
+        update_property(this->mode, mode, need_publish);
+        if (mode != ClimateMode::CLIMATE_MODE_OFF) {
+          this->last_on_mode_ = mode;
+        }
       }
 
       if (mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
