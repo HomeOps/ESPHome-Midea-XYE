@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.6...v0.1.7) (2026-04-21)
+
+
+### Bug Fixes
+
+* suppress transient mode flap after SET ([#102](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/102)) ([#103](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/103)) ([fc56f99](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/fc56f997ea34fae086730083194bdb0a9b4e03e0))
+
 ## [0.1.6](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.5...v0.1.6) (2026-04-08)
 
 
