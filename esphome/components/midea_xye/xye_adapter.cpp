@@ -111,6 +111,10 @@ ModeFlags XYEAdapter::get_mode_flags(climate::ClimatePreset preset,
       ((swing_mode != climate::ClimateSwingMode::CLIMATE_SWING_OFF) * static_cast<uint8_t>(ModeFlags::SWING)));
 }
 
+bool XYEAdapter::is_defrost_active(uint16_t protect_flags) noexcept {
+  return (protect_flags & DEFROST_PROTECT_FLAG) != 0;
+}
+
 }  // namespace xye
 }  // namespace midea
 }  // namespace esphome

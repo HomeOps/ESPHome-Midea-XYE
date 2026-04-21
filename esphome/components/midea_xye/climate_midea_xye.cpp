@@ -307,7 +307,7 @@ void ClimateMideaXYE::ParseResponse() {
       set_sensor(this->error_flags_sensor_, static_cast<float>(qr.error_flags.value()));
       set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
 #ifdef USE_BINARY_SENSOR
-      set_binary_sensor(this->defrost_sensor_, (qr.protect_flags.value() & DEFROST_PROTECT_FLAG) != 0);
+      set_binary_sensor(this->defrost_sensor_, XYEAdapter::is_defrost_active(qr.protect_flags.value()));
 #endif
       break;
     }

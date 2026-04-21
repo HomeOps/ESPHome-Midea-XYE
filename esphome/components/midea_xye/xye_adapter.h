@@ -44,6 +44,9 @@ struct XYEAdapter {
   /// Returns the XYE ModeFlags for the given ESPHome preset and swing mode.
   static ModeFlags get_mode_flags(climate::ClimatePreset preset,
                                   climate::ClimateSwingMode swing_mode) noexcept;
+
+  /// Returns true when the defrost bit is set in the C0 QUERY response `protect_flags` value.
+  static bool is_defrost_active(uint16_t protect_flags) noexcept;
 };
 
 }  // namespace xye
