@@ -94,12 +94,54 @@ Byte    Field               Description
 24      Protect Flags Low   Protection flags (low byte)
 25      Protect Flags High  Protection flags (high byte)
 26      CCM Error Flags     Communication error flags
-27      Unknown4            Unknown/reserved
-28      Unknown5            Unknown/reserved
-29      Unknown6            Unknown/reserved
+27      Unknown4            Unknown. Hardware-dependent (0x00 or 0x14 observed),
+                            steady within a given device.
+28      Unknown5            Unknown. Observed varying over time on some hardware
+                            (see "Byte 27-29 observations" below).
+29      Unknown6            Unknown. Observed varying over time on some hardware
+                            (see "Byte 27-29 observations" below).
 30      CRC                 Checksum
 31      Prologue            Always 0x55
 ```
+
+### Byte 27-29 observations
+
+These three bytes are not yet decoded. Cross-referencing independent captures
+yields the following partial picture:
+
+- **Byte 27 (`Unknown4`)** — hardware-dependent, steady within a given device.
+  `0x00` across 771 C0 responses on a ducted heat pump in the US Pacific
+  Northwest; `0x14` across dozens of C0 responses on a C&H CH-36AHU
+  (Midea-manufactured; Home Assistant community thread
+  ["Midea A/C via Local XYE"](https://community.home-assistant.io/t/midea-a-c-via-local-xye/),
+  mdrobnak). Likely a capability / model-class byte.
+- **Byte 28 (`Unknown5`)** — *not* a static status word and *not* a monotonic
+  counter. A ~22-minute idle capture from a PNW ducted heat pump recorded 7
+  distinct values drifting up *and* down:
+
+  ```
+  0xE0 → 0xD0 → 0xC2 → 0xBE → 0xBA → 0xAE → 0xB0
+  (decimal: 224, 208, 194, 190, 186, 174, 176)
+  ```
+
+  The value can sit on a single setting for many minutes (the `0xE0` run was
+  ~11 minutes in that capture) then step by a few counts. A C&H CH-36AHU
+  capture recorded much more rapid movement through 0x00..0xFF.
+
+  A second PNW capture (109 C0 frames, 3m 43s) deliberately exercised four
+  user-initiated state transitions (OFF → FAN → COOL @ 20°C → COOL @ 22°C)
+  and byte 28 **did not move** — it stayed at `0xE0` through every
+  transition, as did byte 27 (`0x00`) and byte 29 (`0x01`). So byte 28 is
+  **not coupled to `operation_mode` or `target_temperature`** on the
+  user-command timescale. Whatever drives it, HVAC setpoint controls are
+  not an input. Best remaining hypotheses: an internal sensor reading
+  (compressor discharge? evaporator pressure?), a defrost / protection
+  countdown, or some non-user-facing controller state.
+- **Byte 29 (`Unknown6`)** — hardware-dependent steady state: `0x01` across
+  all 771 PNW frames; alternates `0x00`/`0x01` with occasional `0x02` on the
+  C&H unit. Meaning unclear.
+
+Any of these interpretations is provisional until more hardware is captured.
 
 ## Commands
 
