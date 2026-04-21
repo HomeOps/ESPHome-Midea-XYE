@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.0...v0.2.1) (2026-04-21)
+
+
+### Features
+
+* add defrost active binary sensor ([#97](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/97)) ([#108](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/108)) ([0d67257](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/0d6725757fd2f0b6f7d8dbe7443f460021172771))
+
 ## [0.2.0](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.1.7...v0.2.0) (2026-04-21)
 
 
