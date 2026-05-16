@@ -18,6 +18,11 @@ static void set_sensor(Sensor *sensor, float value) {
     sensor->publish_state(value);
 }
 
+static void set_text_sensor(text_sensor::TextSensor *sensor, const char *value) {
+  if (sensor != nullptr && (!sensor->has_state() || sensor->state != value))
+    sensor->publish_state(value);
+}
+
 static void set_number(number::Number *number, float value) {
   if (number != nullptr && (!number->has_state() || number->state != value))
     number->publish_state(value);
@@ -265,6 +270,7 @@ void ClimateMideaXYE::ParseResponse() {
 
         // Publish the internal temperature to the sensor if configured
         set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
+        set_sensor(this->temperature_1_sensor_, this->internal_temperature_);
 
         // Update current_temperature based on sensor availability
         this->update_current_temperature_from_sensors_(need_publish);
@@ -298,6 +304,15 @@ void ClimateMideaXYE::ParseResponse() {
       if (need_publish)
         this->publish_state();
 
+      {
+        const uint8_t spd = static_cast<uint8_t>(qr.fan_mode) & FAN_SPEED_MASK;
+        const char *spd_str = (spd == static_cast<uint8_t>(FanMode::FAN_HIGH))    ? "high"
+                            : (spd == static_cast<uint8_t>(FanMode::FAN_MEDIUM))  ? "medium"
+                            : (spd == static_cast<uint8_t>(FanMode::FAN_LOW) ||
+                               spd == static_cast<uint8_t>(FanMode::FAN_LOW_ALT)) ? "low"
+                                                                                   : "off";
+        set_text_sensor(this->fan_speed_sensor_, spd_str);
+      }
       set_sensor(this->temperature_2a_sensor_, XYEAdapter::get_temperature(qr.t2a_temperature.value));
       set_sensor(this->temperature_2b_sensor_, XYEAdapter::get_temperature(qr.t2b_temperature.value));
       set_sensor(this->temperature_3_sensor_, XYEAdapter::get_temperature(qr.t3_temperature.value));

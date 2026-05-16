@@ -42,6 +42,10 @@ climate:
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
     internal_current_temperature:
       name: "Internal Current Temperature"
+    temperature_1:
+      name: "T1 Internal/Inlet Air Temperature"
+    fan_speed:
+      name: "Fan Speed"
     defrost:
       name: "Defrost Active"
 

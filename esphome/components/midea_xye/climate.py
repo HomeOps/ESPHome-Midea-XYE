@@ -1,6 +1,6 @@
 from esphome.core import coroutine
 from esphome import automation
-from esphome.components import binary_sensor, climate, sensor, uart, remote_transmitter, number
+from esphome.components import binary_sensor, climate, sensor, text_sensor, uart, remote_transmitter, number
 from esphome.components.remote_base import CONF_TRANSMITTER_ID
 import esphome.config_validation as cv
 import esphome.codegen as cg
@@ -49,8 +49,10 @@ from esphome.components.climate import (
 
 #CODEOWNERS = ["@dudanov"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
-AUTO_LOAD = ["binary_sensor", "number", "sensor"]
+AUTO_LOAD = ["binary_sensor", "number", "sensor", "text_sensor"]
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
+CONF_TEMPERATURE_1 = "temperature_1"
+CONF_FAN_SPEED = "fan_speed"
 CONF_TEMPERATURE_2A = "temperature_2a"
 CONF_TEMPERATURE_2B = "temperature_2b"
 CONF_TEMPERATURE_3 = "temperature_3"
@@ -165,6 +167,17 @@ CONFIG_SCHEMA = cv.All(
                 accuracy_decimals=1,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_TEMPERATURE_1): sensor.sensor_schema(
+                unit_of_measurement=UNIT_CELSIUS,
+                icon=ICON_THERMOMETER,
+                accuracy_decimals=1,
+                device_class=DEVICE_CLASS_TEMPERATURE,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
+            cv.Optional(CONF_FAN_SPEED): text_sensor.text_sensor_schema(
+                icon="mdi:fan",
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_TEMPERATURE_2A): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
@@ -394,6 +407,12 @@ async def to_code(config):
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
+    if CONF_TEMPERATURE_1 in config:
+        sens = await sensor.new_sensor(config[CONF_TEMPERATURE_1])
+        cg.add(var.set_temperature_1_sensor(sens))
+    if CONF_FAN_SPEED in config:
+        sens = await text_sensor.new_text_sensor(config[CONF_FAN_SPEED])
+        cg.add(var.set_fan_speed_sensor(sens))
     if CONF_TEMPERATURE_2A in config:
         sens = await sensor.new_sensor(config[CONF_TEMPERATURE_2A])
         cg.add(var.set_temperature_2a_sensor(sens))

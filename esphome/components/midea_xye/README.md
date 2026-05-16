@@ -71,6 +71,10 @@ climate:
       - VERTICAL
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
+    temperature_1:             # Optional. Internal/inlet air temperature (T1)
+      name: Internal/Inlet Air Temp
+    fan_speed:                 # Optional. Current physical fan speed (raw nibble: 0=off, 1=high, 2=med, 3/4=low)
+      name: Fan Speed
     temperature_2a:             # Optional. Inside coil temperature
       name: Inside Coil Inlet Temp
     temperature_2b:             # Optional. Inside coil temperature
