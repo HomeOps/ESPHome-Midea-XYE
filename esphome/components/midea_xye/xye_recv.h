@@ -51,7 +51,7 @@ struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
   uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
-  uint8_t unknown3;                ///< [19] Unknown/reserved
+  uint8_t compressor_status;       ///< [19] Compressor status: bit 0 = compressor active/running (C0_COMPRESSOR_ACTIVE_FLAG)
   ModeFlags mode_flags;            ///< [20] Mode flags (ECO, AUX_HEAT, SWING, etc.)
   OperationFlags operation_flags;  ///< [21] Operation status flags (water pump, water lock)
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes

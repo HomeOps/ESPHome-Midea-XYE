@@ -122,6 +122,13 @@ constexpr uint8_t FAN_AUTO_FLAG = 0x80;
 constexpr uint8_t FAN_SPEED_MASK = 0x0F;
 
 /**
+ * @brief Compressor active/running flag in C0 response byte [19].
+ * Bit 0 is set while the compressor is actively running; clear when the compressor
+ * is idle (fan may still be running for circulation or residual airflow).
+ */
+constexpr uint8_t C0_COMPRESSOR_ACTIVE_FLAG = 0x01;
+
+/**
  * @brief Flags for special operation modes
  */
 enum class ModeFlags : uint8_t {

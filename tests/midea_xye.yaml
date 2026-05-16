@@ -48,6 +48,8 @@ climate:
       name: "Fan Speed"
     defrost:
       name: "Defrost Active"
+    compressor_active:
+      name: "Compressor Active"
 
 # Temperature sensor required for follow_me
 sensor:

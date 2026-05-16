@@ -86,7 +86,7 @@ Byte    Field               Description
 16      Unknown2            Unknown/reserved
 17      Timer Start         Start timer setting
 18      Timer Stop          Stop timer setting
-19      Unknown3            Unknown/reserved
+19      Compressor Status   Bit 0 (0x01) = compressor active/running; 0x00 = compressor idle
 20      Mode Flags          Special mode flags
 21      Operation Flags     Status flags (water pump, water lock, etc.)
 22      Error Flags Low     Error code/flags (low byte)

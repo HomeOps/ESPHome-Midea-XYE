@@ -141,6 +141,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_power_sensor(Sensor *sensor) { this->power_sensor_ = sensor; }
 #ifdef USE_BINARY_SENSOR
   void set_defrost_sensor(binary_sensor::BinarySensor *sensor) { this->defrost_sensor_ = sensor; }
+  void set_compressor_active_sensor(binary_sensor::BinarySensor *sensor) { this->compressor_active_sensor_ = sensor; }
 #endif
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
@@ -222,6 +223,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   Sensor *power_sensor_{nullptr};
 #ifdef USE_BINARY_SENSOR
   binary_sensor::BinarySensor *defrost_sensor_{nullptr};
+  binary_sensor::BinarySensor *compressor_active_sensor_{nullptr};
 #endif
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};

@@ -67,6 +67,7 @@ CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
 CONF_DEFROST = "defrost"
+CONF_COMPRESSOR_ACTIVE = "compressor_active"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -262,6 +263,10 @@ CONFIG_SCHEMA = cv.All(
                 icon="mdi:snowflake-thermometer",
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
+            cv.Optional(CONF_COMPRESSOR_ACTIVE): binary_sensor.binary_sensor_schema(
+                icon="mdi:engine",
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
         }
     )
     .extend(uart.UART_DEVICE_SCHEMA)
@@ -452,3 +457,6 @@ async def to_code(config):
     if CONF_DEFROST in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST])
         cg.add(var.set_defrost_sensor(sens))
+    if CONF_COMPRESSOR_ACTIVE in config:
+        sens = await binary_sensor.new_binary_sensor(config[CONF_COMPRESSOR_ACTIVE])
+        cg.add(var.set_compressor_active_sensor(sens))

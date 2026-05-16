@@ -91,6 +91,10 @@ climate:
       name: Error Flags
     protect_flags:              # Optional. 
       name: Protect Flags
+    defrost:                    # Optional. True while the indoor unit is running a defrost cycle
+      name: Defrost Active
+    compressor_active:          # Optional. True while the compressor is actively running
+      name: Compressor Active
 
 ```
 

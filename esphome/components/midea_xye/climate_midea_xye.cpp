@@ -283,7 +283,9 @@ void ClimateMideaXYE::ParseResponse() {
 #endif
 
         update_property(this->action,
-                        XYEAdapter::get_climate_action(mode, qr.fan_mode, qr.operation_mode),
+                        XYEAdapter::get_climate_action(mode, qr.fan_mode, qr.operation_mode,
+                                                       (qr.compressor_status & C0_COMPRESSOR_ACTIVE_FLAG) != 0,
+                                                       XYEAdapter::is_defrost_active(qr.protect_flags.value())),
                         need_publish);
 
         if ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) !=
@@ -323,6 +325,8 @@ void ClimateMideaXYE::ParseResponse() {
       set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
 #ifdef USE_BINARY_SENSOR
       set_binary_sensor(this->defrost_sensor_, XYEAdapter::is_defrost_active(qr.protect_flags.value()));
+      set_binary_sensor(this->compressor_active_sensor_,
+                        (qr.compressor_status & C0_COMPRESSOR_ACTIVE_FLAG) != 0);
 #endif
       break;
     }
