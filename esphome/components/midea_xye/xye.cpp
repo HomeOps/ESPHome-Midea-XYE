@@ -26,7 +26,7 @@ size_t Temperature::print_debug(const char *tag, const char *name, size_t left, 
     temp_celsius = to_celsius();
   }
   
-  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.1f°C)"), 
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.2f°C)"), 
            name, value, temp_celsius);
   return left - sizeof(Temperature);
 }
