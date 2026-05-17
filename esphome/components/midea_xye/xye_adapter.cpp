@@ -45,11 +45,11 @@ climate::ClimateFanMode XYEAdapter::get_climate_fan_mode(FanMode fan_mode) noexc
 
 FanSpeedLevel XYEAdapter::get_fan_speed_level(FanMode fan_mode) noexcept {
   switch (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) {
-    case static_cast<uint8_t>(FanMode::FAN_HIGH):    return FanSpeedLevel::HIGH;
-    case static_cast<uint8_t>(FanMode::FAN_MEDIUM):  return FanSpeedLevel::MEDIUM;
+    case static_cast<uint8_t>(FanMode::FAN_HIGH):    return FanSpeedLevel::SPEED_HIGH;
+    case static_cast<uint8_t>(FanMode::FAN_MEDIUM):  return FanSpeedLevel::SPEED_MEDIUM;
     case static_cast<uint8_t>(FanMode::FAN_LOW):
-    case static_cast<uint8_t>(FanMode::FAN_LOW_ALT): return FanSpeedLevel::LOW;
-    default:                                         return FanSpeedLevel::OFF;
+    case static_cast<uint8_t>(FanMode::FAN_LOW_ALT): return FanSpeedLevel::SPEED_LOW;
+    default:                                         return FanSpeedLevel::SPEED_OFF;
   }
 }
 
@@ -74,7 +74,9 @@ climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode,
   }
 
   // In heat/cool (auto) mode refine the action using the unit's reported sub-mode.
-  if (mode == ClimateMode::CLIMATE_MODE_HEAT_COOL) {
+  // Gated on fan_running like the HEAT/COOL branches above: with the indoor fan off
+  // the unit is not delivering anything to the room, so the action stays IDLE.
+  if (mode == ClimateMode::CLIMATE_MODE_HEAT_COOL && fan_running) {
     const uint8_t op_raw = static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK;
     if (op_raw == static_cast<uint8_t>(OperationMode::COOL))
       action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;

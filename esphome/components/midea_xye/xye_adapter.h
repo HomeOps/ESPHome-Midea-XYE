@@ -16,11 +16,14 @@ namespace xye {
 /// 0x03/0x04). XYEAdapter::get_fan_speed_level remaps it onto this ordinal scale
 /// so the published sensor value sorts and graphs correctly. It deliberately
 /// lives here, beside the adapter, rather than in the protocol header xye.h.
+///
+/// Enumerators carry a SPEED_ prefix because the Arduino framework defines LOW
+/// and HIGH as preprocessor macros, which would otherwise mangle bare names.
 enum class FanSpeedLevel : uint8_t {
-  OFF = 0,     ///< Fan not running
-  LOW = 1,     ///< Low speed
-  MEDIUM = 2,  ///< Medium speed
-  HIGH = 3     ///< High speed
+  SPEED_OFF = 0,     ///< Fan not running
+  SPEED_LOW = 1,     ///< Low speed
+  SPEED_MEDIUM = 2,  ///< Medium speed
+  SPEED_HIGH = 3     ///< High speed
 };
 
 /// @brief Static adapter class that bridges XYE protocol values and ESPHome climate entity types.

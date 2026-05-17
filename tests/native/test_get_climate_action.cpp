@@ -30,6 +30,7 @@ namespace {
 
 using esphome::climate::ClimateAction;
 using esphome::climate::ClimateMode;
+using esphome::midea::xye::FAN_AUTO_FLAG;
 using esphome::midea::xye::FanMode;
 using esphome::midea::xye::FanSpeedLevel;
 using esphome::midea::xye::OperationMode;
@@ -115,18 +116,23 @@ int main() {
   expect_action("HEAT_COOL/COOL sub-mode, defrost -> still COOLING", HEATCOOL, FAN_ON,
                 OperationMode::COOL, true, true, A_COOLING);
   expect_action("HEAT_COOL/FAN sub-mode -> FAN", HEATCOOL, FAN_ON, OperationMode::FAN, true, false, A_FAN);
+  // With the indoor fan off, HEAT_COOL reports no active action regardless of sub-mode.
+  expect_action("HEAT_COOL/HEAT sub-mode, fan off -> IDLE", HEATCOOL, FAN_NONE, OperationMode::HEAT, true,
+                false, A_IDLE);
 
   // OFF is outside the function's contract but must stay benign.
   expect_action("OFF -> IDLE", OFF, FAN_ON, OP_NA, true, false, A_IDLE);
 
   std::printf("\n-- get_fan_speed_level --\n");
-  expect_level("FAN_OFF -> OFF", FanMode::FAN_OFF, FanSpeedLevel::OFF);
-  expect_level("FAN_LOW -> LOW", FanMode::FAN_LOW, FanSpeedLevel::LOW);
-  expect_level("FAN_LOW_ALT -> LOW", FanMode::FAN_LOW_ALT, FanSpeedLevel::LOW);
-  expect_level("FAN_MEDIUM -> MEDIUM", FanMode::FAN_MEDIUM, FanSpeedLevel::MEDIUM);
-  expect_level("FAN_HIGH -> HIGH", FanMode::FAN_HIGH, FanSpeedLevel::HIGH);
-  // The AUTO bit (0x80) must be masked off; the speed nibble still resolves.
-  expect_level("AUTO|HIGH byte -> HIGH", static_cast<FanMode>(0x81), FanSpeedLevel::HIGH);
+  expect_level("FAN_OFF -> OFF", FanMode::FAN_OFF, FanSpeedLevel::SPEED_OFF);
+  expect_level("FAN_LOW -> LOW", FanMode::FAN_LOW, FanSpeedLevel::SPEED_LOW);
+  expect_level("FAN_LOW_ALT -> LOW", FanMode::FAN_LOW_ALT, FanSpeedLevel::SPEED_LOW);
+  expect_level("FAN_MEDIUM -> MEDIUM", FanMode::FAN_MEDIUM, FanSpeedLevel::SPEED_MEDIUM);
+  expect_level("FAN_HIGH -> HIGH", FanMode::FAN_HIGH, FanSpeedLevel::SPEED_HIGH);
+  // The AUTO bit must be masked off; compose the combined byte from the named
+  // protocol constants rather than hardcoding its numeric value.
+  const auto auto_high = static_cast<FanMode>(FAN_AUTO_FLAG | static_cast<uint8_t>(FanMode::FAN_HIGH));
+  expect_level("AUTO|HIGH byte -> HIGH", auto_high, FanSpeedLevel::SPEED_HIGH);
 
   std::printf("\n%d checks, %d failure(s)\n", g_checks, g_failures);
   return g_failures == 0 ? 0 : 1;
