@@ -160,7 +160,7 @@ climate:
       name: Outside Temp
     temperature_1:             # Optional. Internal/inlet air temperature (T1) - room temperature as read by the unit
       name: T1 Internal Air Temp
-    fan_speed:                  # Optional. Current physical fan speed reported by the unit (raw nibble: 0=off, 1=high, 2=med, 3/4=low)
+    fan_speed:                  # Optional. Current physical fan speed reported by the unit as text (off, high, medium, low; protocol nibble mapping: 0=off, 1=high, 2=medium, 3/4=low)
       name: Fan Speed
     temperature_2a:             # Optional. Inside coil temperature
       name: Inside Coil Inlet Temp
