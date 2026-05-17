@@ -314,8 +314,11 @@ void ClimateMideaXYE::ParseResponse() {
       set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
       set_sensor(this->error_flags_sensor_, static_cast<float>(qr.error_flags.value()));
       set_sensor(this->protect_flags_sensor_, static_cast<float>(qr.protect_flags.value()));
+      set_sensor(this->fan_speed_sensor_, static_cast<float>(XYEAdapter::get_fan_speed_level(qr.fan_mode)));
 #ifdef USE_BINARY_SENSOR
       set_binary_sensor(this->defrost_sensor_, XYEAdapter::is_defrost_active(qr.protect_flags.value()));
+      set_binary_sensor(this->compressor_active_sensor_,
+                        qr.compressor_running_flag == CompressorRunningFlag::ACTIVE);
 #endif
       break;
     }

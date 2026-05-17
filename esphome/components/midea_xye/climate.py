@@ -65,6 +65,8 @@ CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
 CONF_DEFROST = "defrost"
+CONF_COMPRESSOR_ACTIVE = "compressor_active"
+CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
@@ -171,6 +173,14 @@ CONFIG_SCHEMA = cv.All(
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            # Physical fan speed as a monotonic ordinal: 0=off, 1=low, 2=medium, 3=high.
+            # The raw protocol nibble is not monotonic, so it is remapped before publishing.
+            cv.Optional(CONF_FAN_SPEED): sensor.sensor_schema(
+                icon="mdi:fan",
+                accuracy_decimals=0,
+                state_class=STATE_CLASS_MEASUREMENT,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
             cv.Optional(CONF_TEMPERATURE_2A): sensor.sensor_schema(
                 unit_of_measurement=UNIT_CELSIUS,
                 icon=ICON_THERMOMETER,
@@ -252,6 +262,10 @@ CONFIG_SCHEMA = cv.All(
             ),
             cv.Optional(CONF_DEFROST): binary_sensor.binary_sensor_schema(
                 icon="mdi:snowflake-thermometer",
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_COMPRESSOR_ACTIVE): binary_sensor.binary_sensor_schema(
+                icon="mdi:engine",
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         }
@@ -400,6 +414,9 @@ async def to_code(config):
     if CONF_OUTDOOR_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_OUTDOOR_TEMPERATURE])
         cg.add(var.set_outdoor_temperature_sensor(sens))
+    if CONF_FAN_SPEED in config:
+        sens = await sensor.new_sensor(config[CONF_FAN_SPEED])
+        cg.add(var.set_fan_speed_sensor(sens))
     if CONF_TEMPERATURE_2A in config:
         sens = await sensor.new_sensor(config[CONF_TEMPERATURE_2A])
         cg.add(var.set_temperature_2a_sensor(sens))
@@ -439,3 +456,6 @@ async def to_code(config):
     if CONF_DEFROST in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST])
         cg.add(var.set_defrost_sensor(sens))
+    if CONF_COMPRESSOR_ACTIVE in config:
+        sens = await binary_sensor.new_binary_sensor(config[CONF_COMPRESSOR_ACTIVE])
+        cg.add(var.set_compressor_active_sensor(sens))

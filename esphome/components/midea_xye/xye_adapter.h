@@ -9,6 +9,20 @@ namespace esphome {
 namespace midea {
 namespace xye {
 
+/// @brief Monotonic fan-speed level produced by the adapter for the `fan_speed` sensor.
+///
+/// This is an adapter output type, not an XYE protocol value — the raw protocol
+/// nibble (FanMode) is not ordered by speed (FAN_HIGH is 0x01 while FAN_LOW is
+/// 0x03/0x04). XYEAdapter::get_fan_speed_level remaps it onto this ordinal scale
+/// so the published sensor value sorts and graphs correctly. It deliberately
+/// lives here, beside the adapter, rather than in the protocol header xye.h.
+enum class FanSpeedLevel : uint8_t {
+  OFF = 0,     ///< Fan not running
+  LOW = 1,     ///< Low speed
+  MEDIUM = 2,  ///< Medium speed
+  HIGH = 3     ///< High speed
+};
+
 /// @brief Static adapter class that bridges XYE protocol values and ESPHome climate entity types.
 ///        All methods are static and noexcept, performing pure value conversions with no side effects.
 struct XYEAdapter {
@@ -17,6 +31,10 @@ struct XYEAdapter {
 
   /// Returns the ESPHome ClimateFanMode for the given XYE FanMode byte.
   static climate::ClimateFanMode get_climate_fan_mode(FanMode fan_mode) noexcept;
+
+  /// Returns the monotonic FanSpeedLevel ordinal for the given XYE FanMode byte.
+  /// The raw protocol nibble is not ordered by speed; this remaps it for the fan_speed sensor.
+  static FanSpeedLevel get_fan_speed_level(FanMode fan_mode) noexcept;
 
   /// Returns the decoded Celsius temperature from an encoded XYE temperature byte.
   /// Used for T1/T2/T3/outdoor temperature readings and the C4 setpoint when not in Fahrenheit.
