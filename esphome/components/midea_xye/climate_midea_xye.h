@@ -87,6 +87,10 @@ constexpr uint8_t SERVER_COMMAND_UNLOCK = static_cast<uint8_t>(Command::UNLOCK);
 constexpr uint8_t CAPABILITIES_EXT_TEMP = static_cast<uint8_t>(xye::Capabilities::EXTERNAL_TEMP);
 constexpr uint8_t CAPABILITIES_SWING = static_cast<uint8_t>(xye::Capabilities::SWING);
 
+/// Precision step for `current_temperature` reported to Home Assistant (0.01 °C → 2 decimal places).
+/// Applies to both the XYE-bus internal temperature and any external follow_me sensor value.
+constexpr float VISUAL_CURRENT_TEMPERATURE_STEP = 0.01f;
+
 constexpr uint8_t OP_FLAG_WATER_PUMP = static_cast<uint8_t>(xye::OperationFlags::WATER_PUMP);
 constexpr uint8_t OP_FLAG_WATER_LOCK = static_cast<uint8_t>(xye::OperationFlags::WATER_LOCK);
 
