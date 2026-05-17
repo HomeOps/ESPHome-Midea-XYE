@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.2...v0.2.3) (2026-05-17)
+
+
+### Bug Fixes
+
+* increase temperature sensor display precision to 2 decimal places ([#115](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/115)) ([d1b169c](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/d1b169c56fea8e531dc8b491363317afc181fc0e))
+
 ## [0.2.2](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.1...v0.2.2) (2026-05-17)
 
 
