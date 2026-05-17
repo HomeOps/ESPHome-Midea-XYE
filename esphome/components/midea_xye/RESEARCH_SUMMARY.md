@@ -78,7 +78,7 @@ Analyzed all "unknown" fields in receive messages:
 - Bytes 6 and 16 remain unknown
 - Byte 19 is now tracked as a provisional compressor-running flag (`0x01` running, `0x00` idle in observed heat captures)
 - Byte 27 remains hardware-dependent and unknown
-- Bytes 28-29 are tracked as startup/controller status flags with observed steady-state values `0xE0/0x01` on one ducted system
+- Bytes 28-29 remain unknown (`unknown5`/`unknown6`); one ducted system held them at `0xE0/0x01`, but wider captures show byte 28 drifting over time
 - No additional information in wtahler's implementation
 - These fields appear unused or reserved
 

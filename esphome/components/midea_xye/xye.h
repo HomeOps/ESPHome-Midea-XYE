@@ -316,11 +316,11 @@ constexpr uint8_t COMPRESSOR_RUNNING_FLAG_IDLE = 0x00;
 /// C0 QUERY response byte 19 value observed when the compressor is actively running.
 constexpr uint8_t COMPRESSOR_RUNNING_FLAG_ACTIVE = 0x01;
 
-/// C0 QUERY response byte 28 steady-state value observed after startup completes.
-constexpr uint8_t STARTUP_STATUS_FLAGS_LOW_STEADY = 0xE0;
+/// C0 QUERY response byte 28 common steady value on one ducted system, despite wider cross-hardware drift.
+constexpr uint8_t UNKNOWN5_DUCTED_STEADY = 0xE0;
 
-/// C0 QUERY response byte 29 steady-state value observed after startup completes.
-constexpr uint8_t STARTUP_STATUS_FLAGS_HIGH_STEADY = 0x01;
+/// C0 QUERY response byte 29 common steady value on one ducted system.
+constexpr uint8_t UNKNOWN6_DUCTED_STEADY = 0x01;
 
 /**
  * @brief Special temperature value for fan mode

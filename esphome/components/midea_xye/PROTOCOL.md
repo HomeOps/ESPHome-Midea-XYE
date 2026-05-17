@@ -97,10 +97,10 @@ Byte    Field               Description
 26      CCM Error Flags     Communication error flags
 27      Unknown4            Unknown. Hardware-dependent (0x00 or 0x14 observed),
                             steady within a given device.
-28      Startup Flags Low   Startup/controller status low byte. Common steady-state
-                            observation: `0xE0` (see "Byte 27-29 observations" below).
-29      Startup Flags High  Startup/controller status high byte. Common steady-state
-                            observation: `0x01` (see "Byte 27-29 observations" below).
+28      Unknown5            Unknown. Observed varying over time on some hardware
+                            (see "Byte 27-29 observations" below).
+29      Unknown6            Unknown. Observed varying over time on some hardware
+                            (see "Byte 27-29 observations" below).
 30      CRC                 Checksum
 31      Prologue            Always 0x55
 ```
@@ -117,7 +117,8 @@ Byte    Field               Description
 
 ### Byte 27-29 observations
 
-Cross-referencing independent captures yields the following partial picture:
+These three bytes are not yet decoded. Cross-referencing independent captures
+yields the following partial picture:
 
 - **Byte 27 (`Unknown4`)** — hardware-dependent, steady within a given device.
   `0x00` across 771 C0 responses on a ducted heat pump in the US Pacific
@@ -125,9 +126,9 @@ Cross-referencing independent captures yields the following partial picture:
   (Midea-manufactured; Home Assistant community thread
   ["Midea A/C via Local XYE"](https://community.home-assistant.io/t/midea-a-c-via-local-xye/),
   mdrobnak). Likely a capability / model-class byte.
-- **Byte 28 (`Startup Flags Low`)** — startup/controller-status low byte.
-  A ~22-minute idle capture from a PNW ducted heat pump recorded 7 distinct
-  values drifting up *and* down:
+- **Byte 28 (`Unknown5`)** — *not* a static status word and *not* a monotonic
+  counter. A ~22-minute idle capture from a PNW ducted heat pump recorded 7
+  distinct values drifting up *and* down:
 
   ```
   0xE0 → 0xD0 → 0xC2 → 0xBE → 0xBA → 0xAE → 0xB0
@@ -141,13 +142,17 @@ Cross-referencing independent captures yields the following partial picture:
   A second PNW capture (109 C0 frames, 3m 43s) deliberately exercised four
   user-initiated state transitions (OFF → FAN → COOL @ 20°C → COOL @ 22°C)
   and byte 28 **did not move** — it stayed at `0xE0` through every
-  transition, as did byte 27 (`0x00`) and byte 29 (`0x01`). A separate pair of
-  heat-mode captures also held bytes 28-29 steady at `0xE0/0x01` while byte 19
-  toggled between compressor running (`0x01`) and idle (`0x00`). So byte 28 is
-  **not coupled to `operation_mode`, `target_temperature`, or compressor
-  start/stop** on the user-command timescale. Whatever drives it, HVAC setpoint
-  controls are not an input.
-- **Byte 29 (`Startup Flags High`)** — hardware-dependent steady state: `0x01` across
+  transition, as did byte 27 (`0x00`) and byte 29 (`0x01`). So byte 28 is
+  **not coupled to `operation_mode` or `target_temperature`** on the
+  user-command timescale. Whatever drives it, HVAC setpoint controls are
+  not an input. Best remaining hypotheses: an internal sensor reading
+  (compressor discharge? evaporator pressure?), a defrost / protection
+  countdown, or some non-user-facing controller state.
+  A separate pair of heat-mode captures also held bytes 28-29 steady at
+  `0xE0/0x01` while byte 19 toggled between compressor running (`0x01`) and
+  idle (`0x00`), so byte 28 is also **not coupled to compressor start/stop**
+  on the observed timescale.
+- **Byte 29 (`Unknown6`)** — hardware-dependent steady state: `0x01` across
   all 771 PNW frames; alternates `0x00`/`0x01` with occasional `0x02` on the
   C&H unit. Meaning unclear.
 
