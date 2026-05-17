@@ -110,7 +110,8 @@ Byte    Field               Description
 - **Byte 19 (`Compressor Run Flag`)** — provisional compressor-running flag.
   In paired heat-mode captures from one system, C0 byte 19 was `0x01` while the
   compressor was running and `0x00` while the unit was idling, while the C4
-  `compressor_flags` byte (`0x8C`) and C0 bytes 28-29 (`0xE0/0x01`) stayed
+  `compressor_flags` field stayed at `0x8C` (compressor active, outdoor fan
+  running, no protections) and C0 bytes 28-29 (`0xE0/0x01`) stayed
   unchanged. This needs validation on more hardware before being treated as
   universal.
 
@@ -142,7 +143,7 @@ Cross-referencing independent captures yields the following partial picture:
   and byte 28 **did not move** — it stayed at `0xE0` through every
   transition, as did byte 27 (`0x00`) and byte 29 (`0x01`). A separate pair of
   heat-mode captures also held bytes 28-29 steady at `0xE0/0x01` while byte 19
-  toggled between compressor-running (`0x01`) and idle (`0x00`). So byte 28 is
+  toggled between compressor running (`0x01`) and idle (`0x00`). So byte 28 is
   **not coupled to `operation_mode`, `target_temperature`, or compressor
   start/stop** on the user-command timescale. Whatever drives it, HVAC setpoint
   controls are not an input.
