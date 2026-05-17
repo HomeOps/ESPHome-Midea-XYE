@@ -306,15 +306,24 @@ enum class SubsystemFlags : uint8_t {
   OK = 0x80                  ///< Subsystem OK, no protection active (bit 7 set)
 };
 
+/**
+ * @brief Provisional compressor-running values for C0 QUERY response byte 19
+ * 
+ * Current captures show two observed states:
+ * - 0x00: Compressor idle while the unit is not actively heating
+ * - 0x01: Compressor actively running during observed heat captures
+ * 
+ * If other values are seen on additional hardware, enum_to_string will return
+ * "UNKNOWN" until the mapping is expanded.
+ */
+enum class CompressorRunningFlag : uint8_t {
+  IDLE = 0x00,      ///< Compressor idle/not running
+  ACTIVE = 0x01     ///< Compressor actively running
+};
+
 /// Defrost active flag within the 16-bit `protect_flags` field of the C0 QUERY response.
 /// When set, the indoor unit is currently running a defrost cycle.
 constexpr uint16_t DEFROST_PROTECT_FLAG = 0x0002;
-
-/// C0 QUERY response byte 19 value observed when the compressor is idle/not running.
-constexpr uint8_t COMPRESSOR_RUNNING_FLAG_IDLE = 0x00;
-
-/// C0 QUERY response byte 19 value observed when the compressor is actively running.
-constexpr uint8_t COMPRESSOR_RUNNING_FLAG_ACTIVE = 0x01;
 
 /// C0 QUERY response byte 28 value commonly observed on one ducted system during steady state.
 /// Wider cross-hardware captures show this byte can drift over time.
@@ -482,6 +491,7 @@ extern const std::map<Direction, const char*> DIRECTION_MAP;
 extern const std::map<CcmErrorFlags, const char*> CCM_ERROR_FLAGS_MAP;
 extern const std::map<FollowMeSubcommand, const char*> FOLLOW_ME_SUBCOMMAND_MAP;
 extern const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP;
+extern const std::map<CompressorRunningFlag, const char*> COMPRESSOR_RUNNING_FLAG_MAP;
 extern const std::map<EspProfile, const char*> ESP_PROFILE_MAP;
 extern const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP;
 extern const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP;
@@ -503,6 +513,7 @@ template<> struct EnumTraits<Direction> { static const std::map<Direction, const
 template<> struct EnumTraits<CcmErrorFlags> { static const std::map<CcmErrorFlags, const char*>& get_map() { return CCM_ERROR_FLAGS_MAP; } };
 template<> struct EnumTraits<FollowMeSubcommand> { static const std::map<FollowMeSubcommand, const char*>& get_map() { return FOLLOW_ME_SUBCOMMAND_MAP; } };
 template<> struct EnumTraits<CompressorFlags> { static const std::map<CompressorFlags, const char*>& get_map() { return COMPRESSOR_FLAGS_MAP; } };
+template<> struct EnumTraits<CompressorRunningFlag> { static const std::map<CompressorRunningFlag, const char*>& get_map() { return COMPRESSOR_RUNNING_FLAG_MAP; } };
 template<> struct EnumTraits<EspProfile> { static const std::map<EspProfile, const char*>& get_map() { return ESP_PROFILE_MAP; } };
 template<> struct EnumTraits<ProtectionFlags> { static const std::map<ProtectionFlags, const char*>& get_map() { return PROTECTION_FLAGS_MAP; } };
 template<> struct EnumTraits<SystemStatusFlags> { static const std::map<SystemStatusFlags, const char*>& get_map() { return SYSTEM_STATUS_FLAGS_MAP; } };

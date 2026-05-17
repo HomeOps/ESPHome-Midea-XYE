@@ -51,10 +51,10 @@ struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
   uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
-  uint8_t compressor_running_flag; ///< [19] Provisional compressor-running flag; observed as
-                                   ///<      COMPRESSOR_RUNNING_FLAG_ACTIVE (0x01) when heating
-                                   ///<      with the compressor on, and COMPRESSOR_RUNNING_FLAG_IDLE
-                                   ///<      (0x00) when idling
+  CompressorRunningFlag compressor_running_flag; ///< [19] Provisional compressor-running flag;
+                                                 ///<      observed as ACTIVE (0x01) when heating
+                                                 ///<      with the compressor on, and IDLE (0x00)
+                                                 ///<      when idling
   ModeFlags mode_flags;            ///< [20] Mode flags (ECO, AUX_HEAT, SWING, etc.)
   OperationFlags operation_flags;  ///< [21] Operation status flags (water pump, water lock)
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes

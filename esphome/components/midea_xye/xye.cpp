@@ -144,6 +144,11 @@ const std::map<CompressorFlags, const char*> COMPRESSOR_FLAGS_MAP = {
   {CompressorFlags::ACTIVE, "ACTIVE"},
 };
 
+const std::map<CompressorRunningFlag, const char*> COMPRESSOR_RUNNING_FLAG_MAP = {
+  {CompressorRunningFlag::IDLE, "IDLE"},
+  {CompressorRunningFlag::ACTIVE, "ACTIVE"},
+};
+
 const std::map<EspProfile, const char*> ESP_PROFILE_MAP = {
   {EspProfile::ESP_LOW, "ESP_LOW"},
   {EspProfile::ESP_MEDIUM, "ESP_MEDIUM"},
