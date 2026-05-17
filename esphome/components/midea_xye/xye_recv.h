@@ -51,15 +51,20 @@ struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
   uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
-  uint8_t unknown3;                ///< [19] Unknown/reserved
+  uint8_t compressor_running_flag; ///< [19] Provisional compressor-running flag; observed as COMPRESSOR_RUNNING_FLAG_ACTIVE (0x01)
+                                   ///<      when heating with the compressor on, and COMPRESSOR_RUNNING_FLAG_IDLE (0x00) when idling
   ModeFlags mode_flags;            ///< [20] Mode flags (ECO, AUX_HEAT, SWING, etc.)
   OperationFlags operation_flags;  ///< [21] Operation status flags (water pump, water lock)
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes
   Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
   CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
-  uint8_t unknown4;                ///< [27] Unknown/reserved
-  uint8_t startup_status_flags_low;   ///< [28] Startup status flags (low byte), settles to STARTUP_STATUS_FLAGS_LOW_STEADY (0xE0)
-  uint8_t startup_status_flags_high;  ///< [29] Startup status flags (high byte), settles to STARTUP_STATUS_FLAGS_HIGH_STEADY (0x01)
+  uint8_t unknown4;                ///< [27] Unknown. Hardware-dependent: 0x00 across 771 C0
+                                   ///<      responses on a ducted heat pump, 0x14 on a C&H
+                                   ///<      CH-36AHU. Steady within each device.
+  uint8_t startup_status_flags_low;   ///< [28] Startup/controller status flags (low byte). Settles to
+                                      ///<      STARTUP_STATUS_FLAGS_LOW_STEADY (0xE0) on one ducted system
+  uint8_t startup_status_flags_high;  ///< [29] Startup/controller status flags (high byte). Settles to
+                                      ///<      STARTUP_STATUS_FLAGS_HIGH_STEADY (0x01) on one ducted system
 
   /**
    * @brief Print debug information for query response data

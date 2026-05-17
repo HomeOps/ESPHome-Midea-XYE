@@ -75,11 +75,14 @@ All message structures validated against wtahler's implementation:
 ### 6. Unknown Fields - No New Conversions
 
 Analyzed all "unknown" fields in receive messages:
-- Bytes 6, 16, 19, 27-29 remain unknown
+- Bytes 6 and 16 remain unknown
+- Byte 19 is now tracked as a provisional compressor-running flag (`0x01` running, `0x00` idle in observed heat captures)
+- Byte 27 remains hardware-dependent and unknown
+- Bytes 28-29 are tracked as startup/controller status flags with observed steady-state values `0xE0/0x01` on one ducted system
 - No additional information in wtahler's implementation
 - These fields appear unused or reserved
 
-**Status**: ⚠️ No new conversions possible with available resources
+**Status**: ⚠️ Remaining unknown fields still need more cross-hardware validation
 
 ## Deliverables
 

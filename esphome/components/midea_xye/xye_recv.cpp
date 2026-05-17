@@ -24,7 +24,7 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) c
   left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
   left = print_debug_uint8(tag, "timer_start", timer_start, left, level);
   left = print_debug_uint8(tag, "timer_stop", timer_stop, left, level);
-  left = print_debug_uint8(tag, "unknown3", unknown3, left, level);
+  left = print_debug_uint8(tag, "compressor_running_flag", compressor_running_flag, left, level);
   left = print_debug_enum(tag, "mode_flags", mode_flags, left, level);
   left = print_debug_enum(tag, "operation_flags", operation_flags, left, level);
   left = error_flags.print_debug(tag, "error_flags", left, level);
