@@ -32,7 +32,26 @@ jobs:
           # Compile ESP8266 build
           echo "Building for ESP8266..."
           esphome compile tests/midea_xye.yaml
-          
+
           # Compile ESP32 build
           echo "Building for ESP32..."
           esphome compile tests/midea_xye_esp32.yaml
+
+  native-tests:
+    runs-on: ubuntu-latest
+    name: Native Unit Tests
+    if: ${{ !startsWith(github.head_ref, 'release-please') }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and run adapter unit tests
+        run: |
+          g++ -std=c++17 -Wall -DUSE_ARDUINO \
+            -Itests/native/stubs -Iesphome/components/midea_xye \
+            tests/native/test_get_climate_action.cpp \
+            esphome/components/midea_xye/xye_adapter.cpp \
+            -o "${RUNNER_TEMP}/xye_native_tests"
+          "${RUNNER_TEMP}/xye_native_tests"
