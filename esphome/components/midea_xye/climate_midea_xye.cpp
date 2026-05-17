@@ -276,8 +276,16 @@ void ClimateMideaXYE::ParseResponse() {
                         XYEAdapter::get_target_temperature(qr.target_temperature.value), need_publish);
 #endif
 
+        // Compressor/defrost-aware action is opt-in (compressor_aware_action) while the
+        // C0 byte-19 compressor flag is still provisional. When disabled, compressor_active=true
+        // and defrost_active=false reproduce the legacy "fan running implies heating/cooling".
+        const bool compressor_active = !this->compressor_aware_action_ ||
+                                       qr.compressor_running_flag == CompressorRunningFlag::ACTIVE;
+        const bool defrost_active = this->compressor_aware_action_ &&
+                                    XYEAdapter::is_defrost_active(qr.protect_flags.value());
         update_property(this->action,
-                        XYEAdapter::get_climate_action(mode, qr.fan_mode, qr.operation_mode),
+                        XYEAdapter::get_climate_action(mode, qr.fan_mode, qr.operation_mode,
+                                                       compressor_active, defrost_active),
                         need_publish);
 
         if ((this->swing_mode != ClimateSwingMode::CLIMATE_SWING_OFF) !=

@@ -26,10 +26,19 @@ struct XYEAdapter {
   /// masking out the SET_TEMP_STATUS_FLAG (bit 6) that the unit may set in certain states.
   static float get_target_temperature(uint8_t raw) noexcept;
 
-  /// Returns the ClimateAction derived from the current mode, fan, and operation state.
+  /// Returns the ClimateAction derived from the current mode, fan, operation state,
+  /// compressor status, and defrost state.
+  /// @param compressor_active true when the compressor is actively running (C0 byte [19]).
+  ///        HEATING/COOLING is reported only when this is set; otherwise the fan is just
+  ///        circulating air (e.g. a compressor-protection delay between cycles) and FAN is
+  ///        reported instead.
+  /// @param defrost_active true when the unit is running a defrost cycle. A heating action
+  ///        is downgraded to IDLE because the reversed refrigeration cycle is melting
+  ///        outdoor-coil ice, not warming the room.
   /// @note Intended for use when mode != CLIMATE_MODE_OFF.
   static climate::ClimateAction get_climate_action(climate::ClimateMode mode, FanMode fan_mode,
-                                                   OperationMode op_mode) noexcept;
+                                                   OperationMode op_mode, bool compressor_active,
+                                                   bool defrost_active) noexcept;
 
   /// Returns the XYE OperationMode for the given ESPHome ClimateMode.
   static OperationMode get_operation_mode(climate::ClimateMode mode) noexcept;

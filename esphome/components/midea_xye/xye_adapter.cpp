@@ -50,26 +50,35 @@ float XYEAdapter::get_target_temperature(uint8_t raw) noexcept {
 }
 
 climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode, FanMode fan_mode,
-                                                       OperationMode op_mode) noexcept {
+                                                       OperationMode op_mode, bool compressor_active,
+                                                       bool defrost_active) noexcept {
   const bool fan_running = (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) != 0x00;
 
+  // Report HEATING/COOLING only when the compressor is actually running. With the fan on
+  // but the compressor off the unit is merely circulating air, so FAN is the honest action.
   ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
   if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
-    action = ClimateAction::CLIMATE_ACTION_HEATING;
+    action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
   } else if (mode == ClimateMode::CLIMATE_MODE_COOL && fan_running) {
-    action = ClimateAction::CLIMATE_ACTION_COOLING;
+    action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
   }
 
   // In heat/cool (auto) mode refine the action using the unit's reported sub-mode.
   if (mode == ClimateMode::CLIMATE_MODE_HEAT_COOL) {
     const uint8_t op_raw = static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK;
     if (op_raw == static_cast<uint8_t>(OperationMode::COOL))
-      action = ClimateAction::CLIMATE_ACTION_COOLING;
+      action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
     else if (op_raw == static_cast<uint8_t>(OperationMode::FAN))
       action = ClimateAction::CLIMATE_ACTION_FAN;
     else if (op_raw == static_cast<uint8_t>(OperationMode::HEAT))
-      action = ClimateAction::CLIMATE_ACTION_HEATING;
+      action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
   }
+
+  // During a defrost cycle the unit reverses the refrigeration cycle to melt ice off the
+  // outdoor coil — it is not delivering heat to the room. Downgrade any HEATING action to
+  // IDLE. Applied after sub-mode resolution so it covers both HEAT and HEAT_COOL heating.
+  if (defrost_active && action == ClimateAction::CLIMATE_ACTION_HEATING)
+    action = ClimateAction::CLIMATE_ACTION_IDLE;
 
   return action;
 }

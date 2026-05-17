@@ -65,6 +65,7 @@ CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
 CONF_DEFROST = "defrost"
+CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -138,6 +139,10 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PERIOD, default="1s"): cv.time_period,
             cv.Optional(CONF_TIMEOUT, default="100ms"): cv.time_period,
             cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
+            # Opt-in: derive the climate action from the C0 byte-19 compressor flag
+            # and the defrost state. Off by default while byte 19 is still provisional;
+            # legacy "fan running implies heating/cooling" behaviour is used when false.
+            cv.Optional(CONF_COMPRESSOR_AWARE_ACTION, default=False): cv.boolean,
             cv.OnlyWith(CONF_TRANSMITTER_ID, "remote_transmitter"): cv.use_id(
                 remote_transmitter.RemoteTransmitterComponent
             ),
@@ -369,6 +374,7 @@ async def to_code(config):
     cg.add(var.set_period(config[CONF_PERIOD].total_milliseconds))
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
+    cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
     if CONF_TRANSMITTER_ID in config:
         cg.add_define("USE_REMOTE_TRANSMITTER")
         transmitter_ = await cg.get_variable(config[CONF_TRANSMITTER_ID])
