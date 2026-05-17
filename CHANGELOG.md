@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.1...v0.2.2) (2026-05-17)
+
+
+### Bug Fixes
+
+* reclassify C0 byte 19 as compressor-running flag and document bytes 28-29 steady-state values ([#112](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/112)) ([f47e54c](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/f47e54c243e40dd8026dafe571d88ba3473eaa42))
+
 ## [0.2.1](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.0...v0.2.1) (2026-04-21)
 
 
