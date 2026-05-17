@@ -316,10 +316,11 @@ constexpr uint8_t COMPRESSOR_RUNNING_FLAG_IDLE = 0x00;
 /// C0 QUERY response byte 19 value observed when the compressor is actively running.
 constexpr uint8_t COMPRESSOR_RUNNING_FLAG_ACTIVE = 0x01;
 
-/// C0 QUERY response byte 28 common steady value on one ducted system, despite wider cross-hardware drift.
+/// C0 QUERY response byte 28 value commonly observed on one ducted system during steady state.
+/// Wider cross-hardware captures show this byte can drift over time.
 constexpr uint8_t UNKNOWN5_DUCTED_STEADY = 0xE0;
 
-/// C0 QUERY response byte 29 common steady value on one ducted system.
+/// C0 QUERY response byte 29 value commonly observed on one ducted system during steady state.
 constexpr uint8_t UNKNOWN6_DUCTED_STEADY = 0x01;
 
 /**

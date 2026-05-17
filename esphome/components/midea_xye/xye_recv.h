@@ -33,7 +33,7 @@ struct __attribute__((packed)) ReceiveMessageFrame {
  * Contains current unit status and sensor readings
  * Size: 24 bytes (bytes 6-29, excluding frame, CRC, and prologue)
  * 
- * Field mappings verified against wtahler's implementation:
+ * Field layout cross-checked against wtahler's implementation:
  * - Byte indices in comments are absolute positions in 32-byte message
  * - Struct offsets are relative to data section (subtract 6 for frame header)
  */
@@ -51,28 +51,30 @@ struct __attribute__((packed)) QueryResponseData {
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
   uint8_t timer_stop;              ///< [18] Stop timer setting (combinable TimerFlags)
-  uint8_t compressor_running_flag; ///< [19] Provisional compressor-running flag; observed as COMPRESSOR_RUNNING_FLAG_ACTIVE (0x01)
-                                   ///<      when heating with the compressor on, and COMPRESSOR_RUNNING_FLAG_IDLE (0x00) when idling
+  uint8_t compressor_running_flag; ///< [19] Provisional compressor-running flag; observed as
+                                   ///<      COMPRESSOR_RUNNING_FLAG_ACTIVE (0x01) when heating
+                                   ///<      with the compressor on, and COMPRESSOR_RUNNING_FLAG_IDLE
+                                   ///<      (0x00) when idling
   ModeFlags mode_flags;            ///< [20] Mode flags (ECO, AUX_HEAT, SWING, etc.)
   OperationFlags operation_flags;  ///< [21] Operation status flags (water pump, water lock)
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes
   Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
   CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
-  uint8_t unknown4;                ///< [27] Unknown. Hardware-dependent: 0x00 across 771 C0
-                                    ///<      responses on a ducted heat pump, 0x14 on a C&H
-                                    ///<      CH-36AHU. Steady within each device.
-  uint8_t unknown5;                ///< [28] Unknown. Drifts up and down over time, not a simple
-                                    ///<      counter. Ducted heat-pump idle capture showed 7
-                                    ///<      distinct values 0xAE..0xE0, with one setting holding
-                                    ///<      for ~11 min before stepping; C&H CH-36AHU capture
-                                    ///<      showed much more rapid movement across 0x00..0xFF.
-                                    ///<      Not reactive to user mode/setpoint changes; held at
-                                    ///<      UNKNOWN5_DUCTED_STEADY during paired heat captures
-                                    ///<      while byte 19 toggled between active/idle.
-  uint8_t unknown6;                ///< [29] Unknown. Hardware-dependent steady state: 0x01
-                                    ///<      across 771 ducted-heat-pump frames; alternates
-                                    ///<      0x00/0x01 (occasional 0x02) on a C&H CH-36AHU;
-                                    ///<      stayed at UNKNOWN6_DUCTED_STEADY in paired heat captures.
+  uint8_t unknown4;                ///< [27] Unknown. Hardware-dependent: 0x00 across 771 ducted
+                                   ///<      heat-pump C0 responses, 0x14 on a C&H CH-36AHU.
+                                   ///<      Steady within each device.
+  uint8_t unknown5;                ///< [28] Unknown. Drifts up and down over time rather than
+                                   ///<      behaving like a simple counter. One ducted heat-pump
+                                   ///<      idle capture showed 7 distinct values from 0xAE..0xE0,
+                                   ///<      with one setting holding for ~11 min before stepping;
+                                   ///<      a C&H CH-36AHU capture showed much more rapid movement
+                                   ///<      across 0x00..0xFF. Not reactive to user mode/setpoint
+                                   ///<      changes; held at UNKNOWN5_DUCTED_STEADY during paired
+                                   ///<      heat captures while byte 19 toggled between active/idle.
+  uint8_t unknown6;                ///< [29] Unknown. Hardware-dependent steady value: 0x01 across
+                                   ///<      771 ducted-heat-pump frames; alternates 0x00/0x01
+                                   ///<      (occasional 0x02) on a C&H CH-36AHU; stayed at
+                                   ///<      UNKNOWN6_DUCTED_STEADY in paired heat captures.
 
   /**
    * @brief Print debug information for query response data
