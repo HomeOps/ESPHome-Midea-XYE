@@ -31,8 +31,8 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) c
   left = protect_flags.print_debug(tag, "protect_flags", left, level);
   left = print_debug_enum(tag, "ccm_communication_error_flags", ccm_communication_error_flags, left, level);
   left = print_debug_uint8(tag, "unknown4", unknown4, left, level);
-  left = print_debug_uint8(tag, "unknown5", unknown5, left, level);
-  left = print_debug_uint8(tag, "unknown6", unknown6, left, level);
+  left = print_debug_uint8(tag, "startup_status_flags_low", startup_status_flags_low, left, level);
+  left = print_debug_uint8(tag, "startup_status_flags_high", startup_status_flags_high, left, level);
   
   return left;
 }

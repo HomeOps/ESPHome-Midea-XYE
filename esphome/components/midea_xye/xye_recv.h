@@ -58,8 +58,8 @@ struct __attribute__((packed)) QueryResponseData {
   Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
   CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
   uint8_t unknown4;                ///< [27] Unknown/reserved
-  uint8_t unknown5;                ///< [28] Unknown/reserved
-  uint8_t unknown6;                ///< [29] Unknown/reserved
+  uint8_t startup_status_flags_low;   ///< [28] Startup status flags (low byte), settles to STARTUP_STATUS_FLAGS_LOW_STEADY (0xE0)
+  uint8_t startup_status_flags_high;  ///< [29] Startup status flags (high byte), settles to STARTUP_STATUS_FLAGS_HIGH_STEADY (0x01)
 
   /**
    * @brief Print debug information for query response data

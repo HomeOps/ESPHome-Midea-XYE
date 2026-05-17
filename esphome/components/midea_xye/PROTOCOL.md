@@ -95,8 +95,8 @@ Byte    Field               Description
 25      Protect Flags High  Protection flags (high byte)
 26      CCM Error Flags     Communication error flags
 27      Unknown4            Unknown/reserved
-28      Unknown5            Unknown/reserved
-29      Unknown6            Unknown/reserved
+28      Startup Flags Low   Startup status flags low byte (settles to 0xE0 in normal operation)
+29      Startup Flags High  Startup status flags high byte (settles to 0x01 in normal operation)
 30      CRC                 Checksum
 31      Prologue            Always 0x55
 ```

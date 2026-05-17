@@ -310,6 +310,12 @@ enum class SubsystemFlags : uint8_t {
 /// When set, the indoor unit is currently running a defrost cycle.
 constexpr uint16_t DEFROST_PROTECT_FLAG = 0x0002;
 
+/// C0 QUERY response byte 28 steady-state value observed after startup completes.
+constexpr uint8_t STARTUP_STATUS_FLAGS_LOW_STEADY = 0xE0;
+
+/// C0 QUERY response byte 29 steady-state value observed after startup completes.
+constexpr uint8_t STARTUP_STATUS_FLAGS_HIGH_STEADY = 0x01;
+
 /**
  * @brief Special temperature value for fan mode
  */
