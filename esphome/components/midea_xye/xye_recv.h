@@ -57,9 +57,18 @@ struct __attribute__((packed)) QueryResponseData {
   Flags16 error_flags;             ///< [22-23] Error flags (16-bit) - E1/E2 error codes
   Flags16 protect_flags;           ///< [24-25] Protection flags (16-bit)
   CcmErrorFlags ccm_communication_error_flags; ///< [26] CCM communication error flags
-  uint8_t unknown4;                ///< [27] Unknown/reserved
-  uint8_t unknown5;                ///< [28] Unknown/reserved
-  uint8_t unknown6;                ///< [29] Unknown/reserved
+  uint8_t unknown4;                ///< [27] Unknown. Hardware-dependent: 0x00 across 771 C0
+                                   ///<      responses on a ducted heat pump, 0x14 on a C&H
+                                   ///<      CH-36AHU. Steady within each device.
+  uint8_t unknown5;                ///< [28] Unknown. Drifts up and down over time, not a simple
+                                   ///<      counter. Ducted heat-pump idle capture showed 7
+                                   ///<      distinct values 0xAE..0xE0, with one setting holding
+                                   ///<      for ~11 min before stepping; C&H CH-36AHU capture
+                                   ///<      showed much more rapid movement across 0x00..0xFF.
+                                   ///<      Not reactive to user mode/setpoint changes.
+  uint8_t unknown6;                ///< [29] Unknown. Hardware-dependent steady state: 0x01
+                                   ///<      across 771 ducted-heat-pump frames; alternates
+                                   ///<      0x00/0x01 (occasional 0x02) on a C&H CH-36AHU.
 
   /**
    * @brief Print debug information for query response data
