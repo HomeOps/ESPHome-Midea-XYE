@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.3...v0.2.4) (2026-05-18)
+
+
+### Features
+
+* compressor-aware climate action and diagnostic sensors ([#119](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/119)) ([e3cae9b](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/e3cae9b782a25a77ece362eeb130e678bcb49e7f))
+
 ## [0.2.3](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.2...v0.2.3) (2026-05-17)
 
 
