@@ -109,11 +109,12 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
   ValvePosition expansion_valve_pos;  ///< [8] Expansion valve position (0x00 = unused on some models)
   uint8_t reserved1;            ///< [9] Reserved/unused
   SystemStatusFlags system_status_flags;  ///< [10] System status flags (bit 7: enabled, bit 2: wired controller present)
-  FanMode target_fan_speed;    ///< [11] Target (commanded) fan speed: FAN_HIGH 0x01, FAN_MEDIUM
-                               ///<      0x02, FAN_LOW 0x04, FAN_AUTO 0x80. Same encoding as the
-                               ///<      C0 fan_mode byte, but this is the *commanded* speed and
-                               ///<      stays set while the fan is idle, whereas C0 fan_mode
-                               ///<      reports the actual running speed. Confirmed in issue #120.
+  FanMode target_fan_speed;    ///< [11] Target (commanded) fan speed. Same encoding as the C0
+                               ///<      fan_mode byte -- see the FanMode enum for the speed
+                               ///<      values (note FAN_LOW may be 0x03 or 0x04 by model).
+                               ///<      Unlike C0 fan_mode, which reports the actual running
+                               ///<      speed, this holds the commanded speed even while the
+                               ///<      fan is idle. Confirmed in issue #120.
   Temperature target_temperature;   ///< [12] Target temperature (may be in Fahrenheit with offset)
   Flags16BigEndian compressor_freq_or_fan_rpm; ///< [13-14] 16-bit engineering value (compressor Hz or outdoor fan RPM), big-endian: high byte at [13], low byte at [14]
   Temperature outdoor_temperature;  ///< [15] Outdoor temperature sensor reading
