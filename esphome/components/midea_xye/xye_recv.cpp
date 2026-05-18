@@ -52,7 +52,7 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
   left = print_debug_uint8(tag, "expansion_valve_pos", expansion_valve_pos, left, level);
   left = print_debug_uint8(tag, "reserved1", reserved1, left, level);
   left = print_debug_enum(tag, "system_status_flags", system_status_flags, left, level);
-  left = print_debug_uint8(tag, "indoor_unit_address", indoor_unit_address, left, level);
+  left = print_debug_enum(tag, "target_fan_speed", target_fan_speed, left, level);
   left = target_temperature.print_debug(tag, "target_temperature", left, level);
   left = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
   left = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
