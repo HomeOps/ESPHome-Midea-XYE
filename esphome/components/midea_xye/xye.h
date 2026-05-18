@@ -122,6 +122,27 @@ constexpr uint8_t FAN_AUTO_FLAG = 0x80;
 constexpr uint8_t FAN_SPEED_MASK = 0x0F;
 
 /**
+ * @brief Target (commanded) fan speed reported in C4 (QUERY_EXTENDED) byte 17.
+ *
+ * Deliberately a distinct type from FanMode: FanMode is the *actual* running speed
+ * (C0 fan_mode byte, reads 0x00 while the fan is idle), whereas TargetFanSpeed is the
+ * speed the user/thermostat commanded and stays set even when the fan is not running.
+ * The byte encoding is identical to FanMode; the separate type prevents the two
+ * semantically different fields from being mixed up.
+ *
+ * Member names carry the FAN_ prefix (matching FanMode) because the bare identifiers
+ * HIGH and LOW are Arduino preprocessor macros and cannot be used as enumerators.
+ * All four values were confirmed against captured traffic in issue #120.
+ */
+enum class TargetFanSpeed : uint8_t {
+  FAN_HIGH = 0x01,     ///< High target fan speed (bit 0)
+  FAN_MEDIUM = 0x02,   ///< Medium target fan speed (bit 1)
+  FAN_LOW_ALT = 0x03,  ///< Low target fan speed (alternate encoding seen on some units)
+  FAN_LOW = 0x04,      ///< Low target fan speed (bit 2)
+  FAN_AUTO = 0x80      ///< Automatic target fan speed (bit 7)
+};
+
+/**
  * @brief Flags for special operation modes
  */
 enum class ModeFlags : uint8_t {
@@ -496,6 +517,7 @@ extern const std::map<EspProfile, const char*> ESP_PROFILE_MAP;
 extern const std::map<ProtectionFlags, const char*> PROTECTION_FLAGS_MAP;
 extern const std::map<SystemStatusFlags, const char*> SYSTEM_STATUS_FLAGS_MAP;
 extern const std::map<SubsystemFlags, const char*> SUBSYSTEM_FLAGS_MAP;
+extern const std::map<TargetFanSpeed, const char*> TARGET_FAN_SPEED_MAP;
 
 /**
  * @brief Trait struct to map enum types to their string mappings
@@ -518,6 +540,7 @@ template<> struct EnumTraits<EspProfile> { static const std::map<EspProfile, con
 template<> struct EnumTraits<ProtectionFlags> { static const std::map<ProtectionFlags, const char*>& get_map() { return PROTECTION_FLAGS_MAP; } };
 template<> struct EnumTraits<SystemStatusFlags> { static const std::map<SystemStatusFlags, const char*>& get_map() { return SYSTEM_STATUS_FLAGS_MAP; } };
 template<> struct EnumTraits<SubsystemFlags> { static const std::map<SubsystemFlags, const char*>& get_map() { return SUBSYSTEM_FLAGS_MAP; } };
+template<> struct EnumTraits<TargetFanSpeed> { static const std::map<TargetFanSpeed, const char*>& get_map() { return TARGET_FAN_SPEED_MAP; } };
 
 /**
  * @brief Template function for enum-to-string conversion

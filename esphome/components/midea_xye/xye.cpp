@@ -149,6 +149,14 @@ const std::map<CompressorRunningFlag, const char*> COMPRESSOR_RUNNING_FLAG_MAP =
   {CompressorRunningFlag::ACTIVE, "ACTIVE"},
 };
 
+const std::map<TargetFanSpeed, const char*> TARGET_FAN_SPEED_MAP = {
+  {TargetFanSpeed::FAN_HIGH, "FAN_HIGH"},
+  {TargetFanSpeed::FAN_MEDIUM, "FAN_MEDIUM"},
+  {TargetFanSpeed::FAN_LOW_ALT, "FAN_LOW_ALT"},
+  {TargetFanSpeed::FAN_LOW, "FAN_LOW"},
+  {TargetFanSpeed::FAN_AUTO, "FAN_AUTO"},
+};
+
 const std::map<EspProfile, const char*> ESP_PROFILE_MAP = {
   {EspProfile::ESP_LOW, "ESP_LOW"},
   {EspProfile::ESP_MEDIUM, "ESP_MEDIUM"},
