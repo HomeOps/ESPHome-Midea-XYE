@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.4...v0.2.5) (2026-05-18)
+
+
+### Bug Fixes
+
+* reclassify C4 byte 17 as target fan speed ([#122](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/122)) ([cbf0210](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/cbf0210a71231f6260331d70260aa4e7121a9bb6))
+
 ## [0.2.4](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.3...v0.2.4) (2026-05-18)
 
 
