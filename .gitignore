@@ -420,5 +420,5 @@ FodyWeavers.xsd
 # ESPHome build artifacts
 .esphome/
 
-# Claude Code machine-local settings
-.claude/settings.local.json
+# Claude Code local files
+.claude/
