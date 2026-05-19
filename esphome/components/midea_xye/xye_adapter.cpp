@@ -43,6 +43,17 @@ climate::ClimateFanMode XYEAdapter::get_climate_fan_mode(FanMode fan_mode) noexc
   }
 }
 
+climate::ClimateFanMode XYEAdapter::get_climate_fan_mode(TargetFanSpeed target) noexcept {
+  switch (target) {
+    case TargetFanSpeed::FAN_HIGH:   return ClimateFanMode::CLIMATE_FAN_HIGH;
+    case TargetFanSpeed::FAN_MEDIUM: return ClimateFanMode::CLIMATE_FAN_MEDIUM;
+    case TargetFanSpeed::FAN_LOW_ALT:
+    case TargetFanSpeed::FAN_LOW:    return ClimateFanMode::CLIMATE_FAN_LOW;
+    case TargetFanSpeed::FAN_AUTO:
+    default:                         return ClimateFanMode::CLIMATE_FAN_AUTO;
+  }
+}
+
 FanSpeedLevel XYEAdapter::get_fan_speed_level(FanMode fan_mode) noexcept {
   switch (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) {
     case static_cast<uint8_t>(FanMode::FAN_HIGH):    return FanSpeedLevel::SPEED_HIGH;

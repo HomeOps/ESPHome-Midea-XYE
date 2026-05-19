@@ -151,6 +151,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
   void set_compressor_aware_action(bool yesno) { this->compressor_aware_action_ = yesno; }
+  /// Opt-in: when true, this->fan_mode is updated from C4 target_fan_speed on every extended
+  /// query cycle, reflecting the fan setting on the physical thermostat in Home Assistant.
+  void set_sync_fan_mode_from_device(bool yesno) { this->sync_fan_mode_from_device_ = yesno; }
   void set_static_pressure_number(StaticPressureNumber *number) {
     this->static_pressure_number_ = number;
     number->set_parent(this);
@@ -216,6 +219,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   // Opt-in (compressor_aware_action YAML option): when false, get_climate_action is
   // fed compressor_active=true / defrost_active=false to reproduce legacy behaviour.
   bool compressor_aware_action_{false};
+  // Opt-in (sync_fan_mode_from_device YAML option): when true, fan_mode is updated from C4
+  // target_fan_speed (the commanded speed from the physical thermostat).
+  bool sync_fan_mode_from_device_{false};
   Sensor *outdoor_sensor_{nullptr};
   Sensor *fan_speed_sensor_{nullptr};
   Sensor *temperature_2a_sensor_{nullptr};

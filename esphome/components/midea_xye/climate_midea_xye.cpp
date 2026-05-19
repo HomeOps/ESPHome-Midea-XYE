@@ -347,6 +347,19 @@ void ClimateMideaXYE::ParseResponse() {
           this->publish_state();
       }
 #endif
+      // Sync fan mode from the C4 target_fan_speed field when enabled. This is the commanded
+      // speed as set on the physical thermostat and persists when the fan is idle, unlike
+      // C0 fan_mode which reads 0x00 when stopped.
+      if (this->sync_fan_mode_from_device_) {
+        bool fan_need_publish = false;
+        const ClimateFanMode new_fan_mode = XYEAdapter::get_climate_fan_mode(exr.target_fan_speed);
+        if (!this->fan_mode.has_value() || this->fan_mode.value() != new_fan_mode) {
+          this->fan_mode = new_fan_mode;
+          fan_need_publish = true;
+        }
+        if (fan_need_publish)
+          this->publish_state();
+      }
       // Note: Previous versions validated fixed protocol marker bytes (0xBC, 0xD6, 0x80, 0x80, 0x80, 0x80)
       // but investigation shows these bytes are actually dynamic engineering values:
       // - Bytes 19-20 (0xBCD6): 16-bit compressor frequency or outdoor fan RPM

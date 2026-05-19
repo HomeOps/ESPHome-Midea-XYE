@@ -35,6 +35,11 @@ struct XYEAdapter {
   /// Returns the ESPHome ClimateFanMode for the given XYE FanMode byte.
   static climate::ClimateFanMode get_climate_fan_mode(FanMode fan_mode) noexcept;
 
+  /// Returns the ESPHome ClimateFanMode for the given XYE TargetFanSpeed value.
+  /// TargetFanSpeed is the commanded speed from the physical thermostat (C4 packet),
+  /// which persists even when the fan is idle — unlike FanMode in C0 which reads 0x00 when stopped.
+  static climate::ClimateFanMode get_climate_fan_mode(TargetFanSpeed target) noexcept;
+
   /// Returns the monotonic FanSpeedLevel ordinal for the given XYE FanMode byte.
   /// The raw protocol nibble is not ordered by speed; this remaps it for the fan_speed sensor.
   static FanSpeedLevel get_fan_speed_level(FanMode fan_mode) noexcept;

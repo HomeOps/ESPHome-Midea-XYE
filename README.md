@@ -174,8 +174,18 @@ climate:
       name: Error Flags
     protect_flags:              # Optional
       name: Protect Flags
+    fan_speed:                  # Optional. Physical fan speed (0=off, 1=low, 2=medium, 3=high)
+      name: Fan Speed
     defrost:                    # Optional. True while the indoor unit is running a defrost cycle
       name: Defrost Active
+    compressor_active:          # Optional. True while the compressor is running
+      name: Compressor Active
+    compressor_aware_action: false  # Optional. Opt-in: derive heating/cooling/idle action
+                                    # from the compressor + defrost state. Default false
+                                    # (legacy: fan running implies heating/cooling).
+    sync_fan_mode_from_device: false  # Optional. Opt-in: update the HA fan mode from the
+                                      # physical thermostat's commanded speed (C4 packet).
+                                      # Default false (HA fan mode only changes on HA commands).
 ```
 
 ## Debugging

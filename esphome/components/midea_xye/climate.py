@@ -68,6 +68,7 @@ CONF_DEFROST = "defrost"
 CONF_COMPRESSOR_ACTIVE = "compressor_active"
 CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
+CONF_SYNC_FAN_MODE_FROM_DEVICE = "sync_fan_mode_from_device"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -145,6 +146,10 @@ CONFIG_SCHEMA = cv.All(
             # and the defrost state. Off by default while byte 19 is still provisional;
             # legacy "fan running implies heating/cooling" behaviour is used when false.
             cv.Optional(CONF_COMPRESSOR_AWARE_ACTION, default=False): cv.boolean,
+            # Opt-in: sync this->fan_mode from C4 target_fan_speed (commanded speed from the
+            # physical thermostat), so Home Assistant reflects fan mode changes even when
+            # not triggered by an HA command.
+            cv.Optional(CONF_SYNC_FAN_MODE_FROM_DEVICE, default=False): cv.boolean,
             cv.OnlyWith(CONF_TRANSMITTER_ID, "remote_transmitter"): cv.use_id(
                 remote_transmitter.RemoteTransmitterComponent
             ),
@@ -389,6 +394,7 @@ async def to_code(config):
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
     cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
+    cg.add(var.set_sync_fan_mode_from_device(config[CONF_SYNC_FAN_MODE_FROM_DEVICE]))
     if CONF_TRANSMITTER_ID in config:
         cg.add_define("USE_REMOTE_TRANSMITTER")
         transmitter_ = await cg.get_variable(config[CONF_TRANSMITTER_ID])

@@ -96,6 +96,9 @@ climate:
     compressor_aware_action: false  # Optional. Opt-in: derive heating/cooling/idle action
                                     # from the compressor + defrost state. Default false
                                     # (legacy: fan running implies heating/cooling).
+    sync_fan_mode_from_device: false  # Optional. Opt-in: update the HA fan mode from the
+                                      # physical thermostat's commanded speed (C4 packet).
+                                      # Default false (HA fan mode only changes on HA commands).
 
 ```
 
