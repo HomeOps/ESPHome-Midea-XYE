@@ -350,7 +350,9 @@ void ClimateMideaXYE::ParseResponse() {
       // Sync fan mode from the C4 target_fan_speed field when enabled. This is the commanded
       // speed as set on the physical thermostat and persists when the fan is idle, unlike
       // C0 fan_mode which reads 0x00 when stopped.
-      if (this->sync_fan_mode_from_device_) {
+      // Respect post_set_grace_: if a SET was just issued the device may not yet have
+      // updated its reported target_fan_speed, so skip until C0 has cleared the grace window.
+      if (this->sync_fan_mode_from_device_ && post_set_grace_ == 0) {
         bool fan_need_publish = false;
         const ClimateFanMode new_fan_mode = XYEAdapter::get_climate_fan_mode(exr.target_fan_speed);
         if (!this->fan_mode.has_value() || this->fan_mode.value() != new_fan_mode) {
