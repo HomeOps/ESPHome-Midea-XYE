@@ -272,8 +272,12 @@ void ClimateMideaXYE::ParseResponse() {
 #ifndef SET_TARGET_TEMP_ON_QUERY
         // Temperature is raw Celsius; bit 6 (SET_TEMP_STATUS_FLAG / 0x40) may be set
         // by the unit in certain states and must be masked out before use.
-        update_property(this->target_temperature,
-                        XYEAdapter::get_target_temperature(qr.target_temperature.value), need_publish);
+        // In Fahrenheit mode the byte is encoded as (°F + FAHRENHEIT_TEMP_OFFSET) and cannot
+        // be decoded as Celsius here; the setpoint is read from C4 instead.
+        if (!this->use_fahrenheit_) {
+          update_property(this->target_temperature,
+                          XYEAdapter::get_target_temperature(qr.target_temperature.value), need_publish);
+        }
 #endif
 
         // Compressor/defrost-aware action is opt-in (compressor_aware_action) while the
@@ -327,26 +331,21 @@ void ClimateMideaXYE::ParseResponse() {
       const auto &exr = rx_data.message.data.extended_query_response;
       set_sensor(this->outdoor_sensor_, XYEAdapter::get_temperature(exr.outdoor_temperature.value));
       set_number(this->static_pressure_number_, static_cast<float>(STATIC_PRESSURE_VALUE_MASK & exr.static_pressure));
-#ifdef SET_TARGET_TEMP_ON_EXTENDED_QUERY
-      if (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
-        float incoming_target_temp = 0.0;
-        if (this->use_fahrenheit_) {
-          incoming_target_temp = (float) (((exr.target_temperature.value - FAHRENHEIT_TEMP_OFFSET) - 32.0) * 5.0 / 9.0);
-          if (incoming_target_temp != this->target_temperature) {
-            need_publish = true;
-            update_property(this->target_temperature, incoming_target_temp, need_publish);
-          }
-        } else {
-          incoming_target_temp = XYEAdapter::get_temperature(exr.target_temperature.value);
-          if (incoming_target_temp != this->target_temperature) {
-            need_publish = true;
-            update_property(this->target_temperature, incoming_target_temp, need_publish);
-          }
-        }
-        if (need_publish)
-          this->publish_state();
+      // In Fahrenheit mode the C0 target_temperature byte uses (°F + FAHRENHEIT_TEMP_OFFSET)
+      // encoding that cannot be read as Celsius. The same byte appears in C4 where we can
+      // convert it correctly. Read the setpoint here exclusively when Fahrenheit is active.
+      // Respect post_set_grace_: skip until the C0 grace window has closed so a freshly-sent
+      // SET command isn't immediately overwritten by stale device state.
+      // Fahrenheit C4 decode approach adapted from rmounce/esphome@xye-units-switch.
+      if (this->use_fahrenheit_ &&
+          (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) &&
+          post_set_grace_ == 0) {
+        const float incoming_target_temp =
+            (float) (((exr.target_temperature.value - FAHRENHEIT_TEMP_OFFSET) - 32.0) * 5.0 / 9.0);
+        update_property(this->target_temperature, incoming_target_temp, need_publish);
       }
-#endif
+      if (need_publish)
+        this->publish_state();
       // Sync fan mode from the C4 target_fan_speed field when enabled. This is the commanded
       // speed as set on the physical thermostat and persists when the fan is idle, unlike
       // C0 fan_mode which reads 0x00 when stopped.
