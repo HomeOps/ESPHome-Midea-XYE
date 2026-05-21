@@ -38,7 +38,7 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level) c
 }
 
 // ExtendedQueryResponseData methods
-size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int level) const {
+size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int level, bool use_fahrenheit) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
   
   left = print_debug_uint8(tag, "indoor_fan_pwm", indoor_fan_pwm, left, level);
@@ -53,7 +53,8 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
   left = print_debug_uint8(tag, "reserved1", reserved1, left, level);
   left = print_debug_enum(tag, "system_status_flags", system_status_flags, left, level);
   left = print_debug_enum(tag, "target_fan_speed", target_fan_speed, left, level);
-  left = target_temperature.print_debug(tag, "target_temperature", left, level);
+  left = target_temperature.print_debug(tag, "target_temperature", left, level,
+      use_fahrenheit ? TemperatureEncoding::FAHRENHEIT_SETPOINT : TemperatureEncoding::RAW);
   left = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
   left = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
   left = print_debug_uint8(tag, "reserved2", reserved2, left, level);
@@ -73,7 +74,7 @@ Command ReceiveData::get_command() const {
   return message.frame.header.command;
 }
 
-size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
+size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool use_fahrenheit) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
@@ -91,7 +92,7 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level) const {
       break;
     
     case Command::QUERY_EXTENDED:
-      left = message.data.extended_query_response.print_debug(tag, left, level);
+      left = message.data.extended_query_response.print_debug(tag, left, level, use_fahrenheit);
       break;
     
     case Command::SET:

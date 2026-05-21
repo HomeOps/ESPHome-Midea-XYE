@@ -19,6 +19,14 @@ Temperature Temperature::from_celsius(float celsius) {
 size_t Temperature::print_debug(const char *tag, const char *name, size_t left, int level, TemperatureEncoding encoding) const {
   if (left < sizeof(Temperature)) return left;
   
+  if (encoding == TemperatureEncoding::FAHRENHEIT_SETPOINT) {
+    const int fahrenheit = static_cast<int>(value) - static_cast<int>(FAHRENHEIT_TEMP_OFFSET);
+    const float celsius = (fahrenheit - 32) * 5.0f / 9.0f;
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%d°F / %.2f°C)"),
+             name, value, fahrenheit, celsius);
+    return left - sizeof(Temperature);
+  }
+
   float temp_celsius;
   if (encoding == TemperatureEncoding::RAW) {
     temp_celsius = static_cast<float>(value);

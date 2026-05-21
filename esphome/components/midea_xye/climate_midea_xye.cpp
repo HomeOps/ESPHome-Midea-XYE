@@ -142,7 +142,7 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
     }
     if (i == RX_MESSAGE_LENGTH) {
       // Log incoming message at debug level
-      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG);
+      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
