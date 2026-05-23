@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.5...v0.2.6) (2026-05-23)
+
+
+### Features
+
+* sync HA fan mode from C4 target_fan_speed when sync_fan_mode_fr… ([#124](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/124)) ([9243612](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/9243612f27c9999b459d470184b009312bedcf83))
+
 ## [0.2.5](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.4...v0.2.5) (2026-05-18)
 
 
