@@ -587,6 +587,73 @@ If you want to dig further:
 - [README "Sensor Reference" section](https://github.com/MidATRIX/midea-s1s2-rs485-monitor#sensor-reference) — confidence-graded field table, including ⚠️ "probable" and ❓ "unknown" entries that themselves are still open research questions.
 - [HA Community thread on Senville/Midea S-Comms](https://community.home-assistant.io/t/reverse-engineering-senville-midea-scomms/992233) — corresponding discussion forum.
 
+## Other buses on the same IDU — HA/HB
+
+Some Midea IDUs expose a **second** thermostat-bus terminal pair labelled **HA/HB**
+(also seen as H1/H2 or HBL on adjacent series) in addition to X/Y/E. This pair is
+used to connect Midea's premium wired thermostat, which gets a higher-bandwidth and
+more privileged channel into the IDU than XYE/CCM offers — notably, the proprietary
+thermostat can drive features such as native AUTO mode that XYE-connected controllers
+cannot.
+
+HA/HB is currently out of scope for this component. It is documented here so future
+contributors don't confuse it with XYE or assume the same interface hardware works.
+
+### Electrical layer — not standard RS-485
+
+A voltmeter reading across an idle HA/HB pair on one reporter's unit measures
+**~18.5 VDC**. That is **outside the standard RS-485 common-mode range** (−7 V to
++12 V; some "extended" parts go to ±25 V), so HA/HB is almost certainly not plain
+RS-485. Plugging this project's XYE RS-485 dongle into HA/HB will at best log
+garbage and at worst destroy the transceiver.
+
+Likely PHY options (need a scope capture to disambiguate):
+
+- **Single-ended load modulation** — bus rests at ~18 V; the talker sinks current to
+  pull it low for each bit. Common on long-run HVAC thermostat wiring because the
+  same pair powers the thermostat.
+- **Low-amplitude differential AC-coupled on a DC bias** — 18 V is just power; a
+  ±0.5–1 V differential signal rides on top. Requires an isolated extended-common-
+  mode transceiver (e.g. ADM2582E, ISO1500, MAX22500E) to sniff.
+- **Current loop / Modbus-over-current variant** — bus voltage dips during bit
+  transitions rather than swinging cleanly.
+
+### Relationship to S1/S2 and XYE
+
+Functionally HA/HB is **IDU ↔ thermostat**, not IDU ↔ ODU — so it is *not* the same
+bus as S1/S2 (which MidATRIX documents). But because Midea reuses internal
+high-bandwidth protocols across product lines, the **message-layer frame format**
+(`0xA0` preamble, length-prefixed payload, CRC-16/MODBUS — see [Framing
+differences](#framing-differences-not-directly-comparable)) is a reasonable starting
+guess once you have HA/HB bytes off the wire. The endpoints (thermostat address vs.
+ODU address) and message IDs will differ.
+
+If anyone captures HA/HB traffic and validates this guess, please open an issue —
+no public reverse-engineering of the Midea premium-thermostat bus exists today, and
+that gap is the most likely explanation for what the proprietary thermostat does
+that an XYE-connected controller can't.
+
+### Investigation checklist
+
+Before guessing the protocol, characterise the PHY:
+
+1. Confirm the model number and check the IDU wiring diagram (often inside the
+   front cover) — the diagram identifies each terminal pair and may name HA/HB
+   explicitly.
+2. Scope the line: any USB scope (Hantek 6022BE / Owon / Analog Discovery) AC-coupled
+   on one wire referenced to chassis GND, ~2 V/div, capture during a known thermostat
+   command (power on/off, change setpoint). The waveform identifies the PHY:
+   - Clean ±2.5 V symmetric swing on 18 V DC → AC-coupled differential.
+   - Bus dropping 18 V → ~0 V in bit-shaped pulses → single-ended pulldown.
+   - Asymmetric rise/fall → load modulation.
+3. Once the PHY is known, build the interface accordingly:
+   - Differential → isolated extended-common-mode RS-485 transceiver.
+   - Single-ended pulldown → optocoupler + comparator.
+   - Load modulation → custom analog front-end.
+4. With clean bytes on a serial port, try MidATRIX's frame validator first
+   (`0xA0` preamble, CRC-16/MODBUS). If frames pass CRC, the message-layer protocol
+   is shared with S1/S2 and reuse of their decoder framework becomes practical.
+
 ## References
 
 1. **XYE Reverse Engineering Project**
