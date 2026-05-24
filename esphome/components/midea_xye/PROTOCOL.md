@@ -550,7 +550,7 @@ identical** — scaling formulas across both buses. This is where MidATRIX adds 
 
 ### Candidate interpretations for XYE byte 28 (`Unknown5`)
 
-[Byte 28 observations](#byte-27-29-observations) show it drifting slowly while idle
+[Byte 27-29 observations](#byte-27-29-observations) show byte 28 drifting slowly while idle
 (`0xE0 → 0xD0 → 0xC2 → 0xBE → 0xBA → 0xAE → 0xB0` over ~22 min on one PNW unit) and
 staying steady through user mode/temperature/fan changes. Cross-referencing MidATRIX's
 inventory of slow-moving ODU sensors:
