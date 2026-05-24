@@ -132,6 +132,8 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
    * @param tag Log tag to use
    * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
+   * @param use_fahrenheit When true, decodes `target_temperature` as a Fahrenheit setpoint
+   *                       (raw − FAHRENHEIT_TEMP_OFFSET → °F) instead of a raw integer.
    * @return Updated bytes remaining
    */
   size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
@@ -221,6 +223,8 @@ union ReceiveData {
    * @param left Bytes remaining (received size)
    * @param tag Log tag to use
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
+   * @param use_fahrenheit Forwarded to ExtendedQueryResponseData::print_debug to control
+   *                       how the C4 `target_temperature` field is decoded for logging.
    * @return Updated bytes remaining
    */
   size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG,
