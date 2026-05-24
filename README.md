@@ -19,6 +19,12 @@ Kudos to these projects and people:
 - Key contributions and inspiration by @mdrobnak: https://github.com/mdrobnak/esphome/tree/units_switch
 - Static pressure protocol analysis by @rmounce
 - Home Assistant community discussion and contributions: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679
+- S1/S2 bus (IDU ↔ outdoor inverter) reverse-engineering by MidATRIX:
+  https://github.com/MidATRIX/midea-s1s2-rs485-monitor — a sibling Midea RS-485
+  protocol on a different bus, useful as a cross-reference for the sensor fields and
+  encoding patterns Midea reuses across its internal protocols. See
+  [PROTOCOL.md → Related Protocols](esphome/components/midea_xye/PROTOCOL.md#related-protocols--s1s2-bus-iduodu)
+  for the side-by-side comparison and which XYE unknowns it helps narrow.
 
 ## Hardware Requirements
 
