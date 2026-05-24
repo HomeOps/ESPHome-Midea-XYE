@@ -331,7 +331,20 @@ Protection flags are reported as a 16-bit value across bytes 24-25:
 - Byte 24: Protection flags low byte
 - Byte 25: Protection flags high byte
 
-The exact meaning of individual error codes varies by unit model and requires the service manual.
+Known protection-flag bits:
+
+```
+Bit / Mask      Name                Description
+----------      ----                -----------
+0x0002          DEFROST             Unit is currently running a defrost cycle
+                                    (refrigeration cycle reversed; fan may keep
+                                    running while no useful heating is delivered).
+                                    Decoded as DEFROST_PROTECT_FLAG and surfaced via
+                                    the optional `defrost:` binary sensor.
+```
+
+The exact meaning of the remaining bits varies by unit model and requires the service
+manual.
 
 ## CCM Communication Error Flags
 
@@ -527,7 +540,7 @@ identical** — scaling formulas across both buses. This is where MidATRIX adds 
 
 | Concept                  | XYE (this protocol)                                  | S1/S2 equivalent (MidATRIX)                              | What we can infer                                                                                                                                                              |
 | ------------------------ | ---------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Operation mode enum      | bit-encoded: `0x80` AUTO, `0x88` COOL, `0x84` HEAT…  | raw enum: `0x00=Off, 0x01=Cool, 0x02=Heat, 0x03=Fan, 0x04=Dry, 0x07=Defrost` | XYE has no documented `DEFROST` mode value; defrost state on XYE likely lives in operation/protect flags or byte 19, not as a primary mode. S1/S2 confirms defrost is a real *unit-level* state worth surfacing. |
+| Operation mode enum      | bit-encoded: `0x80` AUTO, `0x88` COOL, `0x84` HEAT…  | raw enum: `0x00=Off, 0x01=Cool, 0x02=Heat, 0x03=Fan, 0x04=Dry, 0x07=Defrost` | XYE has no `DEFROST` value in `operation_mode` itself — instead defrost is exposed as bit `0x0002` of the 16-bit `protect_flags` field (bytes 24–25, see [Error and Protection Flags](#error-and-protection-flags)). This component already decodes it as `DEFROST_PROTECT_FLAG` and surfaces it via the optional `defrost:` binary sensor. S1/S2 lifts it to a top-level mode value; XYE keeps it as a protection-flag bit. |
 | Fan enum                 | `0x01=H, 0x02=M, 0x03|0x04=L, 0x80=AUTO`             | `0x01=H, 0x02=M, 0x03=L, 0x06=Boost, 0x0F=Auto`          | Encoding diverges across buses — `0x06=Boost` and `0x0F=Auto` on S1/S2 do **not** apply to XYE. Use only the XYE encoding for XYE bytes.                                       |
 | Temperature              | `(raw − 0x28) / 2` (offset 40)                       | `(raw − 61) / 2` or `(raw − 62) / 2` (offsets 61/62)     | Same `÷ 2` quantisation (0.5 °C steps); different bias. Useful pattern when investigating other XYE bytes that might encode temperature — try the `(raw − k) / 2` family first. |
 | Compressor current       | byte 15 `Current` (often `0xFF`)                     | frame `0001_20` byte 12: `Compressor_Actual_Amps = raw / 3.2` | Current is an **ODU-side** quantity. The XYE `0xFF` is almost certainly an unimplemented-on-IDU sentinel, not a bug — IDU doesn't measure compressor current locally; the ODU does, and only S1/S2 sees it. |
