@@ -30,6 +30,8 @@ size_t Temperature::print_debug(const char *tag, const char *name, size_t left, 
   float temp_celsius;
   if (encoding == TemperatureEncoding::RAW) {
     temp_celsius = static_cast<float>(value);
+  } else if (encoding == TemperatureEncoding::CELSIUS_SETPOINT) {
+    temp_celsius = static_cast<float>(value & SET_TEMP_VALUE_MASK);
   } else {
     temp_celsius = to_celsius();
   }

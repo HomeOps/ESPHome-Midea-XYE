@@ -396,7 +396,8 @@ constexpr float TEMP_ENCODING_SCALE = 2.0f;
 enum class TemperatureEncoding : uint8_t {
   ENCODED = 0,            ///< Standard encoding: (celsius * TEMP_ENCODING_SCALE) + TEMP_ENCODING_OFFSET
   RAW = 1,                ///< Raw integer value (no decoding — display as-is)
-  FAHRENHEIT_SETPOINT = 2 ///< XYE Fahrenheit setpoint encoding: decoded as (raw - FAHRENHEIT_TEMP_OFFSET)°F
+  FAHRENHEIT_SETPOINT = 2, ///< XYE Fahrenheit setpoint encoding: decoded as (raw - FAHRENHEIT_TEMP_OFFSET)°F
+  CELSIUS_SETPOINT = 3    ///< XYE Celsius setpoint encoding: raw integer °C with SET_TEMP_STATUS_FLAG (0x40) masked out
 };
 
 /**
