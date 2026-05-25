@@ -66,7 +66,11 @@ FanSpeedLevel XYEAdapter::get_fan_speed_level(FanMode fan_mode) noexcept {
 
 float XYEAdapter::get_temperature(uint8_t raw) noexcept { return Temperature{raw}.to_celsius(); }
 
-float XYEAdapter::get_target_temperature(uint8_t raw) noexcept {
+float XYEAdapter::get_target_temperature(uint8_t raw, bool use_fahrenheit) noexcept {
+  if (use_fahrenheit) {
+    const int fahrenheit = static_cast<int>(raw) - static_cast<int>(FAHRENHEIT_TEMP_OFFSET);
+    return (fahrenheit - 32) * 5.0f / 9.0f;
+  }
   return static_cast<float>(raw & SET_TEMP_VALUE_MASK);
 }
 
@@ -78,11 +82,7 @@ climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode,
   // Report HEATING/COOLING only when the compressor is actually running. With the fan on
   // but the compressor off the unit is merely circulating air, so FAN is the honest action.
   ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
-  if (mode == ClimateMode::CLIMATE_MODE_FAN_ONLY && fan_running) {
-    action = ClimateAction::CLIMATE_ACTION_FAN;
-  } else if (mode == ClimateMode::CLIMATE_MODE_DRY && fan_running) {
-    action = ClimateAction::CLIMATE_ACTION_DRYING;
-  } else if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
+  if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
     action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
   } else if (mode == ClimateMode::CLIMATE_MODE_COOL && fan_running) {
     action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;

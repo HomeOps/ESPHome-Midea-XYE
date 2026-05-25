@@ -50,7 +50,7 @@ struct XYEAdapter {
 
   /// Returns the target temperature in Celsius from a raw XYE byte,
   /// masking out the SET_TEMP_STATUS_FLAG (bit 6) that the unit may set in certain states.
-  static float get_target_temperature(uint8_t raw) noexcept;
+  static float get_target_temperature(uint8_t raw, bool use_fahrenheit = false) noexcept;
 
   /// Returns the ClimateAction derived from the current mode, fan, operation state,
   /// compressor status, and defrost state.
