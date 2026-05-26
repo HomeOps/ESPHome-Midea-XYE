@@ -78,7 +78,11 @@ climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode,
   // Report HEATING/COOLING only when the compressor is actually running. With the fan on
   // but the compressor off the unit is merely circulating air, so FAN is the honest action.
   ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
-  if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
+  if (mode == ClimateMode::CLIMATE_MODE_FAN_ONLY && fan_running) {
+    action = ClimateAction::CLIMATE_ACTION_FAN;
+  } else if (mode == ClimateMode::CLIMATE_MODE_DRY && fan_running) {
+    action = compressor_active ? ClimateAction::CLIMATE_ACTION_DRYING : ClimateAction::CLIMATE_ACTION_FAN;
+  } else if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
     action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
   } else if (mode == ClimateMode::CLIMATE_MODE_COOL && fan_running) {
     action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
