@@ -75,31 +75,39 @@ climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode,
                                                        bool defrost_active) noexcept {
   const bool fan_running = (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) != 0x00;
 
-  // Report the active work action only when the compressor is actually running. With the fan
-  // on but the compressor off the unit is merely circulating air, so FAN is the honest action.
-  // FAN_ONLY never involves the compressor and always maps directly to FAN.
+  // With the indoor fan off the unit is not delivering anything to the room — stay IDLE.
+  // FAN_ONLY always maps to FAN. For modes that use the compressor (DRY, HEAT, COOL, and
+  // HEAT_COOL sub-modes), report the active action only when the compressor is running;
+  // otherwise the unit is merely circulating air, so FAN is the honest action.
   ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
-  if (mode == ClimateMode::CLIMATE_MODE_FAN_ONLY && fan_running) {
-    action = ClimateAction::CLIMATE_ACTION_FAN;
-  } else if (mode == ClimateMode::CLIMATE_MODE_DRY && fan_running) {
-    action = compressor_active ? ClimateAction::CLIMATE_ACTION_DRYING : ClimateAction::CLIMATE_ACTION_FAN;
-  } else if (mode == ClimateMode::CLIMATE_MODE_HEAT && fan_running) {
-    action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
-  } else if (mode == ClimateMode::CLIMATE_MODE_COOL && fan_running) {
-    action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
-  }
-
-  // In heat/cool (auto) mode refine the action using the unit's reported sub-mode.
-  // Gated on fan_running like the HEAT/COOL branches above: with the indoor fan off
-  // the unit is not delivering anything to the room, so the action stays IDLE.
-  if (mode == ClimateMode::CLIMATE_MODE_HEAT_COOL && fan_running) {
-    const uint8_t op_raw = static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK;
-    if (op_raw == static_cast<uint8_t>(OperationMode::COOL))
-      action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
-    else if (op_raw == static_cast<uint8_t>(OperationMode::FAN))
-      action = ClimateAction::CLIMATE_ACTION_FAN;
-    else if (op_raw == static_cast<uint8_t>(OperationMode::HEAT))
-      action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
+  if (fan_running) {
+    switch (mode) {
+      case ClimateMode::CLIMATE_MODE_FAN_ONLY:
+        action = ClimateAction::CLIMATE_ACTION_FAN;
+        break;
+      case ClimateMode::CLIMATE_MODE_DRY:
+        action = compressor_active ? ClimateAction::CLIMATE_ACTION_DRYING : ClimateAction::CLIMATE_ACTION_FAN;
+        break;
+      case ClimateMode::CLIMATE_MODE_HEAT:
+        action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
+        break;
+      case ClimateMode::CLIMATE_MODE_COOL:
+        action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
+        break;
+      case ClimateMode::CLIMATE_MODE_HEAT_COOL: {
+        // Refine using the unit's reported sub-mode.
+        const uint8_t op_raw = static_cast<uint8_t>(op_mode) & OP_MODE_VALUE_MASK;
+        if (op_raw == static_cast<uint8_t>(OperationMode::COOL))
+          action = compressor_active ? ClimateAction::CLIMATE_ACTION_COOLING : ClimateAction::CLIMATE_ACTION_FAN;
+        else if (op_raw == static_cast<uint8_t>(OperationMode::FAN))
+          action = ClimateAction::CLIMATE_ACTION_FAN;
+        else if (op_raw == static_cast<uint8_t>(OperationMode::HEAT))
+          action = compressor_active ? ClimateAction::CLIMATE_ACTION_HEATING : ClimateAction::CLIMATE_ACTION_FAN;
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   // During a defrost cycle the unit reverses the refrigeration cycle to melt ice off the
