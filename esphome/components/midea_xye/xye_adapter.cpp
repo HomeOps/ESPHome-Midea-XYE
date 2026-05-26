@@ -75,8 +75,9 @@ climate::ClimateAction XYEAdapter::get_climate_action(climate::ClimateMode mode,
                                                        bool defrost_active) noexcept {
   const bool fan_running = (static_cast<uint8_t>(fan_mode) & FAN_SPEED_MASK) != 0x00;
 
-  // Report HEATING/COOLING only when the compressor is actually running. With the fan on
-  // but the compressor off the unit is merely circulating air, so FAN is the honest action.
+  // Report the active work action only when the compressor is actually running. With the fan
+  // on but the compressor off the unit is merely circulating air, so FAN is the honest action.
+  // FAN_ONLY never involves the compressor and always maps directly to FAN.
   ClimateAction action = ClimateAction::CLIMATE_ACTION_IDLE;
   if (mode == ClimateMode::CLIMATE_MODE_FAN_ONLY && fan_running) {
     action = ClimateAction::CLIMATE_ACTION_FAN;
