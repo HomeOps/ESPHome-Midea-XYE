@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.6...v0.2.7) (2026-05-27)
+
+
+### Bug Fixes
+
+* report correct action states for FAN_ONLY and DRY modes ([#129](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/129)) ([f0a4fc2](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/f0a4fc2f2d5921650bd3e433f6ae9a04017f0d7e))
+
 ## [0.2.6](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.5...v0.2.6) (2026-05-23)
 
 
