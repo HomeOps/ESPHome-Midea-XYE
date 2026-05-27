@@ -48,8 +48,12 @@ struct XYEAdapter {
   /// Used for T1/T2/T3/outdoor temperature readings and the C4 setpoint when not in Fahrenheit.
   static float get_temperature(uint8_t raw) noexcept;
 
-  /// Returns the target temperature in Celsius from a raw XYE byte,
-  /// masking out the SET_TEMP_STATUS_FLAG (bit 6) that the unit may set in certain states.
+  /// Returns the target setpoint in Celsius from a raw XYE C4 temperature byte.
+  /// @param raw  The raw byte from the C4 `target_temperature` field.
+  /// @param use_fahrenheit  When true the byte encodes a Fahrenheit value:
+  ///        celsius = (raw - FAHRENHEIT_TEMP_OFFSET - 32) * 5/9.
+  ///        When false the byte is a Celsius integer with SET_TEMP_STATUS_FLAG
+  ///        (bit 6, 0x40) masked off before conversion.
   static float get_target_temperature(uint8_t raw, bool use_fahrenheit = false) noexcept;
 
   /// Returns the ClimateAction derived from the current mode, fan, operation state,
