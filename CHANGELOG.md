@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.9](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.8...v0.2.9) (2026-05-28)
+
+
+### Bug Fixes
+
+* greedy \x hex escape in setpoint debug log + CI lint to catch similar ([#132](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/132)) ([1f08726](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/1f087269539155245f129f3690ff95a74afa6de0))
+
 ## [0.2.8](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.7...v0.2.8) (2026-05-28)
 
 
