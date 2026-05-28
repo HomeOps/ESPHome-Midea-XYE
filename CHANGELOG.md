@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.8](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.7...v0.2.8) (2026-05-28)
+
+
+### Bug Fixes
+
+* correct Fahrenheit setpoint reporting and C4 debug log ([#127](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/127)) ([6035f41](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/6035f4174ef5d06502d8e1985c6f7e2ca896b6b6))
+
 ## [0.2.7](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.6...v0.2.7) (2026-05-27)
 
 
