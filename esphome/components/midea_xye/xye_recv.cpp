@@ -45,10 +45,10 @@ static size_t print_setpoint_debug(const char *tag, const char *name, uint8_t ra
   const float celsius = XYEAdapter::get_target_temperature(raw, use_fahrenheit);
   if (use_fahrenheit) {
     const int fahrenheit = static_cast<int>(raw) - static_cast<int>(FAHRENHEIT_TEMP_OFFSET);
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%d\xc2\xb0F / %.2f\xc2\xb0C)"),
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%d°F / %.2f°C)"),
              name, raw, fahrenheit, celsius);
   } else {
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.2f\xc2\xb0C)"),
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.2f°C)"),
              name, raw, celsius);
   }
   return left - sizeof(Temperature);
