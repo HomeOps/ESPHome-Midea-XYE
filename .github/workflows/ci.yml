@@ -49,16 +49,35 @@ jobs:
 
       - name: Build and run adapter unit tests
         run: |
-          g++ -std=c++17 -Wall -DUSE_ARDUINO \
+          g++ -std=c++17 -Wall -Werror -DUSE_ARDUINO \
             -Itests/native/stubs -Iesphome/components/midea_xye \
             tests/native/test_get_climate_action.cpp \
             esphome/components/midea_xye/xye_adapter.cpp \
             -o "${RUNNER_TEMP}/xye_native_tests"
           "${RUNNER_TEMP}/xye_native_tests"
 
-          g++ -std=c++17 -Wall -DUSE_ARDUINO \
+          g++ -std=c++17 -Wall -Werror -DUSE_ARDUINO \
             -Itests/native/stubs -Iesphome/components/midea_xye \
             tests/native/test_get_target_temperature.cpp \
             esphome/components/midea_xye/xye_adapter.cpp \
             -o "${RUNNER_TEMP}/xye_temp_tests"
           "${RUNNER_TEMP}/xye_temp_tests"
+
+      - name: Lint component sources for warnings
+        # Syntax-only check (-fsyntax-only) against the minimal native stubs.
+        # Catches lexer/parser/semantic warnings (e.g. greedy \x hex escapes)
+        # on sources the unit tests don't link against. -Werror promotes any
+        # warning to a build failure. Sources requiring deeper ESPHome surface
+        # area (climate_midea_xye.cpp) are intentionally excluded — extend the
+        # list as additional stubs are added.
+        run: |
+          for src in \
+            esphome/components/midea_xye/xye.cpp \
+            esphome/components/midea_xye/xye_recv.cpp \
+            esphome/components/midea_xye/xye_send.cpp \
+            esphome/components/midea_xye/xye_adapter.cpp; do
+            echo "Checking $src"
+            g++ -std=c++17 -Wall -Werror -DUSE_ARDUINO -fsyntax-only \
+              -Itests/native/stubs -Iesphome/components/midea_xye \
+              "$src"
+          done
