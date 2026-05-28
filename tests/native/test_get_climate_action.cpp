@@ -5,9 +5,9 @@
 // the esphome climate enums and logging macros it needs.
 //
 // Build & run (from the repository root, output kept out of the tree):
-//   g++ -std=c++17 -DUSE_ARDUINO \
-//       -Itests/native/stubs -Iesphome/components/midea_xye \
-//       tests/native/test_get_climate_action.cpp \
+//   g++ -std=c++17 -DUSE_ARDUINO
+//       -Itests/native/stubs -Iesphome/components/midea_xye
+//       tests/native/test_get_climate_action.cpp
 //       esphome/components/midea_xye/xye_adapter.cpp -o /tmp/xye_native_tests
 //   /tmp/xye_native_tests
 
