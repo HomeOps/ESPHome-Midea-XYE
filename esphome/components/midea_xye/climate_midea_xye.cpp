@@ -169,8 +169,18 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
         }
       }
     } else {
-      ESP_LOGE(Constants::TAG, "Received incorrect message length from AC for Command %02X", cmdSent);
-      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_ERROR);
+      ESP_LOGW(Constants::TAG, "Bad response length (%u bytes, expected %u) for Command %02X; resyncing",
+               i, RX_MESSAGE_LENGTH, cmdSent);
+      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_WARN);
+      // Recover instead of deadlocking in WAIT_DATA: a missed, short, or
+      // over-long reply must not strand the state machine. Honor any queued
+      // command, otherwise restart the poll cycle on the next update().
+      if (queuedCommand != ControlState::WAIT_DATA) {
+        controlState = queuedCommand;
+        queuedCommand = ControlState::WAIT_DATA;
+      } else {
+        controlState = ControlState::SEND_QUERY;
+      }
     }
   });
 }
