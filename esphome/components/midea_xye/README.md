@@ -49,8 +49,8 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false.
-    target_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw.
     target_temperature_source: C4   # Optional. C4 or C0.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.

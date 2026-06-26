@@ -55,32 +55,43 @@ static bool config_value_is(const char *value, const char *expected) {
 float ClimateMideaXYE::decode_bus_temperature_(uint8_t raw) const {
   if (raw == 0xFF)
     return NAN;
-  if (this->raw_fahrenheit_sensor_temperatures_) {
+  if (this->raw_temperatures_) {
+    if (!this->use_fahrenheit_)
+      return static_cast<float>(raw);
     return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
+  }
+  if (this->use_fahrenheit_) {
+    const float fahrenheit = (static_cast<float>(raw) - static_cast<float>(TEMP_ENCODING_OFFSET)) /
+                             TEMP_ENCODING_SCALE;
+    return (fahrenheit - 32.0f) * 5.0f / 9.0f;
   }
   return XYEAdapter::get_temperature(raw);
 }
 
 float ClimateMideaXYE::decode_target_temperature_(uint8_t raw) const {
-  if (this->raw_fahrenheit_target_temperatures_) {
+  if (this->raw_temperatures_) {
     // Same sentinel handling for target fields observed on unsupported frames.
     if (raw == 0xFF)
       return NAN;
+    if (!this->use_fahrenheit_)
+      return static_cast<float>(raw);
     return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
   }
   return XYEAdapter::get_target_temperature(raw, this->use_fahrenheit_);
 }
 
 uint8_t ClimateMideaXYE::encode_target_temperature_(float celsius) const {
-  if (this->raw_fahrenheit_target_temperatures_) {
+  if (this->raw_temperatures_) {
     if (std::isnan(celsius))
       return 0;
-    const int fahrenheit = static_cast<int>(lroundf((9.0f / 5.0f) * celsius + 32.0f));
-    if (fahrenheit < 0)
+    const int raw = this->use_fahrenheit_
+                        ? static_cast<int>(lroundf((9.0f / 5.0f) * celsius + 32.0f))
+                        : static_cast<int>(lroundf(celsius));
+    if (raw < 0)
       return 0;
-    if (fahrenheit > 255)
+    if (raw > 255)
       return 255;
-    return static_cast<uint8_t>(fahrenheit);
+    return static_cast<uint8_t>(raw);
   }
   return XYEAdapter::get_raw_target_temperature(celsius, this->use_fahrenheit_);
 }
@@ -111,12 +122,9 @@ void ClimateMideaXYE::control(const ClimateCall &call) {
 
 void ClimateMideaXYE::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
-  this->raw_fahrenheit_target_temperatures_ =
-      this->raw_fahrenheit_target_temperatures_ ||
-      config_value_is(build_info::CONFIG_TARGET_TEMPERATURE_ENCODING, "raw_fahrenheit");
-  this->raw_fahrenheit_sensor_temperatures_ =
-      this->raw_fahrenheit_sensor_temperatures_ ||
-      config_value_is(build_info::CONFIG_SENSOR_TEMPERATURE_ENCODING, "raw_fahrenheit");
+  this->raw_temperatures_ =
+      this->raw_temperatures_ ||
+      config_value_is(build_info::CONFIG_TEMPERATURE_ENCODING, "raw");
   this->target_temperature_from_c0_ =
       this->target_temperature_from_c0_ ||
       config_value_is(build_info::CONFIG_TARGET_TEMPERATURE_SOURCE, "c0");
@@ -200,7 +208,7 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
     if (i == RX_MESSAGE_LENGTH) {
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_,
-                          this->raw_fahrenheit_target_temperatures_, this->raw_fahrenheit_sensor_temperatures_);
+                          this->raw_temperatures_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
@@ -525,23 +533,17 @@ void ClimateMideaXYE::dump_config() {
   ESP_LOGCONFIG(Constants::TAG, "  [x] Period: %dms", this->get_update_interval());
   ESP_LOGCONFIG(Constants::TAG, "  [x] Response timeout: %dms", this->response_timeout);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime use Fahrenheit: %d", this->use_fahrenheit_);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime target temperature encoding: %s",
-                this->raw_fahrenheit_target_temperatures_ ? "raw_fahrenheit" : "standard");
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime sensor temperature encoding: %s",
-                this->raw_fahrenheit_sensor_temperatures_ ? "raw_fahrenheit" : "standard");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime temperature encoding: %s",
+                this->raw_temperatures_ ? "raw" : "standard");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime target temperature source: %s",
                 this->target_temperature_from_c0_ ? "C0" : "C4");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen use Fahrenheit: %d", build_info::CONFIG_USE_FAHRENHEIT);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature encoding: %s",
-                build_info::CONFIG_TARGET_TEMPERATURE_ENCODING);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sensor temperature encoding: %s",
-                build_info::CONFIG_SENSOR_TEMPERATURE_ENCODING);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen temperature encoding: %s",
+                build_info::CONFIG_TEMPERATURE_ENCODING);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature source: %s",
                 build_info::CONFIG_TARGET_TEMPERATURE_SOURCE);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw Fahrenheit target temperatures: %d",
-                build_info::CONFIG_RAW_FAHRENHEIT_TARGET_TEMPERATURES);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw Fahrenheit sensor temperatures: %d",
-                build_info::CONFIG_RAW_FAHRENHEIT_SENSOR_TEMPERATURES);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw temperatures: %d",
+                build_info::CONFIG_RAW_TEMPERATURES);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature from C0: %d",
                 build_info::CONFIG_TARGET_TEMPERATURE_FROM_C0);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sync fan mode from device: %d",

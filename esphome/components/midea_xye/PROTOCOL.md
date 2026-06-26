@@ -318,16 +318,16 @@ Two Fahrenheit variants have been observed:
 
 - **Offset Fahrenheit in C4**: setpoint byte is `°F + 0x87`; this is what the
  `use_fahrenheit: true` option handles.
-- **Raw Fahrenheit in C0**: C0 temperature bytes are direct Fahrenheit values
+- **Raw temperatures in C0**: C0 temperature bytes may be direct raw values
   (`0x46` = 70°F, `0x45` = 69°F, etc.). Units with this variant may return an
   unusable or sentinel-filled response to C4 extended queries. Use
-  `target_temperature_encoding: RAW_FAHRENHEIT` with `target_temperature_source: C0`
-  for raw-F setpoints. Use `sensor_temperature_encoding: RAW_FAHRENHEIT` only
-  when the C0 T1/T2/T2B/T3 sensor bytes appear to use the same direct-Fahrenheit
-  convention. Debug logs print raw-F, shifted/scaled-C, and shifted/scaled-F
-  candidates for these fields so model-specific field mapping can be checked
-  from captures. In these modes, `0xFF` is treated as unavailable for optional
-  temperature fields such as T2B rather than displayed as a real temperature.
+  `temperature_encoding: RAW` with `target_temperature_source: C0` when C0
+  target and sensor temperatures are unshifted. `use_fahrenheit` then selects
+  whether raw values are interpreted as Fahrenheit (`true`) or Celsius (`false`).
+  Debug logs print raw-C, raw-F, shifted/scaled-C, and shifted/scaled-F candidates
+  for sensor fields so model-specific field mapping can be checked from captures.
+  In these modes, `0xFF` is treated as unavailable for optional temperature fields
+  such as T2B rather than displayed as a real temperature.
 
 **Special Value**:
 - `0xFF`: Used in FAN mode when temperature control is not applicable

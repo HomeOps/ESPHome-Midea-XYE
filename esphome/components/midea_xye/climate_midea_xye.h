@@ -151,8 +151,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_internal_target_temperature_sensor(Sensor *sensor) { this->internal_target_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
-  void set_raw_fahrenheit_target_temperatures(bool yesno) { this->raw_fahrenheit_target_temperatures_ = yesno; }
-  void set_raw_fahrenheit_sensor_temperatures(bool yesno) { this->raw_fahrenheit_sensor_temperatures_ = yesno; }
+  void set_raw_temperatures(bool yesno) { this->raw_temperatures_ = yesno; }
   void set_target_temperature_from_c0(bool yesno) { this->target_temperature_from_c0_ = yesno; }
   void set_compressor_aware_action(bool yesno) { this->compressor_aware_action_ = yesno; }
   /// Opt-in: when true, this->fan_mode is updated from C4 target_fan_speed on every extended
@@ -220,8 +219,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   std::vector<const char *> supported_custom_presets_{};
   std::vector<const char *> supported_custom_fan_modes_{};
   bool use_fahrenheit_;
-  bool raw_fahrenheit_target_temperatures_{false};
-  bool raw_fahrenheit_sensor_temperatures_{false};
+  bool raw_temperatures_{false};
   bool target_temperature_from_c0_{false};
   // Opt-in (compressor_aware_action YAML option): when false, get_climate_action is
   // fed compressor_active=true / defrost_active=false to reproduce legacy behaviour.

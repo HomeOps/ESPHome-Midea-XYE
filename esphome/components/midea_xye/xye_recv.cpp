@@ -8,22 +8,28 @@ namespace esphome {
 namespace midea {
 namespace xye {
 
-static size_t print_raw_fahrenheit_temperature_debug(const char *tag, const char *name, uint8_t raw,
-                                                     size_t left, int level) {
+static size_t print_raw_temperature_debug(const char *tag, const char *name, uint8_t raw,
+                                          size_t left, int level, bool use_fahrenheit) {
   if (left < sizeof(Temperature)) return left;
   if (raw == 0xFF) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (unavailable)"),
              name, raw);
   } else {
-    const float celsius = (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%u°F / %.2f°C)"),
-             name, raw, static_cast<unsigned>(raw), celsius);
+    if (use_fahrenheit) {
+      const float celsius = (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
+      ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%u°F / %.2f°C)"),
+               name, raw, static_cast<unsigned>(raw), celsius);
+    } else {
+      ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%u°C)"),
+               name, raw, static_cast<unsigned>(raw));
+    }
   }
   return left - sizeof(Temperature);
 }
 
-static size_t print_c0_sensor_temperature_debug(const char *tag, const char *name, uint8_t raw,
-                                                size_t left, int level, bool raw_fahrenheit_selected) {
+static size_t print_temperature_candidates_debug(const char *tag, const char *name, uint8_t raw,
+                                                 size_t left, int level, bool use_fahrenheit,
+                                                 bool raw_selected) {
   if (left < sizeof(Temperature)) return left;
   if (raw == 0xFF) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (unavailable)"),
@@ -35,42 +41,43 @@ static size_t print_c0_sensor_temperature_debug(const char *tag, const char *nam
     const float shifted_celsius_as_fahrenheit = shifted_celsius * 9.0f / 5.0f + 32.0f;
     const float shifted_fahrenheit = shifted_value;
     const float shifted_fahrenheit_as_celsius = (shifted_fahrenheit - 32.0f) * 5.0f / 9.0f;
-    const float raw_fahrenheit = static_cast<float>(raw);
-    const float raw_fahrenheit_as_celsius = (raw_fahrenheit - 32.0f) * 5.0f / 9.0f;
+    const float raw_f = static_cast<float>(raw);
+    const float raw_f_as_celsius = (raw_f - 32.0f) * 5.0f / 9.0f;
     ::esphome::esp_log_printf_(
         level, tag, __LINE__,
         ESPHOME_LOG_FORMAT(
-            "    %s: 0x%02X (selected=%s; raw_f=%u°F/%.2f°C; shifted_c=%.2f°C/%.1f°F; "
+            "    %s: 0x%02X (selected=%s; raw_c=%u°C; raw_f=%u°F/%.2f°C; shifted_c=%.2f°C/%.1f°F; "
             "shifted_f=%.2f°F/%.2f°C)"),
-        name, raw, raw_fahrenheit_selected ? "raw_f" : "shifted_c", static_cast<unsigned>(raw),
-        raw_fahrenheit_as_celsius, shifted_celsius, shifted_celsius_as_fahrenheit, shifted_fahrenheit,
-        shifted_fahrenheit_as_celsius);
+        name, raw,
+        raw_selected ? (use_fahrenheit ? "raw_f" : "raw_c") : (use_fahrenheit ? "shifted_f" : "shifted_c"),
+        static_cast<unsigned>(raw), static_cast<unsigned>(raw), raw_f_as_celsius, shifted_celsius,
+        shifted_celsius_as_fahrenheit, shifted_fahrenheit, shifted_fahrenheit_as_celsius);
   }
   return left - sizeof(Temperature);
 }
 
 // QueryResponseData methods
 size_t QueryResponseData::print_debug(const char *tag, size_t left, int level,
-                                      bool raw_fahrenheit_target, bool raw_fahrenheit_sensors) const {
+                                      bool use_fahrenheit, bool raw_temperatures) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  QueryResponseData:"));
   
   left = print_debug_uint8(tag, "unknown1", unknown1, left, level);
   left = print_debug_enum(tag, "capabilities", capabilities, left, level);
   left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
   left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
-  if (raw_fahrenheit_target)
-    left = print_raw_fahrenheit_temperature_debug(tag, "target_temperature", target_temperature.value, left, level);
+  if (raw_temperatures)
+    left = print_raw_temperature_debug(tag, "target_temperature", target_temperature.value, left, level, use_fahrenheit);
   else
     left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
 
-  left = print_c0_sensor_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level,
-                                           raw_fahrenheit_sensors);
-  left = print_c0_sensor_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level,
-                                           raw_fahrenheit_sensors);
-  left = print_c0_sensor_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level,
-                                           raw_fahrenheit_sensors);
-  left = print_c0_sensor_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level,
-                                           raw_fahrenheit_sensors);
+  left = print_temperature_candidates_debug(tag, "t1_temperature", t1_temperature.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
+  left = print_temperature_candidates_debug(tag, "t2a_temperature", t2a_temperature.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
+  left = print_temperature_candidates_debug(tag, "t2b_temperature", t2b_temperature.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
+  left = print_temperature_candidates_debug(tag, "t3_temperature", t3_temperature.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
   left = print_debug_uint8(tag, "current", current, left, level);
   left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
   left = print_debug_uint8(tag, "timer_start", timer_start, left, level);
@@ -89,9 +96,13 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level,
 }
 
 // ExtendedQueryResponseData methods
-static size_t print_setpoint_debug(const char *tag, const char *name, uint8_t raw,
-                                   size_t left, int level, bool use_fahrenheit) {
+static size_t print_c4_setpoint_debug(const char *tag, const char *name, uint8_t raw,
+                                      size_t left, int level, bool use_fahrenheit,
+                                      bool raw_temperatures) {
   if (left < sizeof(Temperature)) return left;
+  if (raw_temperatures)
+    return print_raw_temperature_debug(tag, name, raw, left, level, use_fahrenheit);
+
   const float celsius = XYEAdapter::get_target_temperature(raw, use_fahrenheit);
   if (use_fahrenheit) {
     const int fahrenheit = static_cast<int>(raw) - static_cast<int>(FAHRENHEIT_TEMP_OFFSET);
@@ -104,7 +115,8 @@ static size_t print_setpoint_debug(const char *tag, const char *name, uint8_t ra
   return left - sizeof(Temperature);
 }
 
-size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int level, bool use_fahrenheit) const {
+size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int level, bool use_fahrenheit,
+                                             bool raw_temperatures) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  ExtendedQueryResponseData:"));
   
   left = print_debug_uint8(tag, "indoor_fan_pwm", indoor_fan_pwm, left, level);
@@ -112,16 +124,21 @@ size_t ExtendedQueryResponseData::print_debug(const char *tag, size_t left, int 
   left = print_debug_enum(tag, "compressor_flags", compressor_flags, left, level);
   left = print_debug_enum(tag, "esp_profile", esp_profile, left, level);
   left = print_debug_enum(tag, "protection_flags", protection_flags, left, level);
-  left = coil_inlet_temp.print_debug(tag, "coil_inlet_temp", left, level);
-  left = coil_outlet_temp.print_debug(tag, "coil_outlet_temp", left, level);
-  left = discharge_temp.print_debug(tag, "discharge_temp", left, level);
+  left = print_temperature_candidates_debug(tag, "coil_inlet_temp", coil_inlet_temp.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
+  left = print_temperature_candidates_debug(tag, "coil_outlet_temp", coil_outlet_temp.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
+  left = print_temperature_candidates_debug(tag, "discharge_temp", discharge_temp.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
   left = print_debug_uint8(tag, "expansion_valve_pos", expansion_valve_pos, left, level);
   left = print_debug_uint8(tag, "reserved1", reserved1, left, level);
   left = print_debug_enum(tag, "system_status_flags", system_status_flags, left, level);
   left = print_debug_enum(tag, "target_fan_speed", target_fan_speed, left, level);
-  left = print_setpoint_debug(tag, "target_temperature", target_temperature.value, left, level, use_fahrenheit);
+  left = print_c4_setpoint_debug(tag, "target_temperature", target_temperature.value, left, level, use_fahrenheit,
+                                 raw_temperatures);
   left = compressor_freq_or_fan_rpm.print_debug(tag, "compressor_freq/outdoor_fan_rpm", left, level);
-  left = outdoor_temperature.print_debug(tag, "outdoor_temperature", left, level);
+  left = print_temperature_candidates_debug(tag, "outdoor_temperature", outdoor_temperature.value, left, level,
+                                            use_fahrenheit, raw_temperatures);
   left = print_debug_uint8(tag, "reserved2", reserved2, left, level);
   left = print_debug_uint8(tag, "reserved3", reserved3, left, level);
   left = print_debug_uint8(tag, "static_pressure", static_pressure, left, level);
@@ -155,7 +172,7 @@ static size_t print_unknown_payload_debug(const uint8_t *raw, const char *tag, s
 }
 
 size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool use_fahrenheit,
-                                bool raw_fahrenheit_target, bool raw_fahrenheit_sensors) const {
+                                bool raw_temperatures) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
@@ -169,12 +186,11 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool us
   // Delegate to the appropriate data struct's print_debug method based on command type
   switch (message.frame.header.command) {
     case Command::QUERY:
-      left = message.data.query_response.print_debug(tag, left, level, raw_fahrenheit_target,
-                                                     raw_fahrenheit_sensors);
+      left = message.data.query_response.print_debug(tag, left, level, use_fahrenheit, raw_temperatures);
       break;
     
     case Command::QUERY_EXTENDED:
-      left = message.data.extended_query_response.print_debug(tag, left, level, use_fahrenheit);
+      left = message.data.extended_query_response.print_debug(tag, left, level, use_fahrenheit, raw_temperatures);
       break;
     
     case Command::SET:

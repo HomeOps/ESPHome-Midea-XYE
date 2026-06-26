@@ -100,9 +100,8 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false
-    target_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
-    sensor_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw.
     target_temperature_source: C4   # Optional. C4 or C0
 ```
 
@@ -137,12 +136,11 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false
-    target_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
-                                           # RAW_FAHRENHEIT is for units that report the C0
-                                           # setpoint as a direct Fahrenheit byte, e.g. 0x46 = 70°F.
-    sensor_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
-                                           # Applies uniformly to C0 T1/T2/T2B/T3 fields.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW
+                                    # STANDARD uses the protocol transform for the selected
+                                    # unit system. RAW disables it; with use_fahrenheit: true,
+                                    # 0x46 is treated as 70°F.
     target_temperature_source: C4   # Optional. Defaults to C4. Use C0 for units whose
                                     # extended query response does not expose setpoint.
     #beeper: true               # Optional. Beep on commands

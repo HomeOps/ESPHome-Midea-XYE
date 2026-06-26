@@ -84,7 +84,7 @@ struct __attribute__((packed)) QueryResponseData {
    * @return Updated bytes remaining
    */
   size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                     bool raw_fahrenheit_target = false, bool raw_fahrenheit_sensors = false) const;
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 };
 
 /**
@@ -133,12 +133,12 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
    * @param tag Log tag to use
    * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @param use_fahrenheit When true, decodes `target_temperature` as a Fahrenheit setpoint
-   *                       (raw − FAHRENHEIT_TEMP_OFFSET → °F) instead of a raw integer.
+   * @param use_fahrenheit Selects Fahrenheit vs Celsius for temperature debug output.
+   * @param raw_temperatures Selects raw vs shifted/scaled temperature debug output.
    * @return Updated bytes remaining
    */
   size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                      bool use_fahrenheit = false) const;
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 };
 
 /**
@@ -224,17 +224,13 @@ union ReceiveData {
    * @param left Bytes remaining (received size)
    * @param tag Log tag to use
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @param use_fahrenheit Forwarded to ExtendedQueryResponseData::print_debug to control
-   *                       how the C4 `target_temperature` field is decoded for logging.
-   * @param raw_fahrenheit_target Forwarded to QueryResponseData::print_debug to control
-   *                              how the C0 target temperature byte is decoded for logging.
-   * @param raw_fahrenheit_sensors Forwarded to QueryResponseData::print_debug to control
-   *                               how C0 sensor temperature bytes are decoded for logging.
+   * @param use_fahrenheit Forwarded to payload debug to select Fahrenheit vs Celsius.
+   * @param raw_temperatures Forwarded to payload debug to select raw vs shifted/scaled
+   *                         temperature logging.
    * @return Updated bytes remaining
    */
   size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                     bool use_fahrenheit = false, bool raw_fahrenheit_target = false,
-                     bool raw_fahrenheit_sensors = false) const;
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 
   /// Returns true when the preamble, prologue, direction, and CRC of the
   /// received message are all valid.
