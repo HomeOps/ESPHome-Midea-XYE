@@ -71,6 +71,10 @@ climate:
       - SLEEP
     supported_swing_modes:      # Optional
       - VERTICAL
+    internal_current_temperature: # Optional. Same value shown as climate current temperature
+      name: Room Temp
+    internal_target_temperature:  # Optional. Same value shown as climate target/setpoint
+      name: Target Temp
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
     temperature_2a:             # Optional. T2 indoor coil temperature

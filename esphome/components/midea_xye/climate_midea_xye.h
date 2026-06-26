@@ -149,6 +149,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
 #endif
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
+  void set_internal_target_temperature_sensor(Sensor *sensor) { this->internal_target_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
   void set_raw_fahrenheit_target_temperatures(bool yesno) { this->raw_fahrenheit_target_temperatures_ = yesno; }
   void set_raw_fahrenheit_sensor_temperatures(bool yesno) { this->raw_fahrenheit_sensor_temperatures_ = yesno; }
@@ -246,6 +247,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
 #endif
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};
+  Sensor *internal_target_temperature_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
   float internal_temperature_{NAN};

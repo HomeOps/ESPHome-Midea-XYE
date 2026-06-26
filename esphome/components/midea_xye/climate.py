@@ -67,6 +67,7 @@ CONF_HUMIDITY_SETPOINT = "humidity_setpoint"
 CONF_STATIC_PRESSURE = "static_pressure"
 CONF_FOLLOW_ME_SENSOR = "follow_me_sensor"
 CONF_INTERNAL_CURRENT_TEMPERATURE = "internal_current_temperature"
+CONF_INTERNAL_TARGET_TEMPERATURE = "internal_target_temperature"
 CONF_DEFROST = "defrost"
 CONF_COMPRESSOR_ACTIVE = "compressor_active"
 CONF_FAN_SPEED = "fan_speed"
@@ -369,6 +370,13 @@ CONFIG_SCHEMA = cv.All(
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
+            cv.Optional(CONF_INTERNAL_TARGET_TEMPERATURE): sensor.sensor_schema(
+                unit_of_measurement=UNIT_CELSIUS,
+                icon=ICON_THERMOMETER,
+                accuracy_decimals=2,
+                device_class=DEVICE_CLASS_TEMPERATURE,
+                state_class=STATE_CLASS_MEASUREMENT,
+            ),
             cv.Optional(CONF_DEFROST): binary_sensor.binary_sensor_schema(
                 icon="mdi:snowflake-thermometer",
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -572,6 +580,9 @@ async def to_code(config):
     if CONF_INTERNAL_CURRENT_TEMPERATURE in config:
         sens = await sensor.new_sensor(config[CONF_INTERNAL_CURRENT_TEMPERATURE])
         cg.add(var.set_internal_current_temperature_sensor(sens))
+    if CONF_INTERNAL_TARGET_TEMPERATURE in config:
+        sens = await sensor.new_sensor(config[CONF_INTERNAL_TARGET_TEMPERATURE])
+        cg.add(var.set_internal_target_temperature_sensor(sens))
     if CONF_DEFROST in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_DEFROST])
         cg.add(var.set_defrost_sensor(sens))

@@ -329,8 +329,10 @@ void ClimateMideaXYE::ParseResponse() {
 
         if (this->target_temperature_from_c0_ && post_set_grace_ == 0) {
           const float incoming_target_temp = this->decode_target_temperature_(qr.target_temperature.value);
-          if (!std::isnan(incoming_target_temp))
+          if (!std::isnan(incoming_target_temp)) {
+            set_sensor(this->internal_target_temperature_sensor_, incoming_target_temp);
             update_property(this->target_temperature, incoming_target_temp, need_publish);
+          }
         }
 
         // Compressor/defrost-aware action is opt-in (compressor_aware_action) while the

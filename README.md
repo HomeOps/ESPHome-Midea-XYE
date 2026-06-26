@@ -172,6 +172,10 @@ climate:
       - VERTICAL
     follow_me_sensor: room_temp_sensor  # Optional. Automatically sends room temperature to AC for better temperature control
                                         # The sensor is updated on state change and every 30 seconds
+    internal_current_temperature: # Optional. Same value shown as climate current temperature
+      name: Room Temp
+    internal_target_temperature:  # Optional. Same value shown as climate target/setpoint
+      name: Target Temp
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
     temperature_2a:             # Optional. T2 indoor coil temperature
