@@ -4,7 +4,6 @@
 #include "build_info.h"
 
 #include <cmath>
-#include <cstring>
 
 #include "esphome/core/log.h"
 
@@ -46,10 +45,6 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
     property = value;
     flag = true;
   }
-}
-
-static bool config_value_is(const char *value, const char *expected) {
-  return std::strcmp(value, expected) == 0;
 }
 
 float ClimateMideaXYE::decode_bus_temperature_(uint8_t raw) const {
@@ -122,13 +117,6 @@ void ClimateMideaXYE::control(const ClimateCall &call) {
 
 void ClimateMideaXYE::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
-  this->raw_temperatures_ =
-      this->raw_temperatures_ ||
-      config_value_is(build_info::CONFIG_TEMPERATURE_ENCODING, "raw");
-  this->target_temperature_from_c0_ =
-      this->target_temperature_from_c0_ ||
-      config_value_is(build_info::CONFIG_TARGET_TEMPERATURE_SOURCE, "c0");
-
   this->last_on_mode_ = *this->supported_modes_.begin();
   controlState = ControlState::SEND_QUERY;
   queuedCommand = ControlState::WAIT_DATA;

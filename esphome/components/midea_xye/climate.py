@@ -177,44 +177,17 @@ def _git_build_info():
         "dirty": dirty,
     }
 
-def _config_candidates(value):
-    yield value
-    for attr in ("value", "name"):
-        attr_value = getattr(value, attr, None)
-        if attr_value is not None:
-            yield attr_value
-    yield str(value)
-    yield repr(value)
-
-
-def _normalize_config_candidate(value):
-    return str(value).strip().strip("'\"").lower().replace("-", "_")
-
-
-def _config_matches(value, expected):
-    expected = expected.lower()
-    for candidate in _config_candidates(value):
-        normalized = _normalize_config_candidate(candidate)
-        if normalized == expected or normalized.endswith(f".{expected}") or expected in normalized:
-            return True
-    return False
-
 
 def _add_git_build_defines(config):
     info = _git_build_info()
-    raw_temperatures = _config_matches(config[CONF_TEMPERATURE_ENCODING], "raw")
-    target_temperature_from_c0 = _config_matches(config[CONF_TARGET_TEMPERATURE_SOURCE], "c0")
+    raw_temperatures = config[CONF_TEMPERATURE_ENCODING] == "raw"
+    target_temperature_from_c0 = config[CONF_TARGET_TEMPERATURE_SOURCE] == "c0"
     cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", info["commit"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", info["branch"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", info["remote"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_DIRTY", info["dirty"])
     cg.add_define("MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING", config[CONF_TEMPERATURE_ENCODING])
     cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE", config[CONF_TARGET_TEMPERATURE_SOURCE])
-    cg.add_define(
-        "MIDEA_XYE_CONFIG_RAW_TEMPERATURES",
-        1 if raw_temperatures else 0,
-    )
-    cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_FROM_C0", 1 if target_temperature_from_c0 else 0)
     cg.add_define("MIDEA_XYE_CONFIG_USE_FAHRENHEIT", 1 if config[CONF_USE_FAHRENHEIT] else 0)
     cg.add_define(
         "MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE",

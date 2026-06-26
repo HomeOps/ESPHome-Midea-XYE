@@ -318,7 +318,7 @@ Two Fahrenheit variants have been observed:
 
 - **Offset Fahrenheit in C4**: setpoint byte is `°F + 0x87`; this is what the
  `use_fahrenheit: true` option handles.
-- **Raw temperatures in C0**: C0 temperature bytes may be direct raw values
+- **Raw temperature fields**: Some temperature bytes may be direct raw values
   (`0x46` = 70°F, `0x45` = 69°F, etc.). Units with this variant may return an
   unusable or sentinel-filled response to C4 extended queries. Use
   `temperature_encoding: RAW` with `target_temperature_source: C0` when C0
