@@ -517,6 +517,10 @@ void ClimateMideaXYE::dump_config() {
                 build_info::CONFIG_TEMPERATURE_ENCODING);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature source: %s",
                 build_info::CONFIG_TARGET_TEMPERATURE_SOURCE);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw Fahrenheit temperatures: %d",
+                build_info::CONFIG_RAW_FAHRENHEIT_TEMPERATURES);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature from C0: %d",
+                build_info::CONFIG_TARGET_TEMPERATURE_FROM_C0);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sync fan mode from device: %d",
                 build_info::CONFIG_SYNC_FAN_MODE_FROM_DEVICE);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Source commit: %s%s", build_info::GIT_COMMIT,

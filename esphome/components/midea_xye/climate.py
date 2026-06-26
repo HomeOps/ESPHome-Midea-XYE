@@ -176,19 +176,28 @@ def _git_build_info():
         "dirty": dirty,
     }
 
+def _config_value(value):
+    return str(value)
+
+
 def _add_git_build_defines(config):
     info = _git_build_info()
+    raw_fahrenheit_temperatures = _config_value(config[CONF_TEMPERATURE_ENCODING]) == "raw_fahrenheit"
+    target_temperature_from_c0 = _config_value(config[CONF_TARGET_TEMPERATURE_SOURCE]) == "c0"
     cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", info["commit"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", info["branch"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", info["remote"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_DIRTY", info["dirty"])
     cg.add_define("MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING", config[CONF_TEMPERATURE_ENCODING])
     cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE", config[CONF_TARGET_TEMPERATURE_SOURCE])
+    cg.add_define("MIDEA_XYE_CONFIG_RAW_FAHRENHEIT_TEMPERATURES", 1 if raw_fahrenheit_temperatures else 0)
+    cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_FROM_C0", 1 if target_temperature_from_c0 else 0)
     cg.add_define("MIDEA_XYE_CONFIG_USE_FAHRENHEIT", 1 if config[CONF_USE_FAHRENHEIT] else 0)
     cg.add_define(
         "MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE",
         1 if config[CONF_SYNC_FAN_MODE_FROM_DEVICE] else 0,
     )
+    return raw_fahrenheit_temperatures, target_temperature_from_c0
 
 validate_modes = cv.enum(ALLOWED_CLIMATE_MODES, upper=True)
 validate_presets = cv.enum(ALLOWED_CLIMATE_PRESETS, upper=True)
@@ -451,7 +460,7 @@ async def power_inv_to_code(var, config, args):
 
 
 async def to_code(config):
-    _add_git_build_defines(config)
+    raw_fahrenheit_temperatures, target_temperature_from_c0 = _add_git_build_defines(config)
 
     var = await climate.new_climate(config)
     await cg.register_component(var, config)
@@ -460,8 +469,8 @@ async def to_code(config):
     cg.add(var.set_period(config[CONF_PERIOD].total_milliseconds))
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
-    cg.add(var.set_raw_fahrenheit_temperatures(config[CONF_TEMPERATURE_ENCODING] == "raw_fahrenheit"))
-    cg.add(var.set_target_temperature_from_c0(config[CONF_TARGET_TEMPERATURE_SOURCE] == "c0"))
+    cg.add(var.set_raw_fahrenheit_temperatures(raw_fahrenheit_temperatures))
+    cg.add(var.set_target_temperature_from_c0(target_temperature_from_c0))
     cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
     cg.add(var.set_sync_fan_mode_from_device(config[CONF_SYNC_FAN_MODE_FROM_DEVICE]))
     if CONF_TRANSMITTER_ID in config:
