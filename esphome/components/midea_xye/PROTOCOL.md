@@ -80,9 +80,10 @@ Byte    Field               Description
                             status flag unrelated to the temperature — it must be masked out
                             with SET_TEMP_VALUE_MASK (0xBF) before interpreting the value.
 11      T1 Temperature      Internal/room temperature sensor
-12      T2A Temperature     Indoor coil inlet temperature
-13      T2B Temperature     Indoor coil outlet temperature
-14      T3 Temperature      Outdoor coil/ambient temperature
+12      T2 Temperature      Indoor coil temperature. The code historically calls
+                            this `t2a_temperature`; service docs usually call it T2.
+13      T2B Temperature     Indoor coil exhaust temperature, if equipped (normally located in the outdoor unit, if installed)
+14      T3 Temperature      Outdoor coil temperature
 15      Current             Current draw (units unknown, often reads 0xFF)
 16      Unknown2            Unknown/reserved
 17      Timer Start         Start timer setting
@@ -312,6 +313,21 @@ celsius = (encoded_value - 0x28) / 2.0
 
 ### Fahrenheit Encoding
 Some implementations send raw Fahrenheit values directly without encoding. The behavior may depend on unit configuration or regional settings.
+
+Two Fahrenheit variants have been observed:
+
+- **Offset Fahrenheit in C4**: setpoint byte is `°F + 0x87`; this is what the
+ `use_fahrenheit: true` option handles.
+- **Raw temperature fields**: Some temperature bytes may be direct raw values
+  (`0x46` = 70°F, `0x45` = 69°F, etc.). Units with this variant may return an
+  unusable or sentinel-filled response to C4 extended queries. Use
+  `temperature_encoding: RAW` with `target_temperature_source: C0` when C0
+  target and sensor temperatures are unshifted. `use_fahrenheit` then selects
+  whether raw values are interpreted as Fahrenheit (`true`) or Celsius (`false`).
+  Debug logs print raw-C, raw-F, shifted/scaled-C, and shifted/scaled-F candidates
+  for sensor fields so model-specific field mapping can be checked from captures.
+  In these modes, `0xFF` is treated as unavailable for optional temperature fields
+  such as T2B rather than displayed as a real temperature.
 
 **Special Value**:
 - `0xFF`: Used in FAN mode when temperature control is not applicable

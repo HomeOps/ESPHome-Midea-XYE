@@ -39,6 +39,8 @@ climate:
     period: 1s
     timeout: 100ms
     use_fahrenheit: false
+    temperature_encoding: RAW
+    target_temperature_source: C0
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
     internal_current_temperature:
       name: "Internal Current Temperature"

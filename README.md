@@ -100,7 +100,9 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw
+    target_temperature_source: C4   # Optional. C4 or C0
 ```
 
 ### Follow-Me Example
@@ -134,7 +136,13 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW
+                                    # STANDARD uses the protocol transform for the selected
+                                    # unit system. RAW disables it; with use_fahrenheit: true,
+                                    # 0x46 is treated as 70°F
+    target_temperature_source: C4   # Optional. Defaults to C4. Use C0 for units whose
+                                    # extended query response does not expose setpoint.
     #beeper: true               # Optional. Beep on commands
     visual:                     # Optional. Example of visual settings override
       min_temperature: 17 °C    # min: 17
@@ -162,13 +170,17 @@ climate:
       - VERTICAL
     follow_me_sensor: room_temp_sensor  # Optional. Automatically sends room temperature to AC for better temperature control
                                         # The sensor is updated on state change and every 30 seconds
+    internal_current_temperature: # Optional. Same value shown as climate current temperature
+      name: Room Temp
+    internal_target_temperature:  # Optional. Same value shown as climate target/setpoint
+      name: Target Temp
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
-    temperature_2a:             # Optional. Inside coil temperature
-      name: Inside Coil Inlet Temp
-    temperature_2b:             # Optional. Inside coil temperature
-      name: Inside Coil Outlet Temp
-    temperature_3:              # Optional. Outside coil temperature
+    temperature_2a:             # Optional. T2 indoor coil temperature
+      name: Indoor Coil Temp
+    temperature_2b:             # Optional. T2B indoor coil exhaust temperature (normally located in the outdoor unit, if installed)
+      name: Indoor Coil Exhaust Temp
+    temperature_3:              # Optional. T3 outdoor coil temperature
       name: Outside Coil Temp
     current:                    # Optional. Current measurement
       name: Current
@@ -236,6 +248,8 @@ Example debug output:
 - Reading timer start/stop times (set by remote)
 - Follow-Me temperature - automatically sends room temperature from a configured sensor to the AC unit. Updates on sensor state changes and every 30 seconds.
 - Reading current mode (HEAT or COOL) as commanded by the Midea proprietary thermostat when one is connected to the XYE bus
+- Optional raw-Fahrenheit/C0 setpoint mode for units that report C0 temperatures as direct
+  Fahrenheit bytes instead of Midea's normal encoded Celsius values.
 
 > **Note on AUTO mode:** The **indoor unit itself has no AUTO mode** — it can only ever be
 > in HEAT or COOL. The apparent "AUTO" behaviour comes entirely from the **Midea proprietary

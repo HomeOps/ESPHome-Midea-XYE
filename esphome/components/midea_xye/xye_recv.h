@@ -44,9 +44,9 @@ struct __attribute__((packed)) QueryResponseData {
   FanMode fan_mode;                ///< [9] Current fan mode
   Temperature target_temperature;  ///< [10] Target temperature setpoint
   Temperature t1_temperature;      ///< [11] Internal/inlet air temperature sensor (T1) - room temperature
-  Temperature t2a_temperature;     ///< [12] Indoor coil inlet temperature (T2A) - refrigerant entering
-  Temperature t2b_temperature;     ///< [13] Indoor coil outlet temperature (T2B) - refrigerant leaving
-  Temperature t3_temperature;      ///< [14] Outdoor coil/ambient temperature (T3)
+  Temperature t2a_temperature;     ///< [12] Indoor coil temperature (T2). Field name kept for compatibility.
+  Temperature t2b_temperature;     ///< [13] Indoor coil exhaust temperature (T2B), if equipped
+  Temperature t3_temperature;      ///< [14] Outdoor coil temperature (T3)
   uint8_t current;                 ///< [15] Current draw (units TBD, often reads 0xFF)
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
@@ -83,7 +83,8 @@ struct __attribute__((packed)) QueryResponseData {
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    * @return Updated bytes remaining
    */
-  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 };
 
 /**
@@ -132,12 +133,12 @@ struct __attribute__((packed)) ExtendedQueryResponseData {
    * @param tag Log tag to use
    * @param left Bytes remaining to read
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @param use_fahrenheit When true, decodes `target_temperature` as a Fahrenheit setpoint
-   *                       (raw − FAHRENHEIT_TEMP_OFFSET → °F) instead of a raw integer.
+   * @param use_fahrenheit Selects Fahrenheit vs Celsius for temperature debug output.
+   * @param raw_temperatures Selects raw vs shifted/scaled temperature debug output.
    * @return Updated bytes remaining
    */
   size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                      bool use_fahrenheit = false) const;
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 };
 
 /**
@@ -223,12 +224,13 @@ union ReceiveData {
    * @param left Bytes remaining (received size)
    * @param tag Log tag to use
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
-   * @param use_fahrenheit Forwarded to ExtendedQueryResponseData::print_debug to control
-   *                       how the C4 `target_temperature` field is decoded for logging.
+   * @param use_fahrenheit Forwarded to payload debug to select Fahrenheit vs Celsius.
+   * @param raw_temperatures Forwarded to payload debug to select raw vs shifted/scaled
+   *                         temperature logging.
    * @return Updated bytes remaining
    */
   size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                     bool use_fahrenheit = false) const;
+                     bool use_fahrenheit = false, bool raw_temperatures = false) const;
 
   /// Returns true when the preamble, prologue, direction, and CRC of the
   /// received message are all valid.

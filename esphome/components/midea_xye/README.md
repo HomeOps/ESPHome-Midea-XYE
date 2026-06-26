@@ -49,7 +49,9 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw
+    target_temperature_source: C4   # Optional. C4 or C0.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.
       min_temperature: 17 °C    # min: 17
@@ -69,13 +71,17 @@ climate:
       - SLEEP
     supported_swing_modes:      # Optional
       - VERTICAL
+    internal_current_temperature: # Optional. Same value shown as climate current temperature
+      name: Room Temp
+    internal_target_temperature:  # Optional. Same value shown as climate target/setpoint
+      name: Target Temp
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
-    temperature_2a:             # Optional. Inside coil temperature
-      name: Inside Coil Inlet Temp
-    temperature_2b:             # Optional. Inside coil temperature
-      name: Inside Coil Outlet Temp
-    temperature_3:             # Optional. Outside coil temperature
+    temperature_2a:             # Optional. T2 indoor coil temperature
+      name: Indoor Coil Temp
+    temperature_2b:             # Optional. T2B indoor coil exhaust temperature (normally located in the outdoor unit, if installed)
+      name: Indoor Coil Exhaust Temp
+    temperature_3:             # Optional. T3 outdoor coil temperature
       name: Outside Coil Temp
     current:                    # Optional. Current measurement
       name: Current
@@ -105,6 +111,7 @@ climate:
 # What works
 - Setting mode (off, auto, fan, cool, heat, dry).
 - Setting temperature. Can send in C or F. Handles AC results in C or F. Must manually set in YAML.
+- Raw Fahrenheit C0 temperature mode for units that report bytes like `0x46` as 70°F.
 - Setting fan mode (auto, low, med, high).
 - Reading inside, outside air temperatures, inside coil temperature, and outside coil temperature.
 - Reading timer start/stop times (set by remote)

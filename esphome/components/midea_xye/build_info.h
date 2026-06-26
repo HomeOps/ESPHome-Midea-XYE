@@ -1,0 +1,63 @@
+#pragma once
+
+#ifdef USE_ARDUINO
+
+#ifndef MIDEA_XYE_BUILD_GIT_COMMIT
+#define MIDEA_XYE_BUILD_GIT_COMMIT "unknown"
+#endif
+
+#ifndef MIDEA_XYE_BUILD_GIT_BRANCH
+#define MIDEA_XYE_BUILD_GIT_BRANCH "unknown"
+#endif
+
+#ifndef MIDEA_XYE_BUILD_GIT_REMOTE
+#define MIDEA_XYE_BUILD_GIT_REMOTE "unknown"
+#endif
+
+#ifndef MIDEA_XYE_BUILD_GIT_DIRTY
+#define MIDEA_XYE_BUILD_GIT_DIRTY 0
+#endif
+
+#ifndef MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING
+#define MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING "unknown"
+#endif
+
+#ifndef MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE
+#define MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE "unknown"
+#endif
+
+#ifndef MIDEA_XYE_CONFIG_USE_FAHRENHEIT
+#define MIDEA_XYE_CONFIG_USE_FAHRENHEIT 0
+#endif
+
+#ifndef MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE
+#define MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE 0
+#endif
+
+namespace esphome {
+namespace midea {
+namespace xye {
+namespace build_info {
+
+static constexpr const char *GIT_COMMIT = MIDEA_XYE_BUILD_GIT_COMMIT;
+static constexpr const char *GIT_BRANCH = MIDEA_XYE_BUILD_GIT_BRANCH;
+static constexpr const char *GIT_REMOTE = MIDEA_XYE_BUILD_GIT_REMOTE;
+static constexpr bool GIT_DIRTY = MIDEA_XYE_BUILD_GIT_DIRTY != 0;
+static constexpr const char *CONFIG_TEMPERATURE_ENCODING = MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING;
+static constexpr const char *CONFIG_TARGET_TEMPERATURE_SOURCE = MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE;
+static constexpr bool CONFIG_USE_FAHRENHEIT = MIDEA_XYE_CONFIG_USE_FAHRENHEIT != 0;
+static constexpr bool CONFIG_SYNC_FAN_MODE_FROM_DEVICE = MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE != 0;
+
+constexpr bool str_eq(const char *a, const char *b) {
+  return *a == *b && (*a == '\0' || str_eq(a + 1, b + 1));
+}
+
+static constexpr bool CONFIG_RAW_TEMPERATURES = str_eq(CONFIG_TEMPERATURE_ENCODING, "raw");
+static constexpr bool CONFIG_TARGET_TEMPERATURE_FROM_C0 = str_eq(CONFIG_TARGET_TEMPERATURE_SOURCE, "c0");
+
+}  // namespace build_info
+}  // namespace xye
+}  // namespace midea
+}  // namespace esphome
+
+#endif  // USE_ARDUINO
