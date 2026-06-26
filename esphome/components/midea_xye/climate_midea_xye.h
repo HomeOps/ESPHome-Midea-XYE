@@ -150,7 +150,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
-  void set_raw_fahrenheit_temperatures(bool yesno) { this->raw_fahrenheit_temperatures_ = yesno; }
+  void set_raw_fahrenheit_target_temperatures(bool yesno) { this->raw_fahrenheit_target_temperatures_ = yesno; }
   void set_raw_fahrenheit_sensor_temperatures(bool yesno) { this->raw_fahrenheit_sensor_temperatures_ = yesno; }
   void set_target_temperature_from_c0(bool yesno) { this->target_temperature_from_c0_ = yesno; }
   void set_compressor_aware_action(bool yesno) { this->compressor_aware_action_ = yesno; }
@@ -219,7 +219,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   std::vector<const char *> supported_custom_presets_{};
   std::vector<const char *> supported_custom_fan_modes_{};
   bool use_fahrenheit_;
-  bool raw_fahrenheit_temperatures_{false};
+  bool raw_fahrenheit_target_temperatures_{false};
   bool raw_fahrenheit_sensor_temperatures_{false};
   bool target_temperature_from_c0_{false};
   // Opt-in (compressor_aware_action YAML option): when false, get_climate_action is

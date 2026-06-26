@@ -320,7 +320,7 @@ Two Fahrenheit variants have been observed:
 - **Raw Fahrenheit in C0**: C0 temperature bytes are direct Fahrenheit values
   (`0x46` = 70°F, `0x45` = 69°F, etc.). Units with this variant may return an
   unusable or sentinel-filled response to C4 extended queries. Use
-  `temperature_encoding: RAW_FAHRENHEIT` with `target_temperature_source: C0`
+  `target_temperature_encoding: RAW_FAHRENHEIT` with `target_temperature_source: C0`
   for raw-F setpoints. Use `sensor_temperature_encoding: RAW_FAHRENHEIT` only
   when the C0 T1/T2A/T2B/T3 sensor bytes appear to use the same direct-Fahrenheit
   convention. Debug logs print raw-F, shifted/scaled-C, and shifted/scaled-F

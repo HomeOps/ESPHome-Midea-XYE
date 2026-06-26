@@ -50,7 +50,7 @@ climate:
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false.
-    temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT.
+    target_temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT.
     target_temperature_source: C4   # Optional. C4 or C0.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.
