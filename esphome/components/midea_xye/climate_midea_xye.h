@@ -150,6 +150,8 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_follow_me_sensor(Sensor *sensor);
   void set_internal_current_temperature_sensor(Sensor *sensor) { this->internal_current_temperature_sensor_ = sensor; }
   void set_use_fahrenheit(bool yesno) { this->use_fahrenheit_ = yesno; }
+  void set_raw_fahrenheit_temperatures(bool yesno) { this->raw_fahrenheit_temperatures_ = yesno; }
+  void set_target_temperature_from_c0(bool yesno) { this->target_temperature_from_c0_ = yesno; }
   void set_compressor_aware_action(bool yesno) { this->compressor_aware_action_ = yesno; }
   /// Opt-in: when true, this->fan_mode is updated from C4 target_fan_speed on every extended
   /// query cycle, reflecting the fan setting on the physical thermostat in Home Assistant.
@@ -216,6 +218,8 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   std::vector<const char *> supported_custom_presets_{};
   std::vector<const char *> supported_custom_fan_modes_{};
   bool use_fahrenheit_;
+  bool raw_fahrenheit_temperatures_{false};
+  bool target_temperature_from_c0_{false};
   // Opt-in (compressor_aware_action YAML option): when false, get_climate_action is
   // fed compressor_active=true / defrost_active=false to reproduce legacy behaviour.
   bool compressor_aware_action_{false};
@@ -247,6 +251,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void ParseResponse();
   uint8_t CalculateSetTime(uint32_t time);
   uint32_t CalculateGetTime(uint8_t time);
+  float decode_bus_temperature_(uint8_t raw) const;
+  float decode_target_temperature_(uint8_t raw) const;
+  uint8_t encode_target_temperature_(float celsius) const;
   void update_current_temperature_from_sensors_(bool &need_publish);
   void on_follow_me_sensor_update_(float state);
 };

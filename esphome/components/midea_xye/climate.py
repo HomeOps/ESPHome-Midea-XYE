@@ -69,6 +69,8 @@ CONF_COMPRESSOR_ACTIVE = "compressor_active"
 CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 CONF_SYNC_FAN_MODE_FROM_DEVICE = "sync_fan_mode_from_device"
+CONF_TEMPERATURE_ENCODING = "temperature_encoding"
+CONF_TARGET_TEMPERATURE_SOURCE = "target_temperature_source"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -129,11 +131,23 @@ CUSTOM_PRESETS = {
     "FREEZE_PROTECTION": Capabilities.FREEZE_PROTECTION,
 }
 
+TEMPERATURE_ENCODINGS = {
+    "STANDARD": "standard",
+    "RAW_FAHRENHEIT": "raw_fahrenheit",
+}
+
+TARGET_TEMPERATURE_SOURCES = {
+    "C4": "c4",
+    "C0": "c0",
+}
+
 validate_modes = cv.enum(ALLOWED_CLIMATE_MODES, upper=True)
 validate_presets = cv.enum(ALLOWED_CLIMATE_PRESETS, upper=True)
 validate_swing_modes = cv.enum(ALLOWED_CLIMATE_SWING_MODES, upper=True)
 validate_custom_fan_modes = cv.enum(CUSTOM_FAN_MODES, upper=True)
 validate_custom_presets = cv.enum(CUSTOM_PRESETS, upper=True)
+validate_temperature_encoding = cv.enum(TEMPERATURE_ENCODINGS, upper=True)
+validate_target_temperature_source = cv.enum(TARGET_TEMPERATURE_SOURCES, upper=True)
 
 CONFIG_SCHEMA = cv.All(
     climate.climate_schema(ClimateMideaXYE).extend(
@@ -142,6 +156,8 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PERIOD, default="1s"): cv.time_period,
             cv.Optional(CONF_TIMEOUT, default="100ms"): cv.time_period,
             cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
+            cv.Optional(CONF_TEMPERATURE_ENCODING, default="STANDARD"): validate_temperature_encoding,
+            cv.Optional(CONF_TARGET_TEMPERATURE_SOURCE, default="C4"): validate_target_temperature_source,
             # Opt-in: derive the climate action from the C0 byte-19 compressor flag
             # and the defrost state. Off by default while byte 19 is still provisional;
             # legacy "fan running implies heating/cooling" behaviour is used when false.
@@ -393,6 +409,8 @@ async def to_code(config):
     cg.add(var.set_period(config[CONF_PERIOD].total_milliseconds))
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
+    cg.add(var.set_raw_fahrenheit_temperatures(config[CONF_TEMPERATURE_ENCODING] == "raw_fahrenheit"))
+    cg.add(var.set_target_temperature_from_c0(config[CONF_TARGET_TEMPERATURE_SOURCE] == "c0"))
     cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
     cg.add(var.set_sync_fan_mode_from_device(config[CONF_SYNC_FAN_MODE_FROM_DEVICE]))
     if CONF_TRANSMITTER_ID in config:

@@ -2,6 +2,8 @@
 
 #include "climate_midea_xye.h"
 
+#include <cmath>
+
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -14,7 +16,14 @@ const char *const Constants::SILENT = "Silent";
 const char *const Constants::TURBO = "Turbo";
 
 static void set_sensor(Sensor *sensor, float value) {
-  if (sensor != nullptr && (!sensor->has_state() || sensor->get_raw_state() != value))
+  if (sensor == nullptr)
+    return;
+  if (std::isnan(value)) {
+    if (!sensor->has_state() || !std::isnan(sensor->get_raw_state()))
+      sensor->publish_state(value);
+    return;
+  }
+  if (!sensor->has_state() || sensor->get_raw_state() != value)
     sensor->publish_state(value);
 }
 
@@ -35,6 +44,41 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
     property = value;
     flag = true;
   }
+}
+
+float ClimateMideaXYE::decode_bus_temperature_(uint8_t raw) const {
+  if (this->raw_fahrenheit_temperatures_) {
+    // Raw-Fahrenheit units use 0xFF as an unavailable/sentinel value for
+    // optional sensors such as T2B; do not publish it as a real temperature.
+    if (raw == 0xFF)
+      return NAN;
+    return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
+  }
+  return XYEAdapter::get_temperature(raw);
+}
+
+float ClimateMideaXYE::decode_target_temperature_(uint8_t raw) const {
+  if (this->raw_fahrenheit_temperatures_) {
+    // Same sentinel handling for target fields observed on unsupported frames.
+    if (raw == 0xFF)
+      return NAN;
+    return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
+  }
+  return XYEAdapter::get_target_temperature(raw, this->use_fahrenheit_);
+}
+
+uint8_t ClimateMideaXYE::encode_target_temperature_(float celsius) const {
+  if (this->raw_fahrenheit_temperatures_) {
+    if (std::isnan(celsius))
+      return 0;
+    const int fahrenheit = static_cast<int>(lroundf((9.0f / 5.0f) * celsius + 32.0f));
+    if (fahrenheit < 0)
+      return 0;
+    if (fahrenheit > 255)
+      return 255;
+    return static_cast<uint8_t>(fahrenheit);
+  }
+  return XYEAdapter::get_raw_target_temperature(celsius, this->use_fahrenheit_);
 }
 
 void ClimateMideaXYE::control(const ClimateCall &call) {
@@ -113,8 +157,7 @@ void ClimateMideaXYE::setTransmitParams() {
     d.fan_mode = FanMode::FAN_AUTO;
   }
 
-  // Data always comes in as C, but user may want it set in F.
-  d.target_temperature.value = XYEAdapter::get_raw_target_temperature(this->target_temperature, this->use_fahrenheit_);
+  d.target_temperature.value = this->encode_target_temperature_(this->target_temperature);
 
   d.mode_flags = XYEAdapter::get_mode_flags(
       this->preset.value_or(ClimatePreset::CLIMATE_PRESET_NONE), this->swing_mode);
@@ -261,7 +304,7 @@ void ClimateMideaXYE::ParseResponse() {
 
       if (mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
         // Store the internal temperature from the XYE bus
-        this->internal_temperature_ = XYEAdapter::get_temperature(qr.t1_temperature.value);
+        this->internal_temperature_ = this->decode_bus_temperature_(qr.t1_temperature.value);
 
         // Publish the internal temperature to the sensor if configured
         set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
@@ -269,8 +312,11 @@ void ClimateMideaXYE::ParseResponse() {
         // Update current_temperature based on sensor availability
         this->update_current_temperature_from_sensors_(need_publish);
 
-        // Target temperature is read exclusively from C4 (QUERY_EXTENDED) to handle both
-        // Celsius and Fahrenheit encodings consistently. C0 target_temperature is not used.
+        if (this->target_temperature_from_c0_ && post_set_grace_ == 0) {
+          const float incoming_target_temp = this->decode_target_temperature_(qr.target_temperature.value);
+          if (!std::isnan(incoming_target_temp))
+            update_property(this->target_temperature, incoming_target_temp, need_publish);
+        }
 
         // Compressor/defrost-aware action is opt-in (compressor_aware_action) while the
         // C0 byte-19 compressor flag is still provisional. When disabled, compressor_active=true
@@ -302,9 +348,9 @@ void ClimateMideaXYE::ParseResponse() {
       if (need_publish)
         this->publish_state();
 
-      set_sensor(this->temperature_2a_sensor_, XYEAdapter::get_temperature(qr.t2a_temperature.value));
-      set_sensor(this->temperature_2b_sensor_, XYEAdapter::get_temperature(qr.t2b_temperature.value));
-      set_sensor(this->temperature_3_sensor_, XYEAdapter::get_temperature(qr.t3_temperature.value));
+      set_sensor(this->temperature_2a_sensor_, this->decode_bus_temperature_(qr.t2a_temperature.value));
+      set_sensor(this->temperature_2b_sensor_, this->decode_bus_temperature_(qr.t2b_temperature.value));
+      set_sensor(this->temperature_3_sensor_, this->decode_bus_temperature_(qr.t3_temperature.value));
       set_sensor(this->current_sensor_, static_cast<float>(qr.current));
       set_sensor(this->timer_start_sensor_, CalculateGetTime(qr.timer_start));
       set_sensor(this->timer_stop_sensor_, CalculateGetTime(qr.timer_stop));
@@ -321,19 +367,21 @@ void ClimateMideaXYE::ParseResponse() {
     case Command::QUERY_EXTENDED: {
       bool need_publish = false;
       const auto &exr = rx_data.message.data.extended_query_response;
-      set_sensor(this->outdoor_sensor_, XYEAdapter::get_temperature(exr.outdoor_temperature.value));
+      set_sensor(this->outdoor_sensor_, this->decode_bus_temperature_(exr.outdoor_temperature.value));
       set_number(this->static_pressure_number_, static_cast<float>(STATIC_PRESSURE_VALUE_MASK & exr.static_pressure));
-      // C4 is the sole source for target_temperature, covering both unit modes:
+      // C4 is the default source for target_temperature, covering both standard unit modes:
       //  - Fahrenheit: encoded as (°F + FAHRENHEIT_TEMP_OFFSET); convert to Celsius for ESPHome.
       //  - Celsius:    raw integer degrees with bit 6 (0x40) status flag; mask before use.
+      // Units that expose setpoint only on C0 can opt into target_temperature_source: C0.
       // Respect post_set_grace_: skip until the C0 grace window has closed so a freshly-sent
       // SET command isn't immediately overwritten by stale device state.
       // Fahrenheit C4 decode approach adapted from rmounce/esphome@xye-units-switch.
-      if ((this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) &&
+      if (!this->target_temperature_from_c0_ &&
+          (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) &&
           post_set_grace_ == 0) {
-        const float incoming_target_temp =
-            XYEAdapter::get_target_temperature(exr.target_temperature.value, this->use_fahrenheit_);
-        update_property(this->target_temperature, incoming_target_temp, need_publish);
+        const float incoming_target_temp = this->decode_target_temperature_(exr.target_temperature.value);
+        if (!std::isnan(incoming_target_temp))
+          update_property(this->target_temperature, incoming_target_temp, need_publish);
       }
       if (need_publish)
         this->publish_state();
@@ -460,6 +508,10 @@ void ClimateMideaXYE::dump_config() {
   ESP_LOGCONFIG(Constants::TAG, "  [x] Period: %dms", this->get_update_interval());
   ESP_LOGCONFIG(Constants::TAG, "  [x] Response timeout: %dms", this->response_timeout);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Use Fahrenheit: %d", this->use_fahrenheit_);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Temperature encoding: %s",
+                this->raw_fahrenheit_temperatures_ ? "raw_fahrenheit" : "standard");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Target temperature source: %s",
+                this->target_temperature_from_c0_ ? "C0" : "C4");
 
 #ifdef USE_REMOTE_TRANSMITTER
   ESP_LOGCONFIG(Constants::TAG, "  [x] Using RemoteTransmitter");

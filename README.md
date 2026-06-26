@@ -101,6 +101,8 @@ climate:
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
+    target_temperature_source: C4   # Optional. C4 or C0
 ```
 
 ### Follow-Me Example
@@ -135,6 +137,11 @@ climate:
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT
+                                    # RAW_FAHRENHEIT is for units that report C0 temperatures
+                                    # as direct Fahrenheit bytes, e.g. 0x46 = 70°F.
+    target_temperature_source: C4   # Optional. Defaults to C4. Use C0 for units whose
+                                    # extended query response does not expose setpoint.
     #beeper: true               # Optional. Beep on commands
     visual:                     # Optional. Example of visual settings override
       min_temperature: 17 °C    # min: 17
@@ -236,6 +243,8 @@ Example debug output:
 - Reading timer start/stop times (set by remote)
 - Follow-Me temperature - automatically sends room temperature from a configured sensor to the AC unit. Updates on sensor state changes and every 30 seconds.
 - Reading current mode (HEAT or COOL) as commanded by the Midea proprietary thermostat when one is connected to the XYE bus
+- Optional raw-Fahrenheit/C0 setpoint mode for units that report C0 temperatures as direct
+  Fahrenheit bytes instead of Midea's normal encoded Celsius values.
 
 > **Note on AUTO mode:** The **indoor unit itself has no AUTO mode** — it can only ever be
 > in HEAT or COOL. The apparent "AUTO" behaviour comes entirely from the **Midea proprietary

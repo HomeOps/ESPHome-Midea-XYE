@@ -50,6 +50,8 @@ climate:
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false.
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW_FAHRENHEIT.
+    target_temperature_source: C4   # Optional. C4 or C0.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.
       min_temperature: 17 °C    # min: 17
@@ -105,6 +107,7 @@ climate:
 # What works
 - Setting mode (off, auto, fan, cool, heat, dry).
 - Setting temperature. Can send in C or F. Handles AC results in C or F. Must manually set in YAML.
+- Raw Fahrenheit C0 temperature mode for units that report bytes like `0x46` as 70°F.
 - Setting fan mode (auto, low, med, high).
 - Reading inside, outside air temperatures, inside coil temperature, and outside coil temperature.
 - Reading timer start/stop times (set by remote)

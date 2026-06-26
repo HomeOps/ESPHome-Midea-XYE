@@ -364,7 +364,9 @@ constexpr uint8_t TEMP_FAN_MODE = 0xFF;
  * Bit 6 (0x40) of the target temperature byte can be set by the unit to signal
  * an internal state (exact meaning unknown; observed when unit is in certain states).
  * It is unrelated to the temperature value and must be cleared before converting
- * the byte to a Celsius setpoint. Temperature is always transmitted as raw Celsius.
+ * the byte to a Celsius setpoint in the standard C0 encoding. Some units instead
+ * report direct Fahrenheit bytes (for example, 0x46 = 70°F); those need the
+ * RAW_FAHRENHEIT component option rather than this mask-based Celsius decode.
  */
 constexpr uint8_t SET_TEMP_STATUS_FLAG = 0x40;
 

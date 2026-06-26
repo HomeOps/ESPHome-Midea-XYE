@@ -313,6 +313,18 @@ celsius = (encoded_value - 0x28) / 2.0
 ### Fahrenheit Encoding
 Some implementations send raw Fahrenheit values directly without encoding. The behavior may depend on unit configuration or regional settings.
 
+Two Fahrenheit variants have been observed:
+
+- **Offset Fahrenheit in C4**: setpoint byte is `°F + 0x87`; this is what the
+ `use_fahrenheit: true` option handles.
+- **Raw Fahrenheit in C0**: C0 temperature bytes are direct Fahrenheit values
+  (`0x46` = 70°F, `0x45` = 69°F, etc.). Units with this variant may return an
+  unusable or sentinel-filled response to C4 extended queries. Use
+  `temperature_encoding: RAW_FAHRENHEIT` with `target_temperature_source: C0`
+  for this behavior. In this mode, `0xFF` is treated as unavailable for
+  optional temperature fields such as T2B rather than displayed as a real
+  temperature.
+
 **Special Value**:
 - `0xFF`: Used in FAN mode when temperature control is not applicable
 
