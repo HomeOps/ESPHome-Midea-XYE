@@ -22,16 +22,29 @@ static size_t print_raw_fahrenheit_temperature_debug(const char *tag, const char
   return left - sizeof(Temperature);
 }
 
-static size_t print_standard_temperature_debug(const char *tag, const char *name, uint8_t raw,
-                                               size_t left, int level) {
+static size_t print_c0_sensor_temperature_debug(const char *tag, const char *name, uint8_t raw,
+                                                size_t left, int level, bool raw_fahrenheit_selected) {
   if (left < sizeof(Temperature)) return left;
   if (raw == 0xFF) {
     ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (unavailable)"),
              name, raw);
   } else {
-    const float celsius = Temperature{raw}.to_celsius();
-    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.2f°C)"),
-             name, raw, celsius);
+    const float shifted_value = (static_cast<float>(raw) - static_cast<float>(TEMP_ENCODING_OFFSET)) /
+                                TEMP_ENCODING_SCALE;
+    const float shifted_celsius = shifted_value;
+    const float shifted_celsius_as_fahrenheit = shifted_celsius * 9.0f / 5.0f + 32.0f;
+    const float shifted_fahrenheit = shifted_value;
+    const float shifted_fahrenheit_as_celsius = (shifted_fahrenheit - 32.0f) * 5.0f / 9.0f;
+    const float raw_fahrenheit = static_cast<float>(raw);
+    const float raw_fahrenheit_as_celsius = (raw_fahrenheit - 32.0f) * 5.0f / 9.0f;
+    ::esphome::esp_log_printf_(
+        level, tag, __LINE__,
+        ESPHOME_LOG_FORMAT(
+            "    %s: 0x%02X (selected=%s; raw_f=%u°F/%.2f°C; shifted_c=%.2f°C/%.1f°F; "
+            "shifted_f=%.2f°F/%.2f°C)"),
+        name, raw, raw_fahrenheit_selected ? "raw_f" : "shifted_c", static_cast<unsigned>(raw),
+        raw_fahrenheit_as_celsius, shifted_celsius, shifted_celsius_as_fahrenheit, shifted_fahrenheit,
+        shifted_fahrenheit_as_celsius);
   }
   return left - sizeof(Temperature);
 }
@@ -50,17 +63,14 @@ size_t QueryResponseData::print_debug(const char *tag, size_t left, int level,
   else
     left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
 
-  if (raw_fahrenheit_sensors) {
-    left = print_raw_fahrenheit_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level);
-    left = print_raw_fahrenheit_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level);
-    left = print_raw_fahrenheit_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level);
-    left = print_raw_fahrenheit_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level);
-  } else {
-    left = print_standard_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level);
-    left = print_standard_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level);
-    left = print_standard_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level);
-    left = print_standard_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level);
-  }
+  left = print_c0_sensor_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level,
+                                           raw_fahrenheit_sensors);
+  left = print_c0_sensor_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level,
+                                           raw_fahrenheit_sensors);
+  left = print_c0_sensor_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level,
+                                           raw_fahrenheit_sensors);
+  left = print_c0_sensor_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level,
+                                           raw_fahrenheit_sensors);
   left = print_debug_uint8(tag, "current", current, left, level);
   left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
   left = print_debug_uint8(tag, "timer_start", timer_start, left, level);
