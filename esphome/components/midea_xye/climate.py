@@ -168,7 +168,7 @@ def _git_build_info():
     if not branch:
         branch = "detached"
     remote = _run_git(["remote", "get-url", "origin"]) or "unknown"
-    dirty = "1" if _run_git(["status", "--porcelain"]) else "0"
+    dirty = 1 if _run_git(["status", "--porcelain"]) else 0
     return {
         "commit": commit,
         "branch": branch,
@@ -176,17 +176,19 @@ def _git_build_info():
         "dirty": dirty,
     }
 
-
-def _cpp_string_literal(value):
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
-
-
-def _add_git_build_defines():
+def _add_git_build_defines(config):
     info = _git_build_info()
-    cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", _cpp_string_literal(info["commit"]))
-    cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", _cpp_string_literal(info["branch"]))
-    cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", _cpp_string_literal(info["remote"]))
+    cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", info["commit"])
+    cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", info["branch"])
+    cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", info["remote"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_DIRTY", info["dirty"])
+    cg.add_define("MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING", config[CONF_TEMPERATURE_ENCODING])
+    cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE", config[CONF_TARGET_TEMPERATURE_SOURCE])
+    cg.add_define("MIDEA_XYE_CONFIG_USE_FAHRENHEIT", 1 if config[CONF_USE_FAHRENHEIT] else 0)
+    cg.add_define(
+        "MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE",
+        1 if config[CONF_SYNC_FAN_MODE_FROM_DEVICE] else 0,
+    )
 
 validate_modes = cv.enum(ALLOWED_CLIMATE_MODES, upper=True)
 validate_presets = cv.enum(ALLOWED_CLIMATE_PRESETS, upper=True)
@@ -449,7 +451,7 @@ async def power_inv_to_code(var, config, args):
 
 
 async def to_code(config):
-    _add_git_build_defines()
+    _add_git_build_defines(config)
 
     var = await climate.new_climate(config)
     await cg.register_component(var, config)

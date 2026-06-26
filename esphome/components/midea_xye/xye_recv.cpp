@@ -111,6 +111,21 @@ Command ReceiveData::get_command() const {
   return message.frame.header.command;
 }
 
+static size_t print_unknown_payload_debug(const uint8_t *raw, const char *tag, size_t left, int level) {
+  if (left <= 2)
+    return left;
+
+  ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  UnsupportedPayloadData:"));
+  ::esphome::esp_log_printf_(
+      level, tag, __LINE__,
+      ESPHOME_LOG_FORMAT("    bytes[6..29]: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X"),
+      raw[6], raw[7], raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15], raw[16], raw[17],
+      raw[18], raw[19], raw[20], raw[21], raw[22], raw[23], raw[24], raw[25], raw[26], raw[27], raw[28],
+      raw[29]);
+
+  return 2;
+}
+
 size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool use_fahrenheit,
                                 bool raw_fahrenheit) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
@@ -150,7 +165,7 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool us
       break;
     
     default:
-      left = message.data.generic.print_debug(tag, left, level, raw_fahrenheit);
+      left = print_unknown_payload_debug(this->raw, tag, left, level);
       break;
   }
   

@@ -48,11 +48,9 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
 }
 
 float ClimateMideaXYE::decode_bus_temperature_(uint8_t raw) const {
+  if (raw == 0xFF)
+    return NAN;
   if (this->raw_fahrenheit_temperatures_) {
-    // Raw-Fahrenheit units use 0xFF as an unavailable/sentinel value for
-    // optional sensors such as T2B; do not publish it as a real temperature.
-    if (raw == 0xFF)
-      return NAN;
     return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
   }
   return XYEAdapter::get_temperature(raw);
@@ -509,11 +507,18 @@ void ClimateMideaXYE::dump_config() {
   ESP_LOGCONFIG(Constants::TAG, "MideaXYE:");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Period: %dms", this->get_update_interval());
   ESP_LOGCONFIG(Constants::TAG, "  [x] Response timeout: %dms", this->response_timeout);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Use Fahrenheit: %d", this->use_fahrenheit_);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Temperature encoding: %s",
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime use Fahrenheit: %d", this->use_fahrenheit_);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime temperature encoding: %s",
                 this->raw_fahrenheit_temperatures_ ? "raw_fahrenheit" : "standard");
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Target temperature source: %s",
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime target temperature source: %s",
                 this->target_temperature_from_c0_ ? "C0" : "C4");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen use Fahrenheit: %d", build_info::CONFIG_USE_FAHRENHEIT);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen temperature encoding: %s",
+                build_info::CONFIG_TEMPERATURE_ENCODING);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature source: %s",
+                build_info::CONFIG_TARGET_TEMPERATURE_SOURCE);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sync fan mode from device: %d",
+                build_info::CONFIG_SYNC_FAN_MODE_FROM_DEVICE);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Source commit: %s%s", build_info::GIT_COMMIT,
                 build_info::GIT_DIRTY ? " (dirty)" : "");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Source branch: %s", build_info::GIT_BRANCH);
