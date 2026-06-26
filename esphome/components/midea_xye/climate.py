@@ -1,3 +1,6 @@
+from pathlib import Path
+import subprocess
+
 from esphome.core import coroutine
 from esphome import automation
 from esphome.components import binary_sensor, climate, sensor, uart, remote_transmitter, number
@@ -140,6 +143,50 @@ TARGET_TEMPERATURE_SOURCES = {
     "C4": "c4",
     "C0": "c0",
 }
+
+SOURCE_DIR = Path(__file__).resolve().parent
+
+
+def _run_git(args):
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(SOURCE_DIR), *args],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return ""
+
+
+def _git_build_info():
+    commit = _run_git(["rev-parse", "HEAD"]) or "unknown"
+    branch = _run_git(["branch", "--show-current"])
+    if not branch:
+        branch = _run_git(["describe", "--all", "--exact-match", "HEAD"])
+    if not branch:
+        branch = _run_git(["name-rev", "--name-only", "--no-undefined", "HEAD"])
+    if not branch:
+        branch = "detached"
+    remote = _run_git(["remote", "get-url", "origin"]) or "unknown"
+    dirty = "1" if _run_git(["status", "--porcelain"]) else "0"
+    return {
+        "commit": commit,
+        "branch": branch,
+        "remote": remote,
+        "dirty": dirty,
+    }
+
+
+def _cpp_string_literal(value):
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _add_git_build_defines():
+    info = _git_build_info()
+    cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", _cpp_string_literal(info["commit"]))
+    cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", _cpp_string_literal(info["branch"]))
+    cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", _cpp_string_literal(info["remote"]))
+    cg.add_define("MIDEA_XYE_BUILD_GIT_DIRTY", info["dirty"])
 
 validate_modes = cv.enum(ALLOWED_CLIMATE_MODES, upper=True)
 validate_presets = cv.enum(ALLOWED_CLIMATE_PRESETS, upper=True)
@@ -402,6 +449,8 @@ async def power_inv_to_code(var, config, args):
 
 
 async def to_code(config):
+    _add_git_build_defines()
+
     var = await climate.new_climate(config)
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)

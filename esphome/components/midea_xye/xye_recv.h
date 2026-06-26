@@ -83,7 +83,8 @@ struct __attribute__((packed)) QueryResponseData {
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    * @return Updated bytes remaining
    */
-  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG) const;
+  size_t print_debug(const char *tag, size_t left, int level = ESPHOME_LOG_LEVEL_DEBUG,
+                     bool raw_fahrenheit = false) const;
 };
 
 /**
@@ -225,10 +226,12 @@ union ReceiveData {
    * @param level Log level (ESPHOME_LOG_LEVEL_DEBUG, ESPHOME_LOG_LEVEL_INFO, ESPHOME_LOG_LEVEL_ERROR, etc.)
    * @param use_fahrenheit Forwarded to ExtendedQueryResponseData::print_debug to control
    *                       how the C4 `target_temperature` field is decoded for logging.
+   * @param raw_fahrenheit Forwarded to QueryResponseData::print_debug to control how C0
+   *                       temperature bytes are decoded for logging.
    * @return Updated bytes remaining
    */
   size_t print_debug(size_t left, const char *tag, int level = ESPHOME_LOG_LEVEL_DEBUG,
-                     bool use_fahrenheit = false) const;
+                     bool use_fahrenheit = false, bool raw_fahrenheit = false) const;
 
   /// Returns true when the preamble, prologue, direction, and CRC of the
   /// received message are all valid.

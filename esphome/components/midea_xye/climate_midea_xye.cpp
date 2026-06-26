@@ -1,6 +1,7 @@
 #ifdef USE_ARDUINO
 
 #include "climate_midea_xye.h"
+#include "build_info.h"
 
 #include <cmath>
 
@@ -185,7 +186,8 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
     }
     if (i == RX_MESSAGE_LENGTH) {
       // Log incoming message at debug level
-      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_);
+      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_,
+                          this->raw_fahrenheit_temperatures_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
@@ -512,6 +514,10 @@ void ClimateMideaXYE::dump_config() {
                 this->raw_fahrenheit_temperatures_ ? "raw_fahrenheit" : "standard");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Target temperature source: %s",
                 this->target_temperature_from_c0_ ? "C0" : "C4");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Source commit: %s%s", build_info::GIT_COMMIT,
+                build_info::GIT_DIRTY ? " (dirty)" : "");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Source branch: %s", build_info::GIT_BRANCH);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Source remote: %s", build_info::GIT_REMOTE);
 
 #ifdef USE_REMOTE_TRANSMITTER
   ESP_LOGCONFIG(Constants::TAG, "  [x] Using RemoteTransmitter");
