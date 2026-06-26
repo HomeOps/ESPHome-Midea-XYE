@@ -80,9 +80,10 @@ Byte    Field               Description
                             status flag unrelated to the temperature — it must be masked out
                             with SET_TEMP_VALUE_MASK (0xBF) before interpreting the value.
 11      T1 Temperature      Internal/room temperature sensor
-12      T2A Temperature     Indoor coil inlet temperature
-13      T2B Temperature     Indoor coil outlet temperature
-14      T3 Temperature      Outdoor coil/ambient temperature
+12      T2 Temperature      Indoor coil temperature. The code historically calls
+                            this `t2a_temperature`; service docs usually call it T2.
+13      T2B Temperature     Indoor coil exhaust temperature, if equipped
+14      T3 Temperature      Outdoor coil temperature
 15      Current             Current draw (units unknown, often reads 0xFF)
 16      Unknown2            Unknown/reserved
 17      Timer Start         Start timer setting
@@ -322,7 +323,7 @@ Two Fahrenheit variants have been observed:
   unusable or sentinel-filled response to C4 extended queries. Use
   `target_temperature_encoding: RAW_FAHRENHEIT` with `target_temperature_source: C0`
   for raw-F setpoints. Use `sensor_temperature_encoding: RAW_FAHRENHEIT` only
-  when the C0 T1/T2A/T2B/T3 sensor bytes appear to use the same direct-Fahrenheit
+  when the C0 T1/T2/T2B/T3 sensor bytes appear to use the same direct-Fahrenheit
   convention. Debug logs print raw-F, shifted/scaled-C, and shifted/scaled-F
   candidates for these fields so model-specific field mapping can be checked
   from captures. In these modes, `0xFF` is treated as unavailable for optional

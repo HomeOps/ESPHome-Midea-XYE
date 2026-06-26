@@ -73,11 +73,11 @@ climate:
       - VERTICAL
     outdoor_temperature:        # Optional. Outdoor temperature sensor
       name: Outside Temp
-    temperature_2a:             # Optional. Inside coil temperature
-      name: Inside Coil Inlet Temp
-    temperature_2b:             # Optional. Inside coil temperature
-      name: Inside Coil Outlet Temp
-    temperature_3:             # Optional. Outside coil temperature
+    temperature_2a:             # Optional. T2 indoor coil temperature
+      name: Indoor Coil Temp
+    temperature_2b:             # Optional. T2B indoor coil exhaust temperature
+      name: Indoor Coil Exhaust Temp
+    temperature_3:             # Optional. T3 outdoor coil temperature
       name: Outside Coil Temp
     current:                    # Optional. Current measurement
       name: Current

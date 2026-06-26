@@ -44,9 +44,9 @@ struct __attribute__((packed)) QueryResponseData {
   FanMode fan_mode;                ///< [9] Current fan mode
   Temperature target_temperature;  ///< [10] Target temperature setpoint
   Temperature t1_temperature;      ///< [11] Internal/inlet air temperature sensor (T1) - room temperature
-  Temperature t2a_temperature;     ///< [12] Indoor coil inlet temperature (T2A) - refrigerant entering
-  Temperature t2b_temperature;     ///< [13] Indoor coil outlet temperature (T2B) - refrigerant leaving
-  Temperature t3_temperature;      ///< [14] Outdoor coil/ambient temperature (T3)
+  Temperature t2a_temperature;     ///< [12] Indoor coil temperature (T2). Field name kept for compatibility.
+  Temperature t2b_temperature;     ///< [13] Indoor coil exhaust temperature (T2B), if equipped
+  Temperature t3_temperature;      ///< [14] Outdoor coil temperature (T3)
   uint8_t current;                 ///< [15] Current draw (units TBD, often reads 0xFF)
   uint8_t unknown2;                ///< [16] Unknown/reserved
   uint8_t timer_start;             ///< [17] Start timer setting (combinable TimerFlags)
