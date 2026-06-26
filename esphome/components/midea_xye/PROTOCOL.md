@@ -82,7 +82,7 @@ Byte    Field               Description
 11      T1 Temperature      Internal/room temperature sensor
 12      T2 Temperature      Indoor coil temperature. The code historically calls
                             this `t2a_temperature`; service docs usually call it T2.
-13      T2B Temperature     Indoor coil exhaust temperature, if equipped
+13      T2B Temperature     Indoor coil exhaust temperature, if equipped (normally located in the outdoor unit, if installed)
 14      T3 Temperature      Outdoor coil temperature
 15      Current             Current draw (units unknown, often reads 0xFF)
 16      Unknown2            Unknown/reserved

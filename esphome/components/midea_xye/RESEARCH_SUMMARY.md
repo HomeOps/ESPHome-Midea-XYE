@@ -15,7 +15,7 @@ Successfully mapped all temperature sensors with their actual purposes:
 
 - **T1 (byte 11)**: Internal/inlet air temperature - room temperature
 - **T2 (byte 12; `t2a_temperature` in code)**: Indoor coil temperature
-- **T2B (byte 13)**: Indoor coil exhaust temperature, if equipped
+- **T2B (byte 13)**: Indoor coil exhaust temperature, if equipped (normally located in the outdoor unit, if installed)
 - **T3 (byte 14)**: Outdoor coil/ambient temperature
 
 **Status**: ✅ Documented in code comments and PROTOCOL.md

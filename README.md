@@ -100,8 +100,8 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
-    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw
     target_temperature_source: C4   # Optional. C4 or C0
 ```
 
@@ -136,11 +136,11 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
     temperature_encoding: STANDARD  # Optional. STANDARD or RAW
                                     # STANDARD uses the protocol transform for the selected
                                     # unit system. RAW disables it; with use_fahrenheit: true,
-                                    # 0x46 is treated as 70°F.
+                                    # 0x46 is treated as 70°F
     target_temperature_source: C4   # Optional. Defaults to C4. Use C0 for units whose
                                     # extended query response does not expose setpoint.
     #beeper: true               # Optional. Beep on commands
@@ -178,7 +178,7 @@ climate:
       name: Outside Temp
     temperature_2a:             # Optional. T2 indoor coil temperature
       name: Indoor Coil Temp
-    temperature_2b:             # Optional. T2B indoor coil exhaust temperature
+    temperature_2b:             # Optional. T2B indoor coil exhaust temperature (normally located in the outdoor unit, if installed)
       name: Indoor Coil Exhaust Temp
     temperature_3:              # Optional. T3 outdoor coil temperature
       name: Outside Coil Temp

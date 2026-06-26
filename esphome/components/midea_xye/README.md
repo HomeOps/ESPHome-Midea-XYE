@@ -49,8 +49,8 @@ climate:
     name: Heatpump
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
-    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F.
-    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw.
+    use_fahrenheit: false       # Optional. Defaults to false. Selects C vs F
+    temperature_encoding: STANDARD  # Optional. STANDARD or RAW. Selects shifted/scaled vs raw
     target_temperature_source: C4   # Optional. C4 or C0.
     #beeper: true               # Optional. Beep on commands.
     visual:                     # Optional. Example of visual settings override.
@@ -79,7 +79,7 @@ climate:
       name: Outside Temp
     temperature_2a:             # Optional. T2 indoor coil temperature
       name: Indoor Coil Temp
-    temperature_2b:             # Optional. T2B indoor coil exhaust temperature
+    temperature_2b:             # Optional. T2B indoor coil exhaust temperature (normally located in the outdoor unit, if installed)
       name: Indoor Coil Exhaust Temp
     temperature_3:             # Optional. T3 outdoor coil temperature
       name: Outside Coil Temp
