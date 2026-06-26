@@ -73,6 +73,7 @@ CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 CONF_SYNC_FAN_MODE_FROM_DEVICE = "sync_fan_mode_from_device"
 CONF_TEMPERATURE_ENCODING = "temperature_encoding"
+CONF_SENSOR_TEMPERATURE_ENCODING = "sensor_temperature_encoding"
 CONF_TARGET_TEMPERATURE_SOURCE = "target_temperature_source"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
@@ -176,28 +177,53 @@ def _git_build_info():
         "dirty": dirty,
     }
 
-def _config_value(value):
-    return str(value)
+def _config_candidates(value):
+    yield value
+    for attr in ("value", "name"):
+        attr_value = getattr(value, attr, None)
+        if attr_value is not None:
+            yield attr_value
+    yield str(value)
+    yield repr(value)
+
+
+def _normalize_config_candidate(value):
+    return str(value).strip().strip("'\"").lower().replace("-", "_")
+
+
+def _config_matches(value, expected):
+    expected = expected.lower()
+    for candidate in _config_candidates(value):
+        normalized = _normalize_config_candidate(candidate)
+        if normalized == expected or normalized.endswith(f".{expected}") or expected in normalized:
+            return True
+    return False
 
 
 def _add_git_build_defines(config):
     info = _git_build_info()
-    raw_fahrenheit_temperatures = _config_value(config[CONF_TEMPERATURE_ENCODING]) == "raw_fahrenheit"
-    target_temperature_from_c0 = _config_value(config[CONF_TARGET_TEMPERATURE_SOURCE]) == "c0"
+    raw_fahrenheit_temperatures = _config_matches(config[CONF_TEMPERATURE_ENCODING], "raw_fahrenheit")
+    raw_fahrenheit_sensor_temperatures = _config_matches(config[CONF_SENSOR_TEMPERATURE_ENCODING], "raw_fahrenheit")
+    target_temperature_from_c0 = _config_matches(config[CONF_TARGET_TEMPERATURE_SOURCE], "c0")
     cg.add_define("MIDEA_XYE_BUILD_GIT_COMMIT", info["commit"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_BRANCH", info["branch"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_REMOTE", info["remote"])
     cg.add_define("MIDEA_XYE_BUILD_GIT_DIRTY", info["dirty"])
     cg.add_define("MIDEA_XYE_CONFIG_TEMPERATURE_ENCODING", config[CONF_TEMPERATURE_ENCODING])
+    cg.add_define("MIDEA_XYE_CONFIG_SENSOR_TEMPERATURE_ENCODING", config[CONF_SENSOR_TEMPERATURE_ENCODING])
     cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_SOURCE", config[CONF_TARGET_TEMPERATURE_SOURCE])
     cg.add_define("MIDEA_XYE_CONFIG_RAW_FAHRENHEIT_TEMPERATURES", 1 if raw_fahrenheit_temperatures else 0)
+    cg.add_define(
+        "MIDEA_XYE_CONFIG_RAW_FAHRENHEIT_SENSOR_TEMPERATURES",
+        1 if raw_fahrenheit_sensor_temperatures else 0,
+    )
     cg.add_define("MIDEA_XYE_CONFIG_TARGET_TEMPERATURE_FROM_C0", 1 if target_temperature_from_c0 else 0)
     cg.add_define("MIDEA_XYE_CONFIG_USE_FAHRENHEIT", 1 if config[CONF_USE_FAHRENHEIT] else 0)
     cg.add_define(
         "MIDEA_XYE_CONFIG_SYNC_FAN_MODE_FROM_DEVICE",
         1 if config[CONF_SYNC_FAN_MODE_FROM_DEVICE] else 0,
     )
-    return raw_fahrenheit_temperatures, target_temperature_from_c0
+    return raw_fahrenheit_temperatures, raw_fahrenheit_sensor_temperatures, target_temperature_from_c0
 
 validate_modes = cv.enum(ALLOWED_CLIMATE_MODES, upper=True)
 validate_presets = cv.enum(ALLOWED_CLIMATE_PRESETS, upper=True)
@@ -215,6 +241,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_TIMEOUT, default="100ms"): cv.time_period,
             cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
             cv.Optional(CONF_TEMPERATURE_ENCODING, default="STANDARD"): validate_temperature_encoding,
+            cv.Optional(CONF_SENSOR_TEMPERATURE_ENCODING, default="STANDARD"): validate_temperature_encoding,
             cv.Optional(CONF_TARGET_TEMPERATURE_SOURCE, default="C4"): validate_target_temperature_source,
             # Opt-in: derive the climate action from the C0 byte-19 compressor flag
             # and the defrost state. Off by default while byte 19 is still provisional;
@@ -460,7 +487,11 @@ async def power_inv_to_code(var, config, args):
 
 
 async def to_code(config):
-    raw_fahrenheit_temperatures, target_temperature_from_c0 = _add_git_build_defines(config)
+    (
+        raw_fahrenheit_temperatures,
+        raw_fahrenheit_sensor_temperatures,
+        target_temperature_from_c0,
+    ) = _add_git_build_defines(config)
 
     var = await climate.new_climate(config)
     await cg.register_component(var, config)
@@ -470,6 +501,7 @@ async def to_code(config):
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
     cg.add(var.set_raw_fahrenheit_temperatures(raw_fahrenheit_temperatures))
+    cg.add(var.set_raw_fahrenheit_sensor_temperatures(raw_fahrenheit_sensor_temperatures))
     cg.add(var.set_target_temperature_from_c0(target_temperature_from_c0))
     cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
     cg.add(var.set_sync_fan_mode_from_device(config[CONF_SYNC_FAN_MODE_FROM_DEVICE]))

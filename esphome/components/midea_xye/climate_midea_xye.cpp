@@ -4,6 +4,7 @@
 #include "build_info.h"
 
 #include <cmath>
+#include <cstring>
 
 #include "esphome/core/log.h"
 
@@ -47,10 +48,14 @@ template<typename T> void update_property(T &property, const T &value, bool &fla
   }
 }
 
+static bool config_value_is(const char *value, const char *expected) {
+  return std::strcmp(value, expected) == 0;
+}
+
 float ClimateMideaXYE::decode_bus_temperature_(uint8_t raw) const {
   if (raw == 0xFF)
     return NAN;
-  if (this->raw_fahrenheit_temperatures_) {
+  if (this->raw_fahrenheit_sensor_temperatures_) {
     return (static_cast<float>(raw) - 32.0f) * 5.0f / 9.0f;
   }
   return XYEAdapter::get_temperature(raw);
@@ -106,6 +111,16 @@ void ClimateMideaXYE::control(const ClimateCall &call) {
 
 void ClimateMideaXYE::setup() {
   // this->uart_->check_uart_settings(4800, 1, UART_CONFIG_PARITY_NONE, 8);
+  this->raw_fahrenheit_temperatures_ =
+      this->raw_fahrenheit_temperatures_ ||
+      config_value_is(build_info::CONFIG_TEMPERATURE_ENCODING, "raw_fahrenheit");
+  this->raw_fahrenheit_sensor_temperatures_ =
+      this->raw_fahrenheit_sensor_temperatures_ ||
+      config_value_is(build_info::CONFIG_SENSOR_TEMPERATURE_ENCODING, "raw_fahrenheit");
+  this->target_temperature_from_c0_ =
+      this->target_temperature_from_c0_ ||
+      config_value_is(build_info::CONFIG_TARGET_TEMPERATURE_SOURCE, "c0");
+
   this->last_on_mode_ = *this->supported_modes_.begin();
   controlState = ControlState::SEND_QUERY;
   queuedCommand = ControlState::WAIT_DATA;
@@ -185,7 +200,7 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
     if (i == RX_MESSAGE_LENGTH) {
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_,
-                          this->raw_fahrenheit_temperatures_);
+                          this->raw_fahrenheit_temperatures_, this->raw_fahrenheit_sensor_temperatures_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
       // overwriting the mode we just set. The AC state will be updated
       // on subsequent QUERY cycles.
@@ -508,17 +523,23 @@ void ClimateMideaXYE::dump_config() {
   ESP_LOGCONFIG(Constants::TAG, "  [x] Period: %dms", this->get_update_interval());
   ESP_LOGCONFIG(Constants::TAG, "  [x] Response timeout: %dms", this->response_timeout);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime use Fahrenheit: %d", this->use_fahrenheit_);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime temperature encoding: %s",
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime target temperature encoding: %s",
                 this->raw_fahrenheit_temperatures_ ? "raw_fahrenheit" : "standard");
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime sensor temperature encoding: %s",
+                this->raw_fahrenheit_sensor_temperatures_ ? "raw_fahrenheit" : "standard");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Runtime target temperature source: %s",
                 this->target_temperature_from_c0_ ? "C0" : "C4");
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen use Fahrenheit: %d", build_info::CONFIG_USE_FAHRENHEIT);
-  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen temperature encoding: %s",
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature encoding: %s",
                 build_info::CONFIG_TEMPERATURE_ENCODING);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sensor temperature encoding: %s",
+                build_info::CONFIG_SENSOR_TEMPERATURE_ENCODING);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature source: %s",
                 build_info::CONFIG_TARGET_TEMPERATURE_SOURCE);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw Fahrenheit temperatures: %d",
                 build_info::CONFIG_RAW_FAHRENHEIT_TEMPERATURES);
+  ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen raw Fahrenheit sensor temperatures: %d",
+                build_info::CONFIG_RAW_FAHRENHEIT_SENSOR_TEMPERATURES);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen target temperature from C0: %d",
                 build_info::CONFIG_TARGET_TEMPERATURE_FROM_C0);
   ESP_LOGCONFIG(Constants::TAG, "  [x] Codegen sync fan mode from device: %d",

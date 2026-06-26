@@ -22,26 +22,44 @@ static size_t print_raw_fahrenheit_temperature_debug(const char *tag, const char
   return left - sizeof(Temperature);
 }
 
+static size_t print_standard_temperature_debug(const char *tag, const char *name, uint8_t raw,
+                                               size_t left, int level) {
+  if (left < sizeof(Temperature)) return left;
+  if (raw == 0xFF) {
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (unavailable)"),
+             name, raw);
+  } else {
+    const float celsius = Temperature{raw}.to_celsius();
+    ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("    %s: 0x%02X (%.2f°C)"),
+             name, raw, celsius);
+  }
+  return left - sizeof(Temperature);
+}
+
 // QueryResponseData methods
-size_t QueryResponseData::print_debug(const char *tag, size_t left, int level, bool raw_fahrenheit) const {
+size_t QueryResponseData::print_debug(const char *tag, size_t left, int level,
+                                      bool raw_fahrenheit_target, bool raw_fahrenheit_sensors) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  QueryResponseData:"));
   
   left = print_debug_uint8(tag, "unknown1", unknown1, left, level);
   left = print_debug_enum(tag, "capabilities", capabilities, left, level);
   left = print_debug_enum(tag, "operation_mode", operation_mode, left, level);
   left = print_debug_enum(tag, "fan_mode", fan_mode, left, level);
-  if (raw_fahrenheit) {
+  if (raw_fahrenheit_target)
     left = print_raw_fahrenheit_temperature_debug(tag, "target_temperature", target_temperature.value, left, level);
+  else
+    left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
+
+  if (raw_fahrenheit_sensors) {
     left = print_raw_fahrenheit_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level);
     left = print_raw_fahrenheit_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level);
     left = print_raw_fahrenheit_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level);
     left = print_raw_fahrenheit_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level);
   } else {
-    left = target_temperature.print_debug(tag, "target_temperature", left, level, TemperatureEncoding::RAW);
-    left = t1_temperature.print_debug(tag, "t1_temperature", left, level);
-    left = t2a_temperature.print_debug(tag, "t2a_temperature", left, level);
-    left = t2b_temperature.print_debug(tag, "t2b_temperature", left, level);
-    left = t3_temperature.print_debug(tag, "t3_temperature", left, level);
+    left = print_standard_temperature_debug(tag, "t1_temperature", t1_temperature.value, left, level);
+    left = print_standard_temperature_debug(tag, "t2a_temperature", t2a_temperature.value, left, level);
+    left = print_standard_temperature_debug(tag, "t2b_temperature", t2b_temperature.value, left, level);
+    left = print_standard_temperature_debug(tag, "t3_temperature", t3_temperature.value, left, level);
   }
   left = print_debug_uint8(tag, "current", current, left, level);
   left = print_debug_uint8(tag, "unknown2", unknown2, left, level);
@@ -127,7 +145,7 @@ static size_t print_unknown_payload_debug(const uint8_t *raw, const char *tag, s
 }
 
 size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool use_fahrenheit,
-                                bool raw_fahrenheit) const {
+                                bool raw_fahrenheit_target, bool raw_fahrenheit_sensors) const {
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("RX Message:"));
   ::esphome::esp_log_printf_(level, tag, __LINE__, ESPHOME_LOG_FORMAT("  Frame Header:"));
   
@@ -141,7 +159,8 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool us
   // Delegate to the appropriate data struct's print_debug method based on command type
   switch (message.frame.header.command) {
     case Command::QUERY:
-      left = message.data.query_response.print_debug(tag, left, level, raw_fahrenheit);
+      left = message.data.query_response.print_debug(tag, left, level, raw_fahrenheit_target,
+                                                     raw_fahrenheit_sensors);
       break;
     
     case Command::QUERY_EXTENDED:
