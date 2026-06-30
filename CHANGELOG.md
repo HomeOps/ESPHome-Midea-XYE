@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.11](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.10...v0.2.11) (2026-06-30)
+
+
+### Bug Fixes
+
+* log no-response at DEBUG instead of WARN to avoid silent-bus spam ([#139](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/139)) ([ba5ad94](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/ba5ad944c7a95adbe39ff50ce6e9408145a2bdba))
+
 ## [0.2.10](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.9...v0.2.10) (2026-06-30)
 
 
