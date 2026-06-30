@@ -141,6 +141,9 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
       i++;
     }
     if (i == RX_MESSAGE_LENGTH) {
+      // The configured address answered: the bus is responsive, clear the miss
+      // counter so a transient gap never accumulates toward a needless sweep.
+      this->miss_count_ = 0;
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
@@ -191,12 +194,86 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
       } else {
         controlState = ControlState::SEND_QUERY;
       }
+      // After recovering, count this miss and (if enabled) start an address
+      // sweep once the bus has been unresponsive for discovery_after_ cycles.
+      this->maybe_start_discovery_();
     }
   });
 }
 
+void ClimateMideaXYE::maybe_start_discovery_() {
+  // Called from the no-response path. Count consecutive unanswered polls and,
+  // when auto-discovery is enabled and the bus has stayed silent long enough,
+  // kick off an address sweep. Only runs while the configured address is dead.
+  if (!this->auto_discover_ || this->discovering_)
+    return;
+  if (++this->miss_count_ < this->discovery_after_)
+    return;
+  this->discovering_ = true;
+  this->scan_addr_ = this->scan_min_;
+  ESP_LOGW(Constants::TAG, "Address 0x%02X unresponsive for %u cycles; scanning 0x%02X-0x%02X for a unit",
+           this->address_, this->miss_count_, this->scan_min_, this->scan_max_);
+  this->send_probe_();
+}
+
+void ClimateMideaXYE::send_probe_() {
+  // Send one C0 (QUERY) to the current scan address and wait response_timeout.
+  // A CRC-valid reply whose source ID matches the probed address means a unit
+  // lives there. The sweep chains via set_timeout, so it runs at ~response_timeout
+  // per address independent of the (slower) poll period; normal polling stays
+  // suspended (see update()) so only one frame is ever in flight.
+  //
+  // Drop any stale bytes first (e.g. a late reply to the previous probe) so this
+  // probe's read window only sees a response to this address.
+  uint8_t stale;
+  while (this->uart_->available())
+    this->uart_->read_byte(&stale);
+  this->tx_data = TransmitData(Command::QUERY, this->scan_addr_);
+  this->tx_data.update_crc();
+  this->tx_data.print_debug(Constants::TAG, TX_MESSAGE_LENGTH, ESPHOME_LOG_LEVEL_DEBUG);
+  this->uart_->write_array(this->tx_data.raw, TX_MESSAGE_LENGTH);
+  this->uart_->flush();
+  this->set_timeout("discover-read", this->response_timeout, [this]() {
+    uint8_t i = 0;
+    while (this->uart_->available()) {
+      if (i < RX_MESSAGE_LENGTH)
+        this->uart_->read_byte(&this->rx_data.raw[i]);
+      i++;
+    }
+    const bool found = (i == RX_MESSAGE_LENGTH) && this->rx_data.is_valid() &&
+                       (this->rx_data.message.frame.header.source == this->scan_addr_);
+    if (found) {
+      this->finish_discovery_(true, this->scan_addr_);
+    } else if (this->scan_addr_ >= this->scan_max_) {
+      this->finish_discovery_(false, 0x00);
+    } else {
+      this->scan_addr_++;
+      this->set_timeout("discover-gap", 10, [this]() { this->send_probe_(); });
+    }
+  });
+}
+
+void ClimateMideaXYE::finish_discovery_(bool found, uint8_t addr) {
+  this->discovering_ = false;
+  this->miss_count_ = 0;
+  if (found) {
+    ESP_LOGI(Constants::TAG, "Discovered unit at address 0x%02X (was polling 0x%02X); adopting it", addr,
+             this->address_);
+    this->address_ = addr;
+    set_sensor(this->discovered_address_sensor_, static_cast<float>(addr));
+  } else {
+    ESP_LOGW(Constants::TAG, "Address scan found no unit in 0x%02X-0x%02X; resuming polls at 0x%02X",
+             this->scan_min_, this->scan_max_, this->address_);
+  }
+  this->controlState = ControlState::SEND_QUERY;
+}
+
 void ClimateMideaXYE::update() {
   uint8_t cmdSent = 0x00;
+  // While an address sweep is running it drives itself via chained timeouts;
+  // suspend the normal poll cycle so there is never more than one frame in flight.
+  if (this->discovering_)
+    return;
   // Possible States:
   // 0: Waiting for Response from Command
   // 1: Sending Set C3 Command
