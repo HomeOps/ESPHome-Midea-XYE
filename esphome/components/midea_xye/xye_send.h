@@ -89,7 +89,11 @@ union TransmitData {
   /// Sets preamble, command, node IDs, direction, complement, prologue, and
   /// zeros out all payload fields.  Call update_crc() afterwards to seal the
   /// message before transmission.
-  explicit TransmitData(Command cmd) noexcept;
+  /// @param cmd Command to build the frame for.
+  /// @param server_id Destination unit ID (the unit's centralised-control
+  ///        address, e.g. its rotary dial setting, 0x00..0x3F). Defaults to
+  ///        SERVER_ID (0x00). The source/master ID stays CLIENT_ID.
+  explicit TransmitData(Command cmd, NodeId server_id = SERVER_ID) noexcept;
 
   /// Recompute and store the CRC byte based on the current buffer contents.
   void update_crc() noexcept;

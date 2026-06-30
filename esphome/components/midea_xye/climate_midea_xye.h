@@ -123,6 +123,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void set_uart_parent(uart::UARTComponent *parent) { this->uart_ = parent; }
   void set_period(uint32_t ms) { this->set_update_interval(ms); }
   void set_response_timeout(uint32_t ms) { this->response_timeout = ms; }
+  /// Destination unit ID (the unit's centralised-control / rotary-dial address,
+  /// 0x00..0x3F). Every frame this component transmits is addressed here.
+  void set_address(uint8_t address) { this->address_ = address; }
 
   /* Component methods */
 
@@ -193,6 +196,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   uint8_t ForceReadNextCycle;
   ControlState queuedCommand;
   uint32_t response_timeout;
+  // Destination unit ID for every transmitted frame (the unit's centralised-control
+  // / rotary-dial address). Defaults to 0x00 to preserve legacy single-unit behaviour.
+  uint8_t address_{0x00};
   // Tracks whether Follow-Me has been initialized after mode change.
   // When false, the next Follow-Me update sends an INIT subcommand (0x06).
   // When true, Follow-Me updates send a regular UPDATE subcommand (0x02).

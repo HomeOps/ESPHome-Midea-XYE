@@ -5,6 +5,7 @@ from esphome.components.remote_base import CONF_TRANSMITTER_ID
 import esphome.config_validation as cv
 import esphome.codegen as cg
 from esphome.const import (
+    CONF_ADDRESS,
     CONF_AUTOCONF,
     CONF_BEEPER,
     CONF_CUSTOM_FAN_MODES,
@@ -139,6 +140,10 @@ CONFIG_SCHEMA = cv.All(
     climate.climate_schema(ClimateMideaXYE).extend(
         {
             cv.GenerateID(): cv.declare_id(ClimateMideaXYE),
+            # Destination unit ID = the unit's centralised-control rotary-dial
+            # address (0..0x3F per protocol; a single hex dial covers 0x0..0xF).
+            # Defaults to 0x00 for a single unit on a private bus.
+            cv.Optional(CONF_ADDRESS, default=0): cv.int_range(min=0, max=0x3F),
             cv.Optional(CONF_PERIOD, default="1s"): cv.time_period,
             cv.Optional(CONF_TIMEOUT, default="100ms"): cv.time_period,
             cv.Optional(CONF_USE_FAHRENHEIT, default=False): cv.boolean,
@@ -390,6 +395,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
+    cg.add(var.set_address(config[CONF_ADDRESS]))
     cg.add(var.set_period(config[CONF_PERIOD].total_milliseconds))
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
