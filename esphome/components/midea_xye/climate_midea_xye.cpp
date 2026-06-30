@@ -169,9 +169,19 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
         }
       }
     } else {
-      ESP_LOGW(Constants::TAG, "Bad response length (%u bytes, expected %u) for Command %02X; resyncing",
-               i, RX_MESSAGE_LENGTH, cmdSent);
-      rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_WARN);
+      // Distinguish a true no-reply from a corrupt/partial frame. On a silent
+      // bus (wrong unit address, miswired/unterminated bus, or no unit present)
+      // this branch fires every poll cycle, so logging the expected 0-byte case
+      // at WARN would spam a warning every ~second. Log no-reply at DEBUG and
+      // reserve WARN for an actual short/over-long frame, which is genuinely
+      // suspicious and worth surfacing.
+      if (i == 0) {
+        ESP_LOGD(Constants::TAG, "No response for command %02X", cmdSent);
+      } else {
+        ESP_LOGW(Constants::TAG, "Bad response length (%u bytes, expected %u) for Command %02X; resyncing",
+                 i, RX_MESSAGE_LENGTH, cmdSent);
+        rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_WARN);
+      }
       // Recover instead of deadlocking in WAIT_DATA: a missed, short, or
       // over-long reply must not strand the state machine. Honor any queued
       // command, otherwise restart the poll cycle on the next update().
