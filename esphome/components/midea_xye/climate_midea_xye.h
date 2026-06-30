@@ -126,6 +126,12 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   /// Destination unit ID (the unit's centralised-control / rotary-dial address,
   /// 0x00..0x3F). Every frame this component transmits is addressed here.
   void set_address(uint8_t address) { this->address_ = address; }
+  /// Opt-in: when the configured address is unresponsive for `discovery_after`
+  /// poll cycles, sweep the address range with C0 probes and adopt the first
+  /// unit that answers. Intended for an isolated one-unit-per-ESP bus.
+  void set_auto_discover(bool yesno) { this->auto_discover_ = yesno; }
+  void set_discovery_after(uint16_t cycles) { this->discovery_after_ = cycles; }
+  void set_discovered_address_sensor(Sensor *sensor) { this->discovered_address_sensor_ = sensor; }
 
   /* Component methods */
 
@@ -166,6 +172,12 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void setup() override;
   void loop() override {}
   void sendRecv(uint8_t cmdSent);
+  // Auto-discovery of the unit address (opt-in). maybe_start_discovery_ counts
+  // misses and kicks off a sweep; send_probe_ probes one address and chains to
+  // the next; finish_discovery_ adopts a found address (or gives up) and resumes.
+  void maybe_start_discovery_();
+  void send_probe_();
+  void finish_discovery_(bool found, uint8_t addr);
   void setPowerState(bool state);
   void setTransmitParams();
 
@@ -199,6 +211,14 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   // Destination unit ID for every transmitted frame (the unit's centralised-control
   // / rotary-dial address). Defaults to 0x00 to preserve legacy single-unit behaviour.
   uint8_t address_{0x00};
+  // --- Auto-discovery (opt-in via auto_discover) ---
+  bool auto_discover_{false};       // enable an address sweep when unresponsive
+  uint8_t scan_min_{0x00};          // inclusive low end of the sweep range
+  uint8_t scan_max_{0x3F};          // inclusive high end (protocol max device ID)
+  uint16_t discovery_after_{10};    // consecutive misses before a sweep starts
+  uint16_t miss_count_{0};          // consecutive unanswered polls (normal mode)
+  bool discovering_{false};         // true while a sweep is in progress
+  uint8_t scan_addr_{0x00};         // address currently being probed
   // Tracks whether Follow-Me has been initialized after mode change.
   // When false, the next Follow-Me update sends an INIT subcommand (0x06).
   // When true, Follow-Me updates send a regular UPDATE subcommand (0x02).
@@ -246,6 +266,8 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
 #endif
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};
+  // Publishes the address auto-discovery locked onto (the unit's dial value).
+  Sensor *discovered_address_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
   float internal_temperature_{NAN};

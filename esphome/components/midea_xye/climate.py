@@ -70,6 +70,9 @@ CONF_COMPRESSOR_ACTIVE = "compressor_active"
 CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 CONF_SYNC_FAN_MODE_FROM_DEVICE = "sync_fan_mode_from_device"
+CONF_AUTO_DISCOVER = "auto_discover"
+CONF_DISCOVERY_AFTER = "discovery_after"
+CONF_DISCOVERED_ADDRESS = "discovered_address"
 midea_xye_ns = cg.esphome_ns.namespace("midea").namespace("xye")
 ClimateMideaXYE = midea_xye_ns.class_("ClimateMideaXYE", climate.Climate, cg.Component)
 StaticPressureNumber = midea_xye_ns.class_("StaticPressureNumber", number.Number, cg.Component)
@@ -155,6 +158,11 @@ CONFIG_SCHEMA = cv.All(
             # physical thermostat), so Home Assistant reflects fan mode changes even when
             # not triggered by an HA command.
             cv.Optional(CONF_SYNC_FAN_MODE_FROM_DEVICE, default=False): cv.boolean,
+            # Opt-in: if the configured address is unresponsive for `discovery_after`
+            # poll cycles, sweep the address range with read-only C0 probes and adopt
+            # the first unit that answers. For an isolated one-unit-per-ESP bus.
+            cv.Optional(CONF_AUTO_DISCOVER, default=False): cv.boolean,
+            cv.Optional(CONF_DISCOVERY_AFTER, default=10): cv.int_range(min=1, max=1000),
             cv.OnlyWith(CONF_TRANSMITTER_ID, "remote_transmitter"): cv.use_id(
                 remote_transmitter.RemoteTransmitterComponent
             ),
@@ -189,6 +197,12 @@ CONFIG_SCHEMA = cv.All(
                 icon="mdi:fan",
                 accuracy_decimals=0,
                 state_class=STATE_CLASS_MEASUREMENT,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            # Publishes the unit address that auto-discovery locked onto (its dial value).
+            cv.Optional(CONF_DISCOVERED_ADDRESS): sensor.sensor_schema(
+                icon="mdi:identifier",
+                accuracy_decimals=0,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_TEMPERATURE_2A): sensor.sensor_schema(
@@ -396,6 +410,8 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
     await climate.register_climate(var, config)
     cg.add(var.set_address(config[CONF_ADDRESS]))
+    cg.add(var.set_auto_discover(config[CONF_AUTO_DISCOVER]))
+    cg.add(var.set_discovery_after(config[CONF_DISCOVERY_AFTER]))
     cg.add(var.set_period(config[CONF_PERIOD].total_milliseconds))
     cg.add(var.set_response_timeout(config[CONF_TIMEOUT].total_milliseconds))
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
@@ -429,6 +445,9 @@ async def to_code(config):
     if CONF_FAN_SPEED in config:
         sens = await sensor.new_sensor(config[CONF_FAN_SPEED])
         cg.add(var.set_fan_speed_sensor(sens))
+    if CONF_DISCOVERED_ADDRESS in config:
+        sens = await sensor.new_sensor(config[CONF_DISCOVERED_ADDRESS])
+        cg.add(var.set_discovered_address_sensor(sens))
     if CONF_TEMPERATURE_2A in config:
         sens = await sensor.new_sensor(config[CONF_TEMPERATURE_2A])
         cg.add(var.set_temperature_2a_sensor(sens))

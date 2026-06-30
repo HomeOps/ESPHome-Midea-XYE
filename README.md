@@ -138,6 +138,16 @@ climate:
                                 # Set this to match the dial when one ESP drives one
                                 # indoor unit whose dial is not 0 (e.g. a multi-unit
                                 # system where each unit has a unique dial).
+    auto_discover: false        # Optional. Defaults to false. When the configured
+                                # address is unresponsive for `discovery_after` cycles,
+                                # sweep 0x00..0x3F with read-only C0 probes and adopt the
+                                # first unit that answers. Intended for an isolated
+                                # one-ESP-per-unit bus; do not enable on a bus shared with
+                                # a CCM/other controller.
+    discovery_after: 10         # Optional. Defaults to 10. Consecutive unanswered polls
+                                # before an address sweep starts.
+    discovered_address:         # Optional. Diagnostic sensor reporting the address
+      name: XYE Address         # auto-discovery locked onto (the unit's dial value).
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false

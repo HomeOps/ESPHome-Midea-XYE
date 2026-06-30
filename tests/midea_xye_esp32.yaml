@@ -38,12 +38,17 @@ climate:
   - platform: midea_xye
     id: main_climate
     name: Test Heatpump
+    address: 0x01
+    auto_discover: true
+    discovery_after: 5
     period: 1s
     timeout: 100ms
     use_fahrenheit: false
     follow_me_sensor: test_sensor  # Automatically updates follow_me from this sensor
     internal_current_temperature:
       name: "Internal Current Temperature"
+    discovered_address:
+      name: "XYE Address"
     defrost:
       name: "Defrost Active"
 
