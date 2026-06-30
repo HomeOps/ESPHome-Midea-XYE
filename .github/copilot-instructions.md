@@ -68,6 +68,16 @@ This repository contains an ESPHome external component for controlling Midea HVA
 - Ensure CI passes before requesting review
 - Update tests to cover new functionality
 
+### Pull Request Scope (Required)
+
+**Every PR must address exactly one concern.** Do not bundle unrelated changes. A PR that mixes, for example, a new feature with documentation rewrites, build/version-stamping tooling, or unrelated renames **will be rejected and returned for splitting**.
+
+- One logical change per PR. If the description needs the word "and", split it.
+- Documentation-only changes go in a separate `docs:` PR.
+- Build/tooling/logging scaffolding that the feature does not require goes in its own PR.
+- Keep each diff small enough that a reviewer can hold its single purpose in their head.
+- Prefer several small PRs over one large one, even when every part is individually useful.
+
 ### Conventional Commits (Required)
 
 All PR titles and commit messages **must** follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. release-please uses these to automatically determine the next version and generate changelogs.

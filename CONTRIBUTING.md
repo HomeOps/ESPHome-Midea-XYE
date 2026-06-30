@@ -12,6 +12,7 @@ Thank you for taking the time to contribute! This document explains how to set u
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Commit Messages](#commit-messages)
+- [Scope of a Pull Request](#scope-of-a-pull-request)
 - [Submitting a Pull Request](#submitting-a-pull-request)
 - [Reporting Issues](#reporting-issues)
 
@@ -135,6 +136,28 @@ chore: update CI workflow for ESPHome compile checks
 
 > **Important:** GitHub squash-merges use the PR title as the commit message.  
 > Always set the PR title to match the conventional commit format above.
+
+---
+
+## Scope of a Pull Request
+
+**Each pull request must address exactly one concern.** Narrow, single-purpose PRs are reviewed faster, bisect cleanly, and produce an accurate changelog. A PR that bundles unrelated changes — however useful each part is on its own — will be returned to be split before it is reviewed.
+
+The following do **not** belong in the same PR and must be split apart:
+
+- A new feature and unrelated documentation rewrites.
+- A new feature and build/tooling/logging scaffolding (e.g. version-stamping) that the feature does not require.
+- Two independent features or fixes.
+- Field/sensor renames or comment cleanups mixed into a behavioural change.
+
+Guidelines:
+
+- One logical change per PR. If you need the word "and" to describe it, it is probably two PRs.
+- Documentation-only changes go in their own `docs:` PR.
+- Wide renames or refactors go in their own `refactor:`/`docs:` PR, landed before or after the behavioural change so the behavioural diff stays small and readable.
+- Keep each diff small enough that a reviewer can hold its single purpose in their head.
+
+> Open the pieces as separate PRs and link them together. A large, multi-purpose PR will be asked to be split before review.
 
 ---
 
