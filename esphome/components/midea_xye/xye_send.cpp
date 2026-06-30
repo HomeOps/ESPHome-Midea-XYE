@@ -46,10 +46,10 @@ size_t TransmitData::print_debug(const char *tag, size_t left, int level) const 
   return left;
 }
 
-TransmitData::TransmitData(Command cmd) noexcept {
+TransmitData::TransmitData(Command cmd, NodeId server_id) noexcept {
   message.frame.preamble = ProtocolMarker::PREAMBLE;
   message.frame.header.command = cmd;
-  message.frame.header.server_id = SERVER_ID;
+  message.frame.header.server_id = server_id;
   message.frame.header.client_id1 = CLIENT_ID;
   message.frame.header.direction_node.direction = Direction::FROM_CLIENT;
   message.frame.header.direction_node.node_id = CLIENT_ID;

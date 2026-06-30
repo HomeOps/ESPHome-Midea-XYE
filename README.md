@@ -132,6 +132,12 @@ The component will automatically:
 climate:
   - platform: midea_xye
     name: Heatpump
+    address: 0x00               # Optional. Defaults to 0x00. Destination unit ID =
+                                # the indoor unit's centralised-control / network
+                                # address (its rotary "address" dial, 0x00..0x3F).
+                                # Set this to match the dial when one ESP drives one
+                                # indoor unit whose dial is not 0 (e.g. a multi-unit
+                                # system where each unit has a unique dial).
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false
