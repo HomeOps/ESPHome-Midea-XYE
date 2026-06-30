@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.10](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.9...v0.2.10) (2026-06-30)
+
+
+### Bug Fixes
+
+* recover from WAIT_DATA deadlock on bad/missing response ([#136](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/136)) ([95365ab](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/95365ab48bae9c50b3e2be5c142b935acb126e4b))
+
 ## [0.2.9](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.8...v0.2.9) (2026-05-28)
 
 
