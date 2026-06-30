@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.13](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.12...v0.2.13) (2026-06-30)
+
+
+### Features
+
+* auto-discover the unit address when the bus is unresponsive ([#143](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/143)) ([00b7cfe](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/00b7cfe93c6512243581f4945ab9d14749973516))
+
 ## [0.2.12](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.11...v0.2.12) (2026-06-30)
 
 
