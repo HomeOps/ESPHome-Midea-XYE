@@ -18,6 +18,7 @@ Kudos to these projects and people:
 - ESPHome external component foundation by @exciton: https://github.com/exciton/esphome
 - Key contributions and inspiration by @mdrobnak: https://github.com/mdrobnak/esphome/tree/units_switch
 - Static pressure protocol analysis by @rmounce
+- C&H "Sophia Hyper" concealed-duct raw-temperature/C0-setpoint research by @larsonm-personal
 - Home Assistant community discussion and contributions: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679
 - S1/S2 bus (IDU ↔ outdoor inverter) reverse-engineering by MidATRIX:
   https://github.com/MidATRIX/midea-s1s2-rs485-monitor — a sibling Midea RS-485
