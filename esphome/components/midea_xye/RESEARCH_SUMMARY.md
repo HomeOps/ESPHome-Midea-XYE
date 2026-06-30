@@ -14,8 +14,8 @@ This research analyzed wtahler's esphome-mideaXYE-rs485 implementation and compa
 Successfully mapped all temperature sensors with their actual purposes:
 
 - **T1 (byte 11)**: Internal/inlet air temperature - room temperature
-- **T2A (byte 12)**: Indoor coil inlet temperature - refrigerant entering evaporator
-- **T2B (byte 13)**: Indoor coil outlet temperature - refrigerant leaving evaporator  
+- **T2 (byte 12; `t2a_temperature` in code)**: Indoor coil temperature
+- **T2B (byte 13)**: Indoor coil exhaust temperature, if equipped (normally located in the outdoor unit, if installed)
 - **T3 (byte 14)**: Outdoor coil/ambient temperature
 
 **Status**: ✅ Documented in code comments and PROTOCOL.md
@@ -104,7 +104,7 @@ Created `PROTOCOL.md` with:
 
 Updated header files with:
 - Protocol variation notes (AUTO/FAN_LOW)
-- Temperature sensor purposes (T1-T3, T2A-T2B)
+- Temperature sensor purposes (T1-T3, T2-T2B)
 - Absolute byte position comments
 - Temperature encoding formula with examples
 - Error flag clarifications
@@ -157,7 +157,7 @@ Added references to:
 
 This research successfully:
 - ✅ Validated current protocol implementation against wtahler's work
-- ✅ Documented temperature sensor mappings (T1, T2A, T2B, T3)
+- ✅ Documented temperature sensor mappings (T1, T2, T2B, T3)
 - ✅ Identified and documented protocol variations (AUTO/FAN_LOW)
 - ✅ Created comprehensive protocol documentation (PROTOCOL.md)
 - ✅ Enhanced code comments with practical information

@@ -80,9 +80,10 @@ Byte    Field               Description
                             status flag unrelated to the temperature — it must be masked out
                             with SET_TEMP_VALUE_MASK (0xBF) before interpreting the value.
 11      T1 Temperature      Internal/room temperature sensor
-12      T2A Temperature     Indoor coil inlet temperature
-13      T2B Temperature     Indoor coil outlet temperature
-14      T3 Temperature      Outdoor coil/ambient temperature
+12      T2 Temperature      Indoor coil temperature. The code historically calls
+                            this `t2a_temperature`; service docs usually call it T2.
+13      T2B Temperature     Indoor coil exhaust temperature, if equipped (normally located in the outdoor unit, if installed)
+14      T3 Temperature      Outdoor coil temperature
 15      Current             Current draw (units unknown, often reads 0xFF)
 16      Unknown2            Unknown/reserved
 17      Timer Start         Start timer setting
@@ -312,6 +313,16 @@ celsius = (encoded_value - 0x28) / 2.0
 
 ### Fahrenheit Encoding
 Some implementations send raw Fahrenheit values directly without encoding. The behavior may depend on unit configuration or regional settings.
+
+Two Fahrenheit-related variants have been observed in the field:
+
+- **Offset Fahrenheit in C4**: the setpoint byte is `°F + 0x87`; this is what the
+  existing `use_fahrenheit: true` option handles.
+- **Raw temperature fields**: some units (for example certain C&H concealed-duct
+  models) appear to report temperature bytes as direct raw values (`0x46` = 70°F,
+  `0x45` = 69°F, …) rather than Midea's normal encoded Celsius, and may return an
+  unusable or sentinel-filled (`0xFF`) response to C4 extended queries. Decoding
+  support for these units is tracked separately from this protocol note.
 
 **Special Value**:
 - `0xFF`: Used in FAN mode when temperature control is not applicable
