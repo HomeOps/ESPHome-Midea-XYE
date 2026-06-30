@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.12](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.11...v0.2.12) (2026-06-30)
+
+
+### Features
+
+* add configurable unit address for centralised-control bus ([#141](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/141)) ([7ee00ab](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/7ee00abf6328810d1f966578a151ed1456464d86))
+
 ## [0.2.11](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.10...v0.2.11) (2026-06-30)
 
 
