@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.14](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.13...v0.2.14) (2026-07-01)
+
+
+### Bug Fixes
+
+* accept 0x80 reply-direction bit in received frames ([#148](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/148)) ([2ea42a0](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/2ea42a04864f9c72296400814400d4037bbffda6))
+
 ## [0.2.13](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.12...v0.2.13) (2026-06-30)
 
 
