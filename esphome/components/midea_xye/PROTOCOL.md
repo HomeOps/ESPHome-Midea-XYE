@@ -23,6 +23,20 @@ This documentation is based on:
 - **Architecture**: Master/slave - CCM (master) polls all possible 64 unit IDs
 - **Timing**: 130ms time slice per unit (30ms query + 100ms timeout for response)
 
+### Wired remote connector (powering the ESP)
+
+Observed on a real Midea Mini VRF system (indoor MD17I-017HW): the indoor
+unit's **wired remote connector** carries a low-voltage supply that can power the
+ESP directly, so no separate USB adapter is needed at the unit.
+
+- **Black = ground (0 V)**
+- **Yellow = +5 VDC**
+
+Feed yellow → ESP `5V`/`VIN` and black → `GND`. This is the wired-remote
+connector, which is separate from the X/Y/E data terminals used for the RS-485
+bus. Wire colours are as observed on this system and may vary by model/harness —
+**verify with a multimeter before connecting.**
+
 ## Message Structure
 
 All messages start with a preamble byte (0xAA) and end with a CRC byte followed by a prologue byte (0x55).
