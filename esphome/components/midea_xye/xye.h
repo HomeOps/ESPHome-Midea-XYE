@@ -35,9 +35,15 @@ constexpr uint8_t RX_MESSAGE_LENGTH = 32;  ///< Length of received messages
 /**
  * @brief Message direction indicators
  * 
- * Note: In actual AC implementations, both directions use 0x00 in the direction byte.
+ * Note: In many AC implementations, both directions use 0x00 in the direction byte.
  * Messages are distinguished by context (who initiated the communication) and command type,
- * not by the direction byte value. This matches v0.0.10 behavior and actual AC units.
+ * not by the direction byte value. This matches v0.0.10 behavior and those AC units.
+ *
+ * However, some units set bit 7 (0x80) of this byte on replies as a "this is a
+ * response" marker. A real MD17I-017HW indoor unit on a live 5-indoor-unit Mini
+ * VRF system (outdoor MD17I-004C / GDV-V160W) was captured answering C0 queries
+ * with direction 0x80. ReceiveData::is_valid() masks off bit 7 so both the 0x00
+ * and 0x80 reply encodings validate.
  */
 enum class Direction : uint8_t {
   FROM_CLIENT = 0x00,  ///< Message from client (thermostat) to server (HVAC)

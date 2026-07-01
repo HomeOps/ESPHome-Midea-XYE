@@ -143,9 +143,14 @@ size_t ReceiveData::print_debug(size_t left, const char *tag, int level, bool us
 }
 
 bool ReceiveData::is_valid() const noexcept {
+  // Some units set bit 7 (0x80) of the direction byte as a "this is a reply"
+  // marker (0x80 instead of 0x00); mask it off so both encodings validate. Seen
+  // on a real MD17I-017HW indoor unit on a live 5-unit Mini VRF system, which
+  // answers C0 queries with direction 0x80. See tests/native/test_is_valid.cpp.
+  const uint8_t direction = static_cast<uint8_t>(message.frame.header.direction) & 0x7F;
   return message.frame.preamble == ProtocolMarker::PREAMBLE &&
          message.frame_end.prologue == ProtocolMarker::PROLOGUE &&
-         message.frame.header.direction == Direction::TO_CLIENT &&
+         direction == TO_CLIENT &&
          message.frame_end.crc == compute_protocol_crc(raw, RX_MESSAGE_LENGTH);
 }
 
