@@ -67,8 +67,10 @@ Byte    Field               Description
 ----    -----               -----------
 0       Preamble            Always 0xAA
 1       Command             Response command type (echoes request command)
-2       Direction           Direction flag (0x00 in practice, though some docs specify 0x80).
-                            Messages are distinguished by context and command type, not this byte.
+2       Direction           Direction flag. Observed as either 0x00 or 0x80 depending on the
+                            unit (bit 7 = "this is a reply"). Messages are distinguished by
+                            context and command type, not this byte, so is_valid() masks off
+                            bit 7 and accepts both. See "Direction Flag" note below.
 3       Destination ID      Master/thermostat ID (0x00..0x3F)
 4       Source ID           Unit/device ID (0x00..0x3F)
 5       Destination ID      Master/thermostat ID (repeated)
@@ -525,9 +527,15 @@ The master (CCM/thermostat) uses a polling model:
 
 ### Direction Flag (Byte 2)
 - Some legacy/third-party protocol documentation (and some early tables) describe a direction flag bit, with 0x80 used for frames sent from the master and 0x00 for frames from the AC
-- Actual on-wire traffic for XYE/CCM units shows byte 2 as 0x00 for both requests (master → AC) and responses (AC → master)
-- This implementation always transmits 0x00 in byte 2 and expects 0x00 in responses, matching observed AC behavior
-- Any references to 0x80 in direction-flag fields elsewhere in this document should be interpreted as legacy/spec behavior, not what this component actually sends on the wire
+- On many XYE/CCM units, on-wire traffic shows byte 2 as 0x00 for both requests (master → AC) and responses (AC → master)
+- **However, this is not universal.** A real **MD17I-017HW** indoor unit on a live 5-indoor-unit Mini VRF system (outdoor **MD17I-004C / GDV-V160W**) was captured answering `C0` QUERY frames with byte 2 set to **0x80** — the legacy "this is a reply" bit. The rest of the frame was well-formed (correct preamble, prologue, and CRC) and carried valid live data. Example captured reply (unit address 0x01):
+
+  ```
+  <<< AA C0 80 00 01 00 E0 14 00 00 18 5C 34 36 FF FF 00 00 00 01 00 00 00 00 00 00 00 0A FF FF E6 55
+  ```
+
+- This implementation always **transmits 0x00** in byte 2. For **received** frames, `ReceiveData::is_valid()` masks off bit 7 (`direction & 0x7F`) before comparing, so both the 0x00 and 0x80 reply encodings validate. Before this fix, 0x80-replying units had every response rejected with `Received invalid response from AC` and never came online. Regression coverage: `tests/native/test_is_valid.cpp`.
+- Other references to 0x80 in direction-flag fields elsewhere in this document describe legacy/spec behavior; on the wire this component only ever *sends* 0x00, but it *accepts* 0x00 or 0x80.
 
 ### Temperature Encoding
 - Some units use raw Fahrenheit values without encoding
