@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.15](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.14...v0.2.15) (2026-07-02)
+
+
+### Features
+
+* add target_temperature_from_c0 opt-in to read setpoint from C0 ([#152](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/152)) ([a18fc24](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/a18fc2465a23921e434b432283f0dfa86531ff96))
+
 ## [0.2.14](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.13...v0.2.14) (2026-07-01)
 
 
