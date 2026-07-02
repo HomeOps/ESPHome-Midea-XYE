@@ -147,8 +147,10 @@ climate:
                                 # a CCM/other controller.
     discovery_after: 10         # Optional. Defaults to 10. Consecutive unanswered polls
                                 # before an address sweep starts.
-    discovered_address:         # Optional. Diagnostic sensor reporting the address
-      name: XYE Address         # auto-discovery locked onto (the unit's dial value).
+    discovered_address:         # Optional. Diagnostic sensor reporting the active unit
+      name: XYE Address         # address (the dial value). Published whenever a unit
+                                # answers, so it reflects both the configured address and
+                                # any address auto-discovery locks onto.
     period: 1s                  # Optional. Defaults to 1s
     timeout: 100ms              # Optional. Defaults to 100ms
     use_fahrenheit: false       # Optional. Defaults to false

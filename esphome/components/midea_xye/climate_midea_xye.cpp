@@ -144,6 +144,10 @@ void ClimateMideaXYE::sendRecv(uint8_t cmdSent) {
       // The configured address answered: the bus is responsive, clear the miss
       // counter so a transient gap never accumulates toward a needless sweep.
       this->miss_count_ = 0;
+      // A unit answered at the active address; surface it so the sensor never
+      // sits at "Unknown" for a unit that responds at its configured address
+      // (i.e. one that never triggered an auto-discovery sweep).
+      this->publish_discovered_address_();
       // Log incoming message at debug level
       rx_data.print_debug(i, Constants::TAG, ESPHOME_LOG_LEVEL_DEBUG, this->use_fahrenheit_);
       // Don't parse responses to SET or FOLLOW_ME commands to avoid
@@ -260,12 +264,16 @@ void ClimateMideaXYE::finish_discovery_(bool found, uint8_t addr) {
     ESP_LOGI(Constants::TAG, "Discovered unit at address 0x%02X (was polling 0x%02X); adopting it", addr,
              this->address_);
     this->address_ = addr;
-    set_sensor(this->discovered_address_sensor_, static_cast<float>(addr));
+    this->publish_discovered_address_();
   } else {
     ESP_LOGW(Constants::TAG, "Address scan found no unit in 0x%02X-0x%02X; resuming polls at 0x%02X",
              this->scan_min_, this->scan_max_, this->address_);
   }
   this->controlState = ControlState::SEND_QUERY;
+}
+
+void ClimateMideaXYE::publish_discovered_address_() {
+  set_sensor(this->discovered_address_sensor_, static_cast<float>(this->address_));
 }
 
 void ClimateMideaXYE::update() {
