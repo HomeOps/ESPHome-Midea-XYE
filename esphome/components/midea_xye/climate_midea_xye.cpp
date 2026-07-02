@@ -366,8 +366,19 @@ void ClimateMideaXYE::ParseResponse() {
         // Update current_temperature based on sensor availability
         this->update_current_temperature_from_sensors_(need_publish);
 
-        // Target temperature is read exclusively from C4 (QUERY_EXTENDED) to handle both
-        // Celsius and Fahrenheit encodings consistently. C0 target_temperature is not used.
+        // Target temperature is read from C4 (QUERY_EXTENDED) by default. Opt-in
+        // (target_temperature_from_c0): read it from this C0 frame instead, for units
+        // that never answer C4 (e.g. some Mini VRF indoor units) and would otherwise leave
+        // target_temperature null. C0 carries the setpoint in the same encoding
+        // get_target_temperature() decodes for C4 — Celsius raw with the 0x40 status flag,
+        // or (°F + FAHRENHEIT_TEMP_OFFSET) in Fahrenheit mode. Respect post_set_grace_ so a
+        // freshly-sent SET is not immediately overwritten by stale device state. When enabled,
+        // the C4 handler skips its own target read so the two sources never fight.
+        if (this->target_temperature_from_c0_ && post_set_grace_ == 0) {
+          update_property(this->target_temperature,
+                          XYEAdapter::get_target_temperature(qr.target_temperature.value, this->use_fahrenheit_),
+                          need_publish);
+        }
 
         // Compressor/defrost-aware action is opt-in (compressor_aware_action) while the
         // C0 byte-19 compressor flag is still provisional. When disabled, compressor_active=true
@@ -420,13 +431,16 @@ void ClimateMideaXYE::ParseResponse() {
       const auto &exr = rx_data.message.data.extended_query_response;
       set_sensor(this->outdoor_sensor_, XYEAdapter::get_temperature(exr.outdoor_temperature.value));
       set_number(this->static_pressure_number_, static_cast<float>(STATIC_PRESSURE_VALUE_MASK & exr.static_pressure));
-      // C4 is the sole source for target_temperature, covering both unit modes:
+      // C4 is the default source for target_temperature, covering both unit modes:
       //  - Fahrenheit: encoded as (°F + FAHRENHEIT_TEMP_OFFSET); convert to Celsius for ESPHome.
       //  - Celsius:    raw integer degrees with bit 6 (0x40) status flag; mask before use.
       // Respect post_set_grace_: skip until the C0 grace window has closed so a freshly-sent
       // SET command isn't immediately overwritten by stale device state.
+      // When target_temperature_from_c0 is opted into, C0 is authoritative for the setpoint,
+      // so skip the C4 read here to avoid the two sources fighting.
       // Fahrenheit C4 decode approach adapted from rmounce/esphome@xye-units-switch.
-      if ((this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) &&
+      if (!this->target_temperature_from_c0_ &&
+          (this->mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) &&
           post_set_grace_ == 0) {
         const float incoming_target_temp =
             XYEAdapter::get_target_temperature(exr.target_temperature.value, this->use_fahrenheit_);

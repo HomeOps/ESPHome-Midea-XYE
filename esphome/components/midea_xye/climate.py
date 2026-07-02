@@ -70,6 +70,7 @@ CONF_COMPRESSOR_ACTIVE = "compressor_active"
 CONF_FAN_SPEED = "fan_speed"
 CONF_COMPRESSOR_AWARE_ACTION = "compressor_aware_action"
 CONF_SYNC_FAN_MODE_FROM_DEVICE = "sync_fan_mode_from_device"
+CONF_TARGET_TEMPERATURE_FROM_C0 = "target_temperature_from_c0"
 CONF_AUTO_DISCOVER = "auto_discover"
 CONF_DISCOVERY_AFTER = "discovery_after"
 CONF_DISCOVERED_ADDRESS = "discovered_address"
@@ -158,6 +159,10 @@ CONFIG_SCHEMA = cv.All(
             # physical thermostat), so Home Assistant reflects fan mode changes even when
             # not triggered by an HA command.
             cv.Optional(CONF_SYNC_FAN_MODE_FROM_DEVICE, default=False): cv.boolean,
+            # Opt-in: read the target setpoint from the C0 (QUERY) response instead of C4
+            # (QUERY_EXTENDED). For units that never answer C4 and would otherwise report a
+            # null target temperature. C0 carries the setpoint in the same encoding C4 uses.
+            cv.Optional(CONF_TARGET_TEMPERATURE_FROM_C0, default=False): cv.boolean,
             # Opt-in: if the configured address is unresponsive for `discovery_after`
             # poll cycles, sweep the address range with read-only C0 probes and adopt
             # the first unit that answers. For an isolated one-unit-per-ESP bus.
@@ -417,6 +422,7 @@ async def to_code(config):
     cg.add(var.set_use_fahrenheit(config[CONF_USE_FAHRENHEIT]))
     cg.add(var.set_compressor_aware_action(config[CONF_COMPRESSOR_AWARE_ACTION]))
     cg.add(var.set_sync_fan_mode_from_device(config[CONF_SYNC_FAN_MODE_FROM_DEVICE]))
+    cg.add(var.set_target_temperature_from_c0(config[CONF_TARGET_TEMPERATURE_FROM_C0]))
     if CONF_TRANSMITTER_ID in config:
         cg.add_define("USE_REMOTE_TRANSMITTER")
         transmitter_ = await cg.get_variable(config[CONF_TRANSMITTER_ID])
