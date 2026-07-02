@@ -55,6 +55,7 @@ climate:
       name: "Compressor Active"
     compressor_aware_action: true
     sync_fan_mode_from_device: true
+    target_temperature_from_c0: true
 
 # Temperature sensor required for follow_me
 sensor:

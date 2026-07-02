@@ -163,6 +163,10 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   /// Opt-in: when true, this->fan_mode is updated from C4 target_fan_speed on every extended
   /// query cycle, reflecting the fan setting on the physical thermostat in Home Assistant.
   void set_sync_fan_mode_from_device(bool yesno) { this->sync_fan_mode_from_device_ = yesno; }
+  /// Opt-in: when true, the target setpoint is read from the C0 (QUERY) response instead of
+  /// C4 (QUERY_EXTENDED). For units that never answer C4 and would otherwise report a null
+  /// target temperature. The C4 handler skips its target read while this is enabled.
+  void set_target_temperature_from_c0(bool yesno) { this->target_temperature_from_c0_ = yesno; }
   void set_static_pressure_number(StaticPressureNumber *number) {
     this->static_pressure_number_ = number;
     number->set_parent(this);
@@ -248,6 +252,9 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   // Opt-in (sync_fan_mode_from_device YAML option): when true, fan_mode is updated from C4
   // target_fan_speed (the commanded speed from the physical thermostat).
   bool sync_fan_mode_from_device_{false};
+  // Opt-in (target_temperature_from_c0 YAML option): when true, the setpoint is read from the
+  // C0 (QUERY) response instead of C4 (QUERY_EXTENDED), for units that never answer C4.
+  bool target_temperature_from_c0_{false};
   Sensor *outdoor_sensor_{nullptr};
   Sensor *fan_speed_sensor_{nullptr};
   Sensor *temperature_2a_sensor_{nullptr};
