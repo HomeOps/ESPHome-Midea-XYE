@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.16](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.15...v0.2.16) (2026-07-02)
+
+
+### Bug Fixes
+
+* publish discovered_address whenever a unit answers ([#154](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/154)) ([1db6a6d](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/1db6a6d31a3241f9ac88a036417bee4d2ad7b88a))
+
 ## [0.2.15](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.14...v0.2.15) (2026-07-02)
 
 
