@@ -1,6 +1,6 @@
 from esphome.core import coroutine
 from esphome import automation
-from esphome.components import binary_sensor, climate, sensor, uart, remote_transmitter, number
+from esphome.components import binary_sensor, climate, sensor, text_sensor, uart, remote_transmitter, number
 from esphome.components.remote_base import CONF_TRANSMITTER_ID
 import esphome.config_validation as cv
 import esphome.codegen as cg
@@ -50,7 +50,7 @@ from esphome.components.climate import (
 
 #CODEOWNERS = ["@dudanov"]
 DEPENDENCIES = ["climate", "uart", "wifi"]
-AUTO_LOAD = ["binary_sensor", "number", "sensor"]
+AUTO_LOAD = ["binary_sensor", "number", "sensor", "text_sensor"]
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_TEMPERATURE_2A = "temperature_2a"
 CONF_TEMPERATURE_2B = "temperature_2b"
@@ -204,10 +204,11 @@ CONFIG_SCHEMA = cv.All(
                 state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            # Publishes the unit address that auto-discovery locked onto (its dial value).
-            cv.Optional(CONF_DISCOVERED_ADDRESS): sensor.sensor_schema(
+            # Publishes the active unit address as an integer string (its dial
+            # value). A text sensor keeps it an integer end-to-end instead of a
+            # numeric sensor that renders the address as a float ("3.0").
+            cv.Optional(CONF_DISCOVERED_ADDRESS): text_sensor.text_sensor_schema(
                 icon="mdi:identifier",
-                accuracy_decimals=0,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_TEMPERATURE_2A): sensor.sensor_schema(
@@ -452,7 +453,7 @@ async def to_code(config):
         sens = await sensor.new_sensor(config[CONF_FAN_SPEED])
         cg.add(var.set_fan_speed_sensor(sens))
     if CONF_DISCOVERED_ADDRESS in config:
-        sens = await sensor.new_sensor(config[CONF_DISCOVERED_ADDRESS])
+        sens = await text_sensor.new_text_sensor(config[CONF_DISCOVERED_ADDRESS])
         cg.add(var.set_discovered_address_sensor(sens))
     if CONF_TEMPERATURE_2A in config:
         sens = await sensor.new_sensor(config[CONF_TEMPERATURE_2A])

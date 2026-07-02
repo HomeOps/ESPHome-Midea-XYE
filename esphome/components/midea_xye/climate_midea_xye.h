@@ -6,6 +6,7 @@
 #include "esphome/components/climate/climate_traits.h"
 #include "esphome/components/number/number.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
@@ -101,6 +102,7 @@ using climate::ClimateMode;
 using climate::ClimatePreset;
 using climate::ClimateSwingMode;
 using sensor::Sensor;
+using text_sensor::TextSensor;
 
 class Constants {
  public:
@@ -131,7 +133,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   /// unit that answers. Intended for an isolated one-unit-per-ESP bus.
   void set_auto_discover(bool yesno) { this->auto_discover_ = yesno; }
   void set_discovery_after(uint16_t cycles) { this->discovery_after_ = cycles; }
-  void set_discovered_address_sensor(Sensor *sensor) { this->discovered_address_sensor_ = sensor; }
+  void set_discovered_address_sensor(TextSensor *sensor) { this->discovered_address_sensor_ = sensor; }
 
   /* Component methods */
 
@@ -279,7 +281,7 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   Sensor *follow_me_sensor_{nullptr};
   Sensor *internal_current_temperature_sensor_{nullptr};
   // Publishes the address auto-discovery locked onto (the unit's dial value).
-  Sensor *discovered_address_sensor_{nullptr};
+  TextSensor *discovered_address_sensor_{nullptr};
   StaticPressureNumber *static_pressure_number_{nullptr};
   ClimateMode last_on_mode_;
   float internal_temperature_{NAN};

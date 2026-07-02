@@ -18,6 +18,11 @@ static void set_sensor(Sensor *sensor, float value) {
     sensor->publish_state(value);
 }
 
+static void set_text_sensor(TextSensor *sensor, const std::string &value) {
+  if (sensor != nullptr && (!sensor->has_state() || sensor->state != value))
+    sensor->publish_state(value);
+}
+
 static void set_number(number::Number *number, float value) {
   if (number != nullptr && (!number->has_state() || number->state != value))
     number->publish_state(value);
@@ -273,7 +278,10 @@ void ClimateMideaXYE::finish_discovery_(bool found, uint8_t addr) {
 }
 
 void ClimateMideaXYE::publish_discovered_address_() {
-  set_sensor(this->discovered_address_sensor_, static_cast<float>(this->address_));
+  // Publish as a decimal integer string (the dial value, 0..0x3F). A text
+  // sensor keeps it an integer end-to-end instead of a float that renders as
+  // "3.0" the way a numeric sensor would.
+  set_text_sensor(this->discovered_address_sensor_, std::to_string(static_cast<int>(this->address_)));
 }
 
 void ClimateMideaXYE::update() {
