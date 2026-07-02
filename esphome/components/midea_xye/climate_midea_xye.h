@@ -182,6 +182,11 @@ class ClimateMideaXYE : public PollingComponent, public climate::Climate, public
   void maybe_start_discovery_();
   void send_probe_();
   void finish_discovery_(bool found, uint8_t addr);
+  // Publish the currently active unit address to the discovered_address sensor.
+  // Called whenever a unit answers at the active address, so the sensor reflects
+  // the live address instead of only being set when an auto-discovery sweep
+  // adopts a new one (which never happens for a unit at its configured address).
+  void publish_discovered_address_();
   void setPowerState(bool state);
   void setTransmitParams();
 
