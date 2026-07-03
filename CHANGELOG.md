@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.17](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.16...v0.2.17) (2026-07-03)
+
+
+### Bug Fixes
+
+* render discovered_address as an integer in Home Assistant ([#157](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/157)) ([e740ab7](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/e740ab759adf806d8df3d4d5af47951c0a3af721))
+
 ## [0.2.16](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.15...v0.2.16) (2026-07-02)
 
 
