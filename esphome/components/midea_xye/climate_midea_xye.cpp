@@ -364,16 +364,20 @@ void ClimateMideaXYE::ParseResponse() {
         }
       }
 
+      // The indoor coil/room temperature (t1) is a physical reading that is valid whether
+      // or not the unit is actively conditioning, so it must be published on every valid C0
+      // response — not gated on mode. Otherwise, with no follow-me sensor supplying
+      // current_temperature through a separate path, Home Assistant sees null whenever the
+      // unit reads OFF (which, on some VRF indoor units, is what C0 reports even while running).
+      this->internal_temperature_ = XYEAdapter::get_temperature(qr.t1_temperature.value);
+
+      // Publish the internal temperature to the sensor if configured
+      set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
+
+      // Update current_temperature based on sensor availability
+      this->update_current_temperature_from_sensors_(need_publish);
+
       if (mode != ClimateMode::CLIMATE_MODE_OFF || ForceReadNextCycle == 1) {
-        // Store the internal temperature from the XYE bus
-        this->internal_temperature_ = XYEAdapter::get_temperature(qr.t1_temperature.value);
-
-        // Publish the internal temperature to the sensor if configured
-        set_sensor(this->internal_current_temperature_sensor_, this->internal_temperature_);
-
-        // Update current_temperature based on sensor availability
-        this->update_current_temperature_from_sensors_(need_publish);
-
         // Target temperature is read from C4 (QUERY_EXTENDED) by default. Opt-in
         // (target_temperature_from_c0): read it from this C0 frame instead, for units
         // that never answer C4 (e.g. some Mini VRF indoor units) and would otherwise leave
