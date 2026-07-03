@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.18](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.17...v0.2.18) (2026-07-03)
+
+
+### Bug Fixes
+
+* publish current temperature even when unit reports OFF ([#151](https://github.com/HomeOps/ESPHome-Midea-XYE/issues/151)) ([f2369df](https://github.com/HomeOps/ESPHome-Midea-XYE/commit/f2369df1f0e93bdfacf1b9bbbd1f59bc0f05bf52))
+
 ## [0.2.17](https://github.com/HomeOps/ESPHome-Midea-XYE/compare/v0.2.16...v0.2.17) (2026-07-03)
 
 
