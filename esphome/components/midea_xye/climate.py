@@ -205,9 +205,12 @@ CONFIG_SCHEMA = cv.All(
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             # Publishes the unit address that auto-discovery locked onto (its dial value).
+            # state_class is required for Home Assistant to honour accuracy_decimals=0;
+            # without it HA ignores the precision hint and renders the raw float ("1.0").
             cv.Optional(CONF_DISCOVERED_ADDRESS): sensor.sensor_schema(
                 icon="mdi:identifier",
                 accuracy_decimals=0,
+                state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_TEMPERATURE_2A): sensor.sensor_schema(
