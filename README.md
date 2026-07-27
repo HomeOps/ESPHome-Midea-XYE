@@ -20,6 +20,10 @@ Kudos to these projects and people:
 - Static pressure protocol analysis by @rmounce
 - C&H "Sophia Hyper" concealed-duct raw-temperature/C0-setpoint research by @larsonm-personal
 - Home Assistant community discussion and contributions: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679
+- CCM03 `F1/F2` gateway-port investigation and recovery of genuine legacy Midea/MDV
+  NetAC (`ACServer`) frames by Sergey Kudrin — evidence that the CCM03's PC/gateway
+  port carries XYE framing at 9600 8N1 rather than a separate protocol. See
+  [PROTOCOL.md → Acknowledgments](esphome/components/midea_xye/PROTOCOL.md#acknowledgments).
 - S1/S2 bus (IDU ↔ outdoor inverter) reverse-engineering by MidATRIX:
   https://github.com/MidATRIX/midea-s1s2-rs485-monitor — a sibling Midea RS-485
   protocol on a different bus, useful as a cross-reference for the sensor fields and
