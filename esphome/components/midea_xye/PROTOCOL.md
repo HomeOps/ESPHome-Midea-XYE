@@ -443,20 +443,66 @@ PROTOCOL_ERROR  0x04    Protocol violation
 The CRC is a simple checksum calculated as follows:
 
 ```
-1. Sum all bytes in the message EXCEPT the CRC byte and prologue
+1. Sum all bytes in the message EXCEPT the CRC byte itself.
+   The preamble (byte 0) and the prologue (last byte) ARE included in the sum.
 2. Take the least significant byte of the sum (sum & 0xFF)
 3. CRC = 0xFF - (sum & 0xFF)
 ```
 
-**Example** (16-byte transmit message):
+**The prologue is part of the sum.** Only the CRC slot is skipped. This is the
+single most common way to get the checksum wrong: excluding the trailing `0x55`
+produces a CRC that is off by exactly `0x55`, and every frame built that way is
+dropped silently by the unit — indistinguishable from "wrong protocol" or a
+wiring fault.
+
+**Reference implementation** — this is `compute_protocol_crc()` in `xye.h`, and
+it is the authority for this section:
+
 ```c
-uint8_t crc = 0;
-for (int i = 0; i < 14; i++) {  // Bytes 0-13 (exclude CRC at 14 and prologue at 15)
-    crc += message[i];
+uint8_t compute_protocol_crc(const uint8_t *data, uint8_t len) {
+    uint32_t crc = 0;
+    for (uint8_t i = 0; i < len; i++) {
+        if (i != len - 2)   // skip the CRC slot only; prologue at len-1 is summed
+            crc += data[i];
+    }
+    return (uint8_t) (0xFF - (crc & 0xFF));
 }
-message[14] = 0xFF - crc;  // Store CRC
-message[15] = 0x55;        // Store prologue
 ```
+
+`len` is the **total** frame length including both the CRC byte and the
+prologue — 16 for transmit, 32 for receive. The CRC therefore lives at index
+`len-2` and the prologue at `len-1`.
+
+**Worked example** (the captured 32-byte MD17I-017HW reply from
+[Direction Flag (Byte 2)](#direction-flag-byte-2)):
+
+```
+AA C0 80 00 01 00 E0 14 00 00 18 5C 34 36 FF FF 00 00 00 01
+00 00 00 00 00 00 00 0A FF FF E6 55
+```
+
+Summing all 32 bytes except index 30 (the CRC slot) — including the `0xAA`
+preamble and the trailing `0x55` prologue — gives 2073. `2073 & 0xFF = 0x19`,
+and `0xFF - 0x19 = 0xE6`, which matches byte 30. Had the prologue been left out
+of the sum the result would have been `0x3B`, and the frame would have been
+rejected.
+
+### Byte 13 is not the CRC
+
+In a transmit frame, byte 13 (`Complement`) is `0xFF - Command` and byte 14 is
+the CRC. These are easy to confuse because both are "0xFF minus something" and
+byte 13 is the more eye-catching value:
+
+```
+Command   Byte 13 (complement)   Note
+-------   --------------------   ----
+0xC0      0x3F                   NOT the checksum
+0xC4      0x3B                   NOT the checksum
+0xC1      0x3E                   NOT the checksum
+```
+
+A frame with a correct complement and a wrong CRC looks well-formed to a human
+reader and is still discarded by the unit. Verify byte 14 independently.
 
 ## Follow-Me Subcommands
 
@@ -613,7 +659,7 @@ versa) without verifying byte offsets first.
 | UART               | 4800 8N1 half-duplex                  | 4800 8N1 half-duplex **(same)**                   |
 | Preamble           | `0xAA`                                | `0xA0`                                            |
 | Prologue           | `0x55`                                | (none — last 2 bytes are CRC)                     |
-| Checksum           | 1-byte: `0xFF − sum(bytes 0…N-1)`     | CRC-16/MODBUS, little-endian                      |
+| Checksum           | 1-byte: `0xFF − sum(all bytes except the CRC slot, prologue included)` | CRC-16/MODBUS, little-endian    |
 | Frame length       | Fixed (16 TX / 32 RX)                 | Variable; length byte at offset 4                 |
 | Address            | 1-byte device ID `0x00..0x3F`         | 2-byte device address (`0x0001`=ODU, `0x0100`=IDU)|
 | Polling            | CCM master polls 64 IDs (130 ms slot) | ODU master, 24-frame cycle (~3.6 s)               |
@@ -813,6 +859,7 @@ Before guessing the protocol, characterise the PHY:
 
 ## Version History
 
+- **v1.3** (2026-07-27): Corrected the CRC Calculation section. The prose and the worked example both excluded the prologue from the checksum sum, contradicting `compute_protocol_crc()` in `xye.h`, which skips only the CRC slot — an error of exactly `0x55`. Replaced with the reference implementation and a worked example verified against the captured MD17I-017HW reply, and added a note that byte 13 (command complement) is not the CRC.
 - **v1.2** (2026-06-15): Incorporated MidATRIX May 2026 community posts: dual candidate interpretations for C0 bytes 28-29 (IDU EEV position 16-bit LE vs Oil Return Cycle counter), critical HA/HB→XYE 19 V backfeed safety warning on KJR-120W/MBF, retired the obsolete AC-voltage and temperature byte-28 hypotheses.
 - **v1.1** (2026-05-24): Added "Related Protocols — S1/S2 bus" section with MidATRIX cross-reference and byte-28 hypotheses
 - **v1.0** (2026-01-30): Initial documentation based on code analysis and external references
