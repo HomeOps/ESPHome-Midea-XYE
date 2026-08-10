@@ -13,6 +13,17 @@ This documentation is based on:
 - ESPHome Midea component: https://github.com/esphome/esphome/tree/dev/esphome/components/midea
 - HA Community thread reverse-engineering by mdrobnak, rymo, and others: https://community.home-assistant.io/t/midea-a-c-via-local-xye/857679 ([archived PDF](https://github.com/user-attachments/files/26555742/Midea.A_C.via.local.XYE.-.ESPHome.-.Home.Assistant.Community.pdf))
 - S1/S2 bus reverse-engineering by MidATRIX: https://github.com/MidATRIX/midea-s1s2-rs485-monitor — different bus (IDU↔ODU), same RS-485 medium, useful field-level cross-reference. See [Related Protocols](#related-protocols--s1s2-bus-iduodu).
+- CCM03 `F1/F2` gateway-port investigation by Sergey Kudrin, who obtained the original
+  legacy Midea/MDV **NetAC** software package (`NetACControlFBD` / `ACServer`) and
+  extracted genuine legacy `F1/F2` request and response frames from it. Those frames
+  validate against the framing, addressing and CRC rules documented here — 16-byte
+  query, 32-byte response, `0xAA`/`0x55`, command echoed in the reply, the `0x80`
+  reply marker in response byte 2, and a correct CRC under
+  [CRC Calculation](#crc-calculation) — which indicates the CCM03's PC/gateway port
+  speaks XYE at **9600 8N1**, not a separate upper-layer protocol as the terminal
+  labelling suggests. The frames also carry command `0xC1`, which this component does
+  not implement (see [Commands](#commands)). Software-extracted rather than captured
+  on the wire; on-wire confirmation on a live VRF system is pending.
 
 ## Physical Layer
 
