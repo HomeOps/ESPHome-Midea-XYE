@@ -689,7 +689,11 @@ void ClimateMideaXYE::update_current_temperature_from_sensors_(bool &need_publis
   // Use follow_me_sensor as current_temperature if available, otherwise use internal temperature
   if (this->follow_me_sensor_ != nullptr && this->follow_me_sensor_->has_state() &&
       !std::isnan(this->follow_me_sensor_->state)) {
-    update_property(this->current_temperature, this->follow_me_sensor_->state, need_publish);
+    const float sensor_temperature = this->use_fahrenheit_
+                                         ? (this->follow_me_sensor_->state - FAHRENHEIT_CELSIUS_OFFSET) *
+                                               FAHRENHEIT_TO_CELSIUS_SCALE
+                                         : this->follow_me_sensor_->state;
+    update_property(this->current_temperature, sensor_temperature, need_publish);
   } else if (!std::isnan(this->internal_temperature_)) {
     update_property(this->current_temperature, this->internal_temperature_, need_publish);
   }

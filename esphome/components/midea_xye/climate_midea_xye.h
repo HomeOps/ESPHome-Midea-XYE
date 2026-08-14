@@ -91,6 +91,11 @@ constexpr uint8_t CAPABILITIES_SWING = static_cast<uint8_t>(xye::Capabilities::S
 /// Applies to both the XYE-bus internal temperature and any external follow_me sensor value.
 constexpr float VISUAL_CURRENT_TEMPERATURE_STEP = 0.01f;
 
+/// Fahrenheit temperature offset used when converting a Follow-Me sensor value for ESPHome.
+constexpr float FAHRENHEIT_CELSIUS_OFFSET = 32.0f;
+/// Fahrenheit-to-Celsius scale used when converting a Follow-Me sensor value for ESPHome.
+constexpr float FAHRENHEIT_TO_CELSIUS_SCALE = 5.0f / 9.0f;
+
 constexpr uint8_t OP_FLAG_WATER_PUMP = static_cast<uint8_t>(xye::OperationFlags::WATER_PUMP);
 constexpr uint8_t OP_FLAG_WATER_LOCK = static_cast<uint8_t>(xye::OperationFlags::WATER_LOCK);
 
