@@ -1,0 +1,178 @@
+# ACiQ Extreme+ Home Assistant add-on profile
+#
+# Tested on:
+#   - ACIQ-48-PAH air handler
+#   - ACIQ-48-HPD outdoor unit
+#
+# Requires the midea_xye climate entry to have:
+#   id: heatpump_xye
+#
+# The generic midea_xye component already exposes temperature, compressor,
+# defrost, error, protection, and fan-speed sensors. This package intentionally
+# adds only ACiQ-specific / comparison-friendly entities not already exposed:
+#   - EEV Position
+#   - Actual Fan Mode
+#   - Target Fan Mode
+#   - Bus Mode (diagnostic)
+#   - Operating State (diagnostic)
+#
+# C0 bytes 28-29 are the bus-reported EEV position, little-endian, in steps.
+# See docs/ACIQ_EXTREME_PLUS.md for the field map and validation evidence.
+#
+# States are published only when the corresponding C0/C4 frame changes.
+
+sensor:
+  - platform: template
+    id: aciq_eev_position
+    name: "EEV Position"
+    unit_of_measurement: "steps"
+    icon: mdi:valve
+    accuracy_decimals: 0
+    state_class: measurement
+    update_interval: never
+
+text_sensor:
+  - platform: template
+    id: aciq_actual_fan
+    name: "Actual Fan Mode"
+    icon: mdi:fan
+    update_interval: never
+
+  - platform: template
+    id: aciq_target_fan
+    name: "Target Fan Mode"
+    icon: mdi:fan-auto
+    update_interval: never
+
+  - platform: template
+    id: aciq_bus_mode
+    name: "Bus Mode"
+    icon: mdi:hvac
+    entity_category: diagnostic
+    update_interval: never
+
+  - platform: template
+    id: aciq_c4_operating_state
+    name: "Operating State"
+    icon: mdi:state-machine
+    entity_category: diagnostic
+    update_interval: never
+
+globals:
+  - id: aciq_profile_last_c0_hash
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+  - id: aciq_profile_last_c4_hash
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+interval:
+  - interval: 200ms
+    then:
+      - lambda: |-
+          const uint8_t cmd =
+              static_cast<uint8_t>(id(heatpump_xye).rx_data.message.frame.header.command);
+          if (cmd != 0xC0 && cmd != 0xC4) return;
+
+          const uint8_t *b = id(heatpump_xye).rx_data.raw;
+
+          uint32_t hash = 2166136261u;
+          for (int i = 0; i < 30; i++) {
+            hash ^= b[i];
+            hash *= 16777619u;
+          }
+
+          auto publish_fan = [](auto *out, uint8_t raw, bool show_auto_physical) {
+            const bool auto_mode = (raw & 0x80) != 0;
+            const uint8_t speed = raw & 0x0F;
+
+            const char *speed_name = nullptr;
+            switch (speed) {
+              case 0x00: speed_name = "OFF"; break;
+              case 0x01: speed_name = "HIGH"; break;
+              case 0x02: speed_name = "MEDIUM"; break;
+              case 0x03:
+              case 0x04: speed_name = "LOW"; break;
+              default: break;
+            }
+
+            if (auto_mode) {
+              if (!show_auto_physical || speed == 0x00) {
+                out->publish_state("AUTO");
+              } else if (speed_name != nullptr) {
+                char s[24];
+                snprintf(s, sizeof(s), "AUTO + %s", speed_name);
+                out->publish_state(s);
+              } else {
+                char s[24];
+                snprintf(s, sizeof(s), "AUTO + 0x%02X", speed);
+                out->publish_state(s);
+              }
+              return;
+            }
+
+            if (speed_name != nullptr) {
+              out->publish_state(speed_name);
+            } else {
+              char s[24];
+              snprintf(s, sizeof(s), "UNKNOWN 0x%02X", raw);
+              out->publish_state(s);
+            }
+          };
+
+          if (cmd == 0xC0) {
+            if (hash == id(aciq_profile_last_c0_hash)) return;
+            id(aciq_profile_last_c0_hash) = hash;
+
+            const uint16_t eev =
+                static_cast<uint16_t>(b[28]) |
+                (static_cast<uint16_t>(b[29]) << 8);
+            id(aciq_eev_position).publish_state(eev);
+
+            publish_fan(id(aciq_actual_fan), b[9], true);
+
+            switch (b[8]) {
+              case 0x00: id(aciq_bus_mode).publish_state("OFF"); break;
+              case 0x81: id(aciq_bus_mode).publish_state("FAN ONLY"); break;
+              case 0x82: id(aciq_bus_mode).publish_state("DRY"); break;
+              case 0x84: id(aciq_bus_mode).publish_state("HEAT"); break;
+              case 0x88: id(aciq_bus_mode).publish_state("COOL"); break;
+              case 0x80:
+              case 0x90:
+              case 0x91:
+              case 0x98:
+                id(aciq_bus_mode).publish_state("AUTO");
+                break;
+              default: {
+                char s[24];
+                snprintf(s, sizeof(s), "UNKNOWN 0x%02X", b[8]);
+                id(aciq_bus_mode).publish_state(s);
+                break;
+              }
+            }
+            return;
+          }
+
+          if (hash == id(aciq_profile_last_c4_hash)) return;
+          id(aciq_profile_last_c4_hash) = hash;
+
+          publish_fan(id(aciq_target_fan), b[17], false);
+
+          switch (b[16]) {
+            case 0x01: id(aciq_c4_operating_state).publish_state("OFF"); break;
+            case 0x81: id(aciq_c4_operating_state).publish_state("FAN ONLY"); break;
+            case 0x82: id(aciq_c4_operating_state).publish_state("DRY"); break;
+            case 0x84: id(aciq_c4_operating_state).publish_state("HEAT"); break;
+            case 0x88: id(aciq_c4_operating_state).publish_state("COOL"); break;
+            case 0x90: id(aciq_c4_operating_state).publish_state("AUTO"); break;
+            case 0x08: id(aciq_c4_operating_state).publish_state("COOL / DISABLING"); break;
+            default: {
+              char s[24];
+              snprintf(s, sizeof(s), "UNKNOWN 0x%02X", b[16]);
+              id(aciq_c4_operating_state).publish_state(s);
+              break;
+            }
+          }
